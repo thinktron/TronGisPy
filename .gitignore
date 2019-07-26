@@ -1,4 +1,7 @@
 venv
 .vscode
 __pycache__
-data
+build
+dist
+SplittedImage.egg-info
+test_output

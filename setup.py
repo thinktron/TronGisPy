@@ -11,14 +11,15 @@ setuptools.setup(
     description="For splitting satellite image",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/GoatWang/PySaga",
+    url="http://rd.thinktronltd.com/jeremywang/SplittedImage",
     packages=setuptools.find_packages(),
-    package_data={'PySaga': ['saga_cmd_pkls/*']},
+    # package_data={'PySaga': ['saga_cmd_pkls/*']},
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ),
+#    install_requires=["Django >= 1.1.1",],
 )
 
 # python3 setup.py sdist bdist_wheel

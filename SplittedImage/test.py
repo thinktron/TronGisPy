@@ -1,4 +1,5 @@
 import unittest
+import shutil
 
 # data
 import pandas as pd
@@ -17,12 +18,18 @@ from SplittedImage import SplittedImage
 
 data_dir = os.path.join('data')
 satellite_tif_dir = data_dir
-satellite_tif_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002.tif')
+satellite_tif_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005.tif')
+
+
 
 class TestSplittedImage(unittest.TestCase):
     def setUp(self):
+        self.output_dir = os.path.join('test_output')
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
+
         # window_size_h = window_size_w = step_size_h = step_size_w = 256
-        box_size = 512
+        box_size = 128
         ds = gdal.Open(satellite_tif_path)
         geo_transform = ds.GetGeoTransform()
         projection = ds.GetProjection()
@@ -32,33 +39,36 @@ class TestSplittedImage(unittest.TestCase):
         X = np.transpose(img_src_arr, axes=[1,2,0])
         self.splitted_image = SplittedImage(X, box_size, geo_transform, projection)
 
-    # def test___getitem__(self):
-    #     slice_test1 = Counter(pd.cut(self.splitted_image[1].flatten(), bins=3, labels=range(3))) == Counter({0: 2373445, 1: 1818830, 2: 2029})
-    #     slice_test2 = Counter(pd.cut(self.splitted_image[:2].flatten(), bins=3, labels=range(3))) == Counter({0: 6859244, 1: 5674081, 2: 49587})
-    #     slice_test3 = Counter(pd.cut(self.splitted_image[:2, 2].flatten(), bins=3, labels=range(3))) == Counter({1: 395645, 0: 385327, 2: 5460})
-    #     slice_test4 = Counter(pd.cut(self.splitted_image[:2, :2].flatten(), bins=3, labels=range(3))) == Counter({0: 1364836, 1: 993154, 2: 1306})
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
 
-    #     self.assertTrue(slice_test1)
-    #     self.assertTrue(slice_test2)
-    #     self.assertTrue(slice_test3)
-    #     self.assertTrue(slice_test4)
+    def test___getitem__(self):
+        slice_test1 = Counter(pd.cut(self.splitted_image[1].flatten(), bins=3, labels=range(3))) == Counter({1: 137343, 0: 122742, 2: 2059})
+        slice_test2 = Counter(pd.cut(self.splitted_image[:2].flatten(), bins=3, labels=range(3))) == Counter({1: 412579, 0: 366496, 2: 7357})
+        slice_test3 = Counter(pd.cut(self.splitted_image[:2, 2].flatten(), bins=3, labels=range(3))) == Counter({0: 97945, 1: 95721, 2: 2942})
+        slice_test4 = Counter(pd.cut(self.splitted_image[:2, :2].flatten(), bins=3, labels=range(3))) == Counter({1: 333569, 0: 250291, 2: 5964})
 
-    # def test_get_padded_image(self):
-    #     shape_test = self.splitted_image.padded_image.shape == (4096, 4096, 4)
-    #     self.assertTrue(shape_test)
+        self.assertTrue(slice_test1)
+        self.assertTrue(slice_test2)
+        self.assertTrue(slice_test3)
+        self.assertTrue(slice_test4)
 
-    # def test_get_splitted_images(self):
-    #     shape_test = self.splitted_image.get_splitted_images().shape == (256, 256, 256, 4)
-    #     self.assertTrue(shape_test)
+    def test_get_padded_image(self):
+        shape_test = self.splitted_image.padded_image.shape == (512, 512, 4)
+        self.assertTrue(shape_test)
 
-    # def test_get_geo_attribute(self):
-    #     df_attribute = self.splitted_image.get_geo_attribute()
-    #     pol = df_attribute.loc[0, 'geometry']
-    #     area_test = pol.area == 6553600.0
-    #     self.assertTrue(area_test)
+    def test_get_splitted_images(self):
+        shape_test = self.splitted_image.get_splitted_images().shape == (16, 128, 128, 4)
+        self.assertTrue(shape_test)
+
+    def test_get_geo_attribute(self):
+        df_attribute = self.splitted_image.get_geo_attribute()
+        pol = df_attribute.loc[0, 'geometry']
+        area_test = pol.area == 1638400.0
+        self.assertTrue(area_test)
 
     def test_write_splitted_images(self):
-        self.splitted_image.write_splitted_images('data', 'P0015913_SP5_006_001_002')
+        self.splitted_image.write_splitted_images(self.output_dir, 'P0015913_SP5_006_001_002_021_002_005')
 
 
 
