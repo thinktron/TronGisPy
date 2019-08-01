@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="SplittedImage",
-    version="0.0.1",
+    version="0.0.2",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="For splitting satellite image",
@@ -21,6 +21,9 @@ setuptools.setup(
     ),
 #    install_requires=["Django >= 1.1.1",],
 )
+
+# 0.0.0
+# 0.0.2 modify write_combined_tif to fit the image not well splitted by the right box size
 
 # python3 setup.py sdist bdist_wheel
 # scp ~/Projects/PySaga/dist/PySaga-0.0.3-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySaga-0.0.3-py3-none-any.whl

@@ -14,7 +14,7 @@ pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.
 # Build & deployee
 ```
 python setup.py sdist bdist_wheel
-scp C:\Users\Thinktron\Projects\SplittedImage\dist\SplittedImage-0.0.1-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/SplittedImage-0.0.1-py3-none-any.whl
+scp C:\Users\Thinktron\Projects\SplittedImage\dist\SplittedImage-0.0.2-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/SplittedImage-0.0.2-py3-none-any.whl
 ```
 
 
