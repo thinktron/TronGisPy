@@ -29,15 +29,16 @@ class TestSplittedImage(unittest.TestCase):
             os.mkdir(self.output_dir)
 
         # window_size_h = window_size_w = step_size_h = step_size_w = 256
-        box_size = 128
+        self.box_size = 128
         ds = gdal.Open(satellite_tif_path)
-        geo_transform = ds.GetGeoTransform()
-        projection = ds.GetProjection()
+        self.geo_transform = ds.GetGeoTransform()
+        self.projection = ds.GetProjection()
+        self.dtype_gdal = ds.GetRasterBand(1).DataType # gdal.GetDataTypeName(self.dtype_gdal)
         img_src_arr = ds.ReadAsArray()
         ds = None
 
-        X = np.transpose(img_src_arr, axes=[1,2,0])
-        self.splitted_image = SplittedImage(X, box_size, geo_transform, projection)
+        self.X = np.transpose(img_src_arr, axes=[1,2,0])
+        self.splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform, self.projection)
 
     def tearDown(self):
         shutil.rmtree(self.output_dir)
@@ -70,7 +71,12 @@ class TestSplittedImage(unittest.TestCase):
     def test_write_splitted_images(self):
         self.splitted_image.write_splitted_images(self.output_dir, 'P0015913_SP5_006_001_002_021_002_005')
 
-
+    def test_write_combined_tif(self):
+        box_size = 101
+        splitted_image = SplittedImage(self.X, box_size, self.geo_transform, self.projection)
+        X_pred = splitted_image.get_splitted_images()
+        dst_tif_path = os.path.join(self.output_dir, "combined.tif")
+        splitted_image.write_combined_tif(X_pred, dst_tif_path, self.dtype_gdal)
 
 
 if __name__ == "__main__":

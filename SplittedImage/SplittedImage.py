@@ -163,11 +163,11 @@ class SplittedImage():
             if target_img.std() != 0:
                 self.write_output_tif(target_img, path, self.num_bands, self.window_size_w, self.window_size_h, row['geo_transform'], self.projection)
 
-    def write_combined_tif(self, X, dst_tif_path):
+    def write_combined_tif(self, X, dst_tif_path, dtype_gdal=gdal.GDT_Int32):
         rows = self.source_image.shape[0]
         cols = self.source_image.shape[1]
         bands = X.shape[3]
-        dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, gdal.GDT_Int32)
+        dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, dtype_gdal)
         dst_ds.SetGeoTransform(self.geo_transform)
         dst_ds.SetProjection(self.projection)
         
@@ -177,7 +177,8 @@ class SplittedImage():
                 idx_h , idx_w = self.convert_order_to_location_index(i)
                 h_start_inner, h_stop_inner = self.convert_to_inner_index_h(idx_h, idx_h)
                 w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
-                X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner] = X[i, :, :, b]
+                h_length, w_length = X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner].shape
+                X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner] = X[i, :h_length, :w_length, b]
                 
             band = dst_ds.GetRasterBand(b+1)
             band.WriteArray(X_combined, 0, 0)
