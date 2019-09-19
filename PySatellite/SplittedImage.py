@@ -2,6 +2,7 @@ import os
 import numpy as np
 import gdal
 import geopandas as gpd
+from PySatellite.CRS import transfer_xy_to_coord
 from shapely.geometry import Polygon
 epsilon = 10**-6
 
@@ -95,14 +96,14 @@ class SplittedImage():
     def get_splitted_images(self):
         return np.array(self.apply(lambda x:x))
 
-    def transfer_xy_to_coord(self, xy, geo_transform):
-        xoffset, px_w, rot1, yoffset, rot2, px_h = geo_transform
-        x, y = xy
-        posX = px_w * x + rot1 * y + xoffset
-        posY = rot2 * x + px_h * y + yoffset
-        posX += px_w / 2.0
-        posY += px_h / 2.0
-        return (posX, posY)
+    # def transfer_xy_to_coord(self, xy, geo_transform):
+    #     xoffset, px_w, rot1, yoffset, rot2, px_h = geo_transform
+    #     x, y = xy
+    #     posX = px_w * x + rot1 * y + xoffset
+    #     posY = rot2 * x + px_h * y + yoffset
+    #     posX += px_w / 2.0
+    #     posY += px_h / 2.0
+    #     return (posX, posY)
         
     def get_geo_attribute(self, return_geo_transform=False):
         rows = []
@@ -113,10 +114,10 @@ class SplittedImage():
             w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
             x_start, y_start, x_stop, y_stop = w_start_inner, h_start_inner, w_stop_inner, h_stop_inner
 
-            left_top_coord = self.transfer_xy_to_coord((x_start, y_start), self.geo_transform)
-            left_buttom_coord = self.transfer_xy_to_coord((x_start, y_stop), self.geo_transform)
-            right_buttom_coord = self.transfer_xy_to_coord((x_stop, y_stop), self.geo_transform)
-            right_top_coord = self.transfer_xy_to_coord((x_stop, y_start), self.geo_transform)
+            left_top_coord = transfer_xy_to_coord((x_start, y_start), self.geo_transform)
+            left_buttom_coord = transfer_xy_to_coord((x_start, y_stop), self.geo_transform)
+            right_buttom_coord = transfer_xy_to_coord((x_stop, y_stop), self.geo_transform)
+            right_top_coord = transfer_xy_to_coord((x_stop, y_start), self.geo_transform)
 
             x_min, y_max = left_top_coord
             pixel_size = self.geo_transform[1]
@@ -152,6 +153,8 @@ class SplittedImage():
         dst_ds = None
 
     def write_splitted_images(self, target_dir, filename):
+        """target_dir: where you want to store all aplitted images; filename: index number will be followed by the output filename you defined, e.g. <filename>_idx_idxh_idxw;
+        """
         df_attribute = self.get_geo_attribute(return_geo_transform=True)
         splitted_images = self.get_splitted_images()
         for idx, row in df_attribute.iterrows():

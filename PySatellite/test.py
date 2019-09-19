@@ -15,6 +15,7 @@ import gdal
 
 # main
 from SplittedImage import SplittedImage
+from SatelliteIO import get_geo_info, get_nparray, get_extend
 
 data_dir = os.path.join('data')
 satellite_tif_dir = data_dir
@@ -30,14 +31,13 @@ class TestSplittedImage(unittest.TestCase):
 
         # window_size_h = window_size_w = step_size_h = step_size_w = 256
         self.box_size = 128
-        ds = gdal.Open(satellite_tif_path)
-        self.geo_transform = ds.GetGeoTransform()
-        self.projection = ds.GetProjection()
-        self.dtype_gdal = ds.GetRasterBand(1).DataType # gdal.GetDataTypeName(self.dtype_gdal)
-        img_src_arr = ds.ReadAsArray()
-        ds = None
+        
+        cols, rows, bands, geo_transform, projection, dtype_gdal = get_geo_info(satellite_tif_path)
+        self.geo_transform = geo_transform
+        self.projection = projection
+        self.dtype_gdal = dtype_gdal
+        self.X = get_nparray(satellite_tif_path)
 
-        self.X = np.transpose(img_src_arr, axes=[1,2,0])
         self.splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform, self.projection)
 
     def tearDown(self):

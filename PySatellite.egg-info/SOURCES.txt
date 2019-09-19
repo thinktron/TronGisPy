@@ -1,0 +1,16 @@
+README.md
+setup.py
+PySatellite/CRS.py
+PySatellite/SatelliteIO.py
+PySatellite/SplittedImage.py
+PySatellite/__init__.py
+PySatellite/test.py
+PySatellite.egg-info/PKG-INFO
+PySatellite.egg-info/SOURCES.txt
+PySatellite.egg-info/dependency_links.txt
+PySatellite.egg-info/requires.txt
+PySatellite.egg-info/top_level.txt
+PySatellite/data/P0015913_SP5_006_001_002_021_002_005.tif
+PySatellite/data/P0015913_SP5_006_001_002_021_002_005.tif.aux.xml
+PySatellite/data/P0015913_SP5_006_001_002_049_006_001.tif
+PySatellite/data/P0015913_SP5_006_001_002_049_006_001.tif.aux.xml
