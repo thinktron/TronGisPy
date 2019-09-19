@@ -35,6 +35,7 @@ setuptools.setup(
 
 # 0.0.0
 # 0.0.2 modify write_combined_tif to fit the image not well splitted by the right box size
+# 0.0.3 add Normalizer
 # 0.0.4 change name add CRS and SatelliteIO module
 
 # python setup.py sdist bdist_wheel
