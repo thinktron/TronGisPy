@@ -12,8 +12,9 @@ def get_geo_info(fp):
     geo_transform = ds.GetGeoTransform()
     projection = ds.GetProjection()
     dtype_gdal = ds.GetRasterBand(1).DataType
+    no_data_value = ds.GetRasterBand(1).GetNoDataValue()
     ds = None 
-    return cols, rows, bands, geo_transform, projection, dtype_gdal
+    return cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value
 
 def get_nparray(fp, opencv_shape=True):
     """if opencv_shape the shape will be (cols, rows, bnads), else (bnads, cols, rows)"""
@@ -72,14 +73,14 @@ def clip_image_by_shp(src_image_path, src_shp_path, dst_image_path):
                        cropToCutline=True)
     result = None
 
-def tif_composition(crs_tif_image, src_tif_paths, dst_tif_path, no_data_value=-99):
+def tif_composition(ref_tif_image, src_tif_paths, dst_tif_path):
     """
-    crs_image: should br used to create the canvas with final coordinate system, geo_transform and projection, 
+    crs_image: should be used to create the canvas with final coordinate system, geo_transform and projection, 
     src_tifs: should be in list type with elements with full path of tif images.
     dst_tif_path: output file path
     """
     # get geo info
-    cols, rows, bands, geo_transform, projection, dtype_gdal = get_geo_info(crs_tif_image)
+    cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(ref_tif_image)
     
     # cal bands count
     bands_for_each_tif = [get_geo_info(tif_path)[2] for tif_path in src_tif_paths]

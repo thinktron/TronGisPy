@@ -25,7 +25,7 @@ satellite_tif_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_0
 satellite_tif_clipper_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_clipper.shp')
 satellite_tif_kmeans_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_kmeans.tif')
 
-show_image = True
+show_image = False
 
 
 class TestSplittedImage(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestSplittedImage(unittest.TestCase):
         # window_size_h = window_size_w = step_size_h = step_size_w = 256
         self.box_size = 128
         
-        cols, rows, bands, geo_transform, projection, dtype_gdal = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
         self.geo_transform = geo_transform
         self.projection = projection
         self.dtype_gdal = dtype_gdal
@@ -124,7 +124,7 @@ class TestAlgorithm(unittest.TestCase):
 
         # window_size_h = window_size_w = step_size_h = step_size_w = 256
         self.box_size = 128
-        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.dtype_gdal = get_geo_info(satellite_tif_path)
+        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.dtype_gdal, self.no_data_value = get_geo_info(satellite_tif_path)
         self.X = get_nparray(satellite_tif_path)
 
     # def tearDown(self):

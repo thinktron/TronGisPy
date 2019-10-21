@@ -40,6 +40,4 @@ setuptools.setup(
 # 0.0.4 change name add CRS and SatelliteIO module
 # 0.0.5 add kmeans in Algorithm, clip_image_by_shp & tif_composition in SatelliteIO
 
-# python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.0.5-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.0.4-py3-none-any.whl
 # pip3 install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
