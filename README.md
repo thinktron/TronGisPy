@@ -18,13 +18,13 @@ pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.
 
 # Install from pip server
 ```bash
-pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 SplittedImage
+pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
 ```
 
 # Build & deployee
 ```bash
 python setup.py sdist bdist_wheel
-scp dist\SplittedImage-0.0.3-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/SplittedImage-0.0.3-py3-none-any.whl
+scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.0.5-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.0.5-py3-none-any.whl
 ```
 
 # Usage

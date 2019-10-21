@@ -1,1 +1,1 @@
-from SplittedImage import * 
+from PySatellite import * 

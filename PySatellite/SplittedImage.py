@@ -3,6 +3,7 @@ import numpy as np
 import gdal
 import geopandas as gpd
 from PySatellite.CRS import transfer_xy_to_coord
+from PySatellite.SatelliteIO import write_output_tif
 from shapely.geometry import Polygon
 epsilon = 10**-6
 
@@ -139,19 +140,6 @@ class SplittedImage():
         else:
             return df_attribute[["idx", "idx_h", "idx_w", "geometry"]]
 
-    def write_output_tif(self, X, dst_tif_path, bands, cols, rows, geo_transform, projection):
-        dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, gdal.GDT_Int32) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
-        dst_ds.SetGeoTransform(geo_transform)
-        dst_ds.SetProjection(projection)
-
-        for b in range(bands):
-            band = dst_ds.GetRasterBand(b+1)
-            band.WriteArray(X[:, :, b], 0, 0)
-
-        band.FlushCache()
-        band.SetNoDataValue(-99)
-        dst_ds = None
-
     def write_splitted_images(self, target_dir, filename):
         """target_dir: where you want to store all aplitted images; filename: index number will be followed by the output filename you defined, e.g. <filename>_idx_idxh_idxw;
         """
@@ -164,7 +152,7 @@ class SplittedImage():
             idx_w_str = "_" + ("%3i"%row['idx_w']).replace(" ", "0")
             path = os.path.join(target_dir, filename + idx_str + idx_h_str + idx_w_str + ".tif")
             if target_img.std() != 0:
-                self.write_output_tif(target_img, path, self.num_bands, self.window_size_w, self.window_size_h, row['geo_transform'], self.projection)
+                write_output_tif(target_img, path, self.num_bands, self.window_size_w, self.window_size_h, row['geo_transform'], self.projection)
 
     def write_combined_tif(self, X, dst_tif_path, dtype_gdal=gdal.GDT_Int32):
         rows = self.source_image.shape[0]

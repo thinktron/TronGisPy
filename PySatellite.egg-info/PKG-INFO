@@ -1,8 +1,8 @@
 Metadata-Version: 2.1
 Name: PySatellite
-Version: 0.0.4
+Version: 0.0.5
 Summary: Satellite image Processing tool
-Home-page: http://rd.thinktronltd.com/jeremywang/SplittedImage
+Home-page: http://rd.thinktronltd.com/jeremywang/PySatellite
 Author: GoatWang
 Author-email: jeremywang@thinktronltd.com
 License: UNKNOWN
@@ -26,13 +26,13 @@ Description: # Preinstlall
         
         # Install from pip server
         ```bash
-        pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 SplittedImage
+        pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
         ```
         
         # Build & deployee
         ```bash
         python setup.py sdist bdist_wheel
-        scp C:\Users\Thinktron\Projects\SplittedImage\dist\SplittedImage-0.0.2-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/SplittedImage-0.0.2-py3-none-any.whl
+        scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.0.4-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.0.4-py3-none-any.whl
         ```
         
         # Usage
@@ -57,13 +57,10 @@ Description: # Preinstlall
         print(splitted_images.shape) #(num_splitted_images, box_size, box_size, num_bands)
         
         # get the basic information (idx, idx_h, idx_w, geo_transform, geometry) of each splitted images
-        df_attribute = splitted_image.get_geo_attribute()
-        df_attribute.to_file("file_dst.shp")
-        
-        # write the splitted images in to disk
         output_dir = "output"
         if not os.path.isdir(output_dir): os.mkdir(output_dir)
-        splitted_image.write_splitted_images(output_dir, 'P0015913_SP5')
+        df_attribute = splitted_image.get_geo_attribute()
+        df_attribute.to_file(os.path.join(output_dir, "file_dst.shp"))
         
         # write the splitted images in to disk
         splitted_image.write_splitted_images(output_dir, 'P0015913_SP5')
@@ -71,7 +68,7 @@ Description: # Preinstlall
         # once you successfully run AI model on each image, you can combine it into one
         X_pred = splitted_images
         dst_tif_path = os.path.join(output_dir, "result_combined.tif")
-        splitted_image.write_combined_tif(X_pred, dst_tif_path, self.dtype_gdal)
+        splitted_image.write_combined_tif(X_pred, dst_tif_path, dtype_gdal)
         ```
         
         

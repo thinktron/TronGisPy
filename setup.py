@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PySatellite",
-    version="0.0.4",
+    version="0.0.5",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Satellite image Processing tool",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="http://rd.thinktronltd.com/jeremywang/SplittedImage",
+    url="http://rd.thinktronltd.com/jeremywang/PySatellite",
     packages=setuptools.find_packages(),
     # package_data={'PySaga': ['saga_cmd_pkls/*']},
     package_data={'PySatellite': ['data/*']},
@@ -22,6 +22,7 @@ setuptools.setup(
     ),
       install_requires=[
           'affine',
+          'scikit-learn'
       ]
 #    install_requires=[
 #        "GDAL == 2.4.1",
@@ -37,7 +38,8 @@ setuptools.setup(
 # 0.0.2 modify write_combined_tif to fit the image not well splitted by the right box size
 # 0.0.3 add Normalizer
 # 0.0.4 change name add CRS and SatelliteIO module
+# 0.0.5 add kmeans in Algorithm, clip_image_by_shp & tif_composition in SatelliteIO
 
 # python setup.py sdist bdist_wheel
-# scp ~/Projects/PySaga/dist/PySaga-0.0.3-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySaga-0.0.3-py3-none-any.whl
-# pip3 install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySaga
+# scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.0.5-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.0.4-py3-none-any.whl
+# pip3 install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
