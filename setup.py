@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PySatellite",
-    version="0.0.5",
+    version="0.0.7",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Satellite image Processing tool",
@@ -39,5 +39,7 @@ setuptools.setup(
 # 0.0.3 add Normalizer
 # 0.0.4 change name add CRS and SatelliteIO module
 # 0.0.5 add kmeans in Algorithm, clip_image_by_shp & tif_composition in SatelliteIO
+# 0.0.6 return no_data_value in get_geo_info
+# 0.0.7 add refine_resolution in SatelliteIO
 
 # pip3 install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite

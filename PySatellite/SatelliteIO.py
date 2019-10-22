@@ -4,7 +4,7 @@ import gdal
 
 # bands compositions
 def get_geo_info(fp):
-    """cols, rows, bands, geo_transform, projection, dtype_gdal = get_geo_info(fp)"""
+    """cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(fp)"""
     ds = gdal.Open(fp)
     cols = ds.RasterXSize
     rows = ds.RasterYSize
@@ -46,7 +46,7 @@ def get_extend(fp):
     return extend
 
 
-def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projection):
+def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projection, no_data_value=None):
     assert len(X.shape) == 3, "please reshape it to (n_rows, n_cols, n_bands)"
     dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, gdal.GDT_Int32) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
     dst_ds.SetGeoTransform(geo_transform)
@@ -55,9 +55,10 @@ def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projecti
     for b in range(bands):
         band = dst_ds.GetRasterBand(b+1)
         band.WriteArray(X[:, :, b], 0, 0)
-
-    band.FlushCache()
-    band.SetNoDataValue(-99)
+        if no_data_value:
+            band.SetNoDataValue(no_data_value)
+        band.FlushCache()
+        
     dst_ds = None
 
 def get_testing_fp():
@@ -81,7 +82,7 @@ def tif_composition(ref_tif_image, src_tif_paths, dst_tif_path):
     """
     # get geo info
     cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(ref_tif_image)
-    
+
     # cal bands count
     bands_for_each_tif = [get_geo_info(tif_path)[2] for tif_path in src_tif_paths]
     bands = sum(bands_for_each_tif)
@@ -99,6 +100,12 @@ def tif_composition(ref_tif_image, src_tif_paths, dst_tif_path):
             band = dst_ds.GetRasterBand(band_num)
             band.WriteArray(nparr[:, :, band_num_for_the_tif], 0, 0)
             band.FlushCache()
-            band.SetNoDataValue(no_data_value)
+            if no_data_value:
+                band.SetNoDataValue(no_data_value)
             band_num += 1
     dst_ds = None
+
+
+def refine_resolution(src_tif_path, dst_tif_path, dst_resolution):
+    result = gdal.Warp(dst_tif_path, src_tif_path, xRes=dst_resolution, yRes=dst_resolution)
+    result = None

@@ -4,7 +4,6 @@ import unittest
 import os
 import shutil
 import numpy as np
-from collections import Counter
 
 # data
 import pandas as pd
@@ -17,7 +16,7 @@ import gdal
 
 # main
 from PySatellite.SplittedImage import SplittedImage
-from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_image_by_shp, tif_composition
+from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_image_by_shp, tif_composition, refine_resolution
 from PySatellite.Algorithm import kmeans
 data_dir = os.path.join('PySatellite', 'data')
 satellite_tif_dir = data_dir
@@ -25,6 +24,7 @@ satellite_tif_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_0
 satellite_tif_clipper_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_clipper.shp')
 satellite_tif_kmeans_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_kmeans.tif')
 
+# show_image = True
 show_image = False
 
 
@@ -89,8 +89,8 @@ class TestSatelliteIO(unittest.TestCase):
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
 
-    def tearDown(self):
-        shutil.rmtree(self.output_dir)
+    # def tearDown(self):
+    #     shutil.rmtree(self.output_dir)
 
     def test_clip_image_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
@@ -105,16 +105,47 @@ class TestSatelliteIO(unittest.TestCase):
     def test_tif_composition(self):
         crs_tif_image = satellite_tif_path
         src_tif_paths = [satellite_tif_path, satellite_tif_kmeans_path]
-        dst_image_path = os.path.join(self.output_dir, 'composited_image.tif')
-        tif_composition(crs_tif_image, src_tif_paths, dst_image_path)
+        dst_tif_path = os.path.join(self.output_dir, 'composited_image.tif')
+        tif_composition(crs_tif_image, src_tif_paths, dst_tif_path)
 
-        composited_image_arr = get_nparray(dst_image_path)
+        composited_image_arr = get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(composited_image_arr[:, :, 4], cmap='gray')
             plt.title("TestSatelliteIO" + ": " + "test_clip_image_by_shp")
             plt.show()
 
         self.assertTrue(composited_image_arr.shape == (512, 512, 5))
+
+    def test_refine_resolution(self):
+        src_tif_path = satellite_tif_path
+        dst_tif_path = os.path.join(self.output_dir, 'resolution_refined_image.tif')
+        dst_resolution = 5
+        refine_resolution(src_tif_path, dst_tif_path, dst_resolution)
+
+        resolution_refined_image_arr = get_nparray(dst_tif_path)
+        if show_image:
+            plt.imshow(resolution_refined_image_arr)
+            plt.title("TestSatelliteIO" + ": " + "test_refine_resolution")
+            plt.show()
+        self.assertTrue(resolution_refined_image_arr.shape == (1024, 1024, 4))
+
+    def test_write_output_tif(self):
+        dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
+        clip_image_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
+
+        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(dst_image_path)
+        clip_image_arr = get_nparray(dst_image_path)
+        padded_image_arr = np.pad(clip_image_arr, ((0,62), (0,75), (0,0)), mode='constant', constant_values=0)
+        dst_tif_path = os.path.join(self.output_dir, 'padded_image.tif')
+        write_output_tif(padded_image_arr,dst_tif_path,4,300,200,geo_transform, projection)
+
+        padded_image_arr = get_nparray(dst_tif_path)
+        if show_image:
+            plt.imshow(padded_image_arr)
+            plt.title("TestSatelliteIO" + ": " + "test_write_output_tif")
+            plt.show()
+        self.assertTrue(padded_image_arr.shape == (200, 300, 4))
+
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):

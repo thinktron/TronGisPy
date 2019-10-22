@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: PySatellite
-Version: 0.0.5
+Version: 0.0.7
 Summary: Satellite image Processing tool
 Home-page: http://rd.thinktronltd.com/jeremywang/PySatellite
 Author: GoatWang
@@ -32,7 +32,7 @@ Description: # Preinstlall
         # Build & deployee
         ```bash
         python setup.py sdist bdist_wheel
-        scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.0.4-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.0.4-py3-none-any.whl
+        scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.0.7-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.0.7-py3-none-any.whl
         ```
         
         # Usage
