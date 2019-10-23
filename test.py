@@ -11,18 +11,20 @@ from collections import Counter
 import matplotlib.pyplot as plt
 
 # gis
+import geopandas as gpd
 from shapely.geometry import Polygon
 import gdal
 
 # main
 from PySatellite.SplittedImage import SplittedImage
-from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_image_by_shp, tif_composition, refine_resolution
+from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_image_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer
 from PySatellite.Algorithm import kmeans
 data_dir = os.path.join('PySatellite', 'data')
 satellite_tif_dir = data_dir
 satellite_tif_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005.tif')
 satellite_tif_clipper_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_clipper.shp')
 satellite_tif_kmeans_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_kmeans.tif')
+rasterized_image_path = os.path.join(satellite_tif_dir, 'rasterized_image.tif')
 
 # show_image = True
 show_image = False
@@ -89,8 +91,8 @@ class TestSatelliteIO(unittest.TestCase):
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
 
-    # def tearDown(self):
-    #     shutil.rmtree(self.output_dir)
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
 
     def test_clip_image_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
@@ -146,6 +148,33 @@ class TestSatelliteIO(unittest.TestCase):
             plt.show()
         self.assertTrue(padded_image_arr.shape == (200, 300, 4))
 
+    def test_rasterize_layer(self):
+        src_shp_path = satellite_tif_clipper_path
+        dst_tif_path = os.path.join(self.output_dir, 'rasterized_image.tif')
+        ref_tif_path = satellite_tif_path
+        rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path)
+
+        rasterized_image = get_nparray(dst_tif_path)
+        if show_image:
+            plt.imshow(rasterized_image[:,:,0], cmap='gray')
+            plt.title("TestSatelliteIO" + ": " + "test_rasterize_layer")
+            plt.show()
+        
+        self.assertTrue(np.sum(rasterized_image==1) == 20512)
+
+    def test_polygonize_layer(self):
+        src_tif_path = rasterized_image_path
+        dst_shp_path = os.path.join(self.output_dir, 'polygonized_layer.shp')
+        polygonize_layer(src_tif_path, dst_shp_path)
+
+        df_shp = gpd.read_file(dst_shp_path)
+        if show_image:
+            df_shp.plot()
+            plt.show()
+
+        self.assertTrue(df_shp.loc[0, 'geometry'].area == 2051200)
+
+
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
@@ -158,8 +187,8 @@ class TestAlgorithm(unittest.TestCase):
         self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.dtype_gdal, self.no_data_value = get_geo_info(satellite_tif_path)
         self.X = get_nparray(satellite_tif_path)
 
-    # def tearDown(self):
-    #     shutil.rmtree(self.output_dir)
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
 
     def test_kmeans(self):
         X_kmeans = kmeans(self.X, n_clusters=5, no_data_value=0)

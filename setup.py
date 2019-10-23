@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PySatellite",
-    version="0.0.7",
+    version="0.0.8",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Satellite image Processing tool",
@@ -22,16 +22,10 @@ setuptools.setup(
     ),
       install_requires=[
           'affine',
-          'scikit-learn'
+          'scikit-learn',
+          'descartes',
+          'matplotlib'
       ]
-#    install_requires=[
-#        "GDAL == 2.4.1",
-#        "Shapely == 1.6.4.post2",
-#        "Fiona == 1.8.6",
-#        "Rtree >= 0.8.3",
-#        "pyproj >= 2.2.2",
-#        "geopandas >= 0.5.0",
-#    ],
 )
 
 # 0.0.0
@@ -41,5 +35,7 @@ setuptools.setup(
 # 0.0.5 add kmeans in Algorithm, clip_image_by_shp & tif_composition in SatelliteIO
 # 0.0.6 return no_data_value in get_geo_info
 # 0.0.7 add refine_resolution in SatelliteIO
+# 0.0.8 add polygonize & rasterize in SatelliteIO
+
 
 # pip3 install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
