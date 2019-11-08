@@ -3,6 +3,7 @@ import numpy as np
 import ogr, osr
 import gdal
 import geopandas as gpd
+from PySatellite.CRS import transfer_npidx_to_coord_polygon
 
 # bands compositions
 def get_geo_info(fp):
@@ -48,9 +49,9 @@ def get_extend(fp):
     return extend
 
 
-def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projection, no_data_value=None):
+def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projection, data_type=gdal.GDT_Int32, no_data_value=None):
     assert len(X.shape) == 3, "please reshape it to (n_rows, n_cols, n_bands)"
-    dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, gdal.GDT_Int32) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
+    dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, data_type) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
     dst_ds.SetGeoTransform(geo_transform)
     dst_ds.SetProjection(projection)
 
@@ -69,14 +70,14 @@ def get_testing_fp():
     return os.path.abspath(satellite_tif_path)
 
 
-def clip_image_by_shp(src_tif_path, src_shp_path, dst_tif_path):
+def clip_tif_by_shp(src_tif_path, src_shp_path, dst_tif_path):
     result = gdal.Warp(dst_tif_path,
                        src_tif_path,
                        cutlineDSName=src_shp_path,
                        cropToCutline=True)
     result = None
 
-def tif_composition(ref_tif_path, src_tif_paths, dst_tif_path):
+def tif_composition(ref_tif_path, src_tif_paths, dst_tif_path, dst_tif_dtype_gdal=None):
     """
     ref_tif_path: should be used to create the canvas with final coordinate system, geo_transform and projection, 
     src_tif_paths: should be in list type with elements with full path of tif images.
@@ -84,7 +85,9 @@ def tif_composition(ref_tif_path, src_tif_paths, dst_tif_path):
     """
     # get geo info
     cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(ref_tif_path)
-
+    if dst_tif_dtype_gdal:
+        dtype_gdal = dst_tif_dtype_gdal
+        
     # cal bands count
     bands_for_each_tif = [get_geo_info(tif_path)[2] for tif_path in src_tif_paths]
     bands = sum(bands_for_each_tif)
@@ -121,6 +124,7 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     # Open your shapefile
     df_shp = gpd.read_file(src_shp_path)
     if not use_attribute:
+        use_attribute = 'positive'
         df_shp['positive'] = 1
     else:
         assert use_attribute in df_shp.columns, "attribute not exists!"
@@ -144,7 +148,7 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     band.FlushCache()
 
     # set it to the attribute that contains the relevant unique
-    gdal.RasterizeLayer(dst_tif_ds, [1], src_shp_layer, options = ["ATTRIBUTE=positive"]) # target_ds, band_list, source_layer, options = options
+    gdal.RasterizeLayer(dst_tif_ds, [1], src_shp_layer, options = ["ATTRIBUTE="+use_attribute]) # target_ds, band_list, source_layer, options = options
 
     # Add a spatial reference
     dst_tif_ds.SetProjection(ref_tif_ds.GetProjection())
@@ -179,3 +183,26 @@ def polygonize_layer(src_tif_path, dst_shp_path, remove_boundry=True):
         df_shp.drop(np.argmax(df_shp['geometry'].apply(lambda x:x.area).values), inplace=True)
         df_shp.to_file(dst_shp_path)
 
+def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=False, crs=None, return_gdf=False):
+    """
+    crs should be dict type {'init' :'epsg:<epsg_code>'}, e.g. {'init' :'epsg:4326>'}
+    """
+    cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(src_tif_path)
+    X = get_nparray(src_tif_path)
+    idxs = np.where(np.ones_like(X[:,:,0], dtype=np.bool))
+    rows = []
+    for row_idx, col_idx in zip(*idxs):
+        row = {}
+        npidx = (row_idx, col_idx)
+        row['geometry'] = transfer_npidx_to_coord_polygon(npidx, geo_transform)
+        if all_bands_as_feature:
+            for i in range(X.shape[2]):
+                row['band'+str(i+1)] = X[row_idx, col_idx, i]
+        rows.append(row)
+    df_shp = gpd.GeoDataFrame(rows, geometry='geometry')
+    if crs:
+        df_shp.crs = crs
+    if return_gdf:
+       return df_shp
+    else:
+        df_shp.to_file(dst_shp_path)

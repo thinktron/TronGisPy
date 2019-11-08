@@ -96,15 +96,6 @@ class SplittedImage():
 
     def get_splitted_images(self):
         return np.array(self.apply(lambda x:x))
-
-    # def transfer_xy_to_coord(self, xy, geo_transform):
-    #     xoffset, px_w, rot1, yoffset, rot2, px_h = geo_transform
-    #     x, y = xy
-    #     posX = px_w * x + rot1 * y + xoffset
-    #     posY = rot2 * x + px_h * y + yoffset
-    #     posX += px_w / 2.0
-    #     posY += px_h / 2.0
-    #     return (posX, posY)
         
     def get_geo_attribute(self, return_geo_transform=False):
         rows = []

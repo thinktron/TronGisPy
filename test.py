@@ -17,8 +17,10 @@ import gdal
 
 # main
 from PySatellite.SplittedImage import SplittedImage
-from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_image_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer
+from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon
 from PySatellite.Algorithm import kmeans
+from PySatellite.CRS import transfer_xy_to_coord, transfer_npidx_to_coord_polygon
+
 data_dir = os.path.join('PySatellite', 'data')
 satellite_tif_dir = data_dir
 satellite_tif_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005.tif')
@@ -85,7 +87,7 @@ class TestSplittedImage(unittest.TestCase):
         dst_tif_path = os.path.join(self.output_dir, "combined.tif")
         splitted_image.write_combined_tif(X_pred, dst_tif_path, self.dtype_gdal)
 
-class TestSatelliteIO(unittest.TestCase):
+class TestCRS(unittest.TestCase):
     def setUp(self):
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -94,13 +96,40 @@ class TestSatelliteIO(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.output_dir)
 
-    def test_clip_image_by_shp(self):
+    def test_transfer_xy_to_coord(self):
+        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
+        xy = [1,1]
+        coord_xy = transfer_xy_to_coord(xy, geo_transform)
+        self.assertTrue(coord_xy == (328540.0, 2750780.0))
+
+    def test_transfer_npidx_to_coord_polygon(self):
+        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
+        npidx = [0,2]
+        polygon = transfer_npidx_to_coord_polygon(npidx, geo_transform)
+        # df_lands_boundry = gpd.GeoDataFrame([{'geometry':polygon}], geometry='geometry')
+        # df_lands_boundry.crs = {'init' :'epsg:3826'}
+        # dst_shp_path = os.path.join(self.output_dir, 'df_lands_boundry.shp')
+        # df_lands_boundry.to_file(dst_shp_path)
+        centroid = polygon.centroid.x, polygon.centroid.y
+        self.assertTrue(centroid == (328555.0, 2750785.0))
+
+
+class TestSatelliteIO(unittest.TestCase):
+    def setUp(self):
+        self.output_dir = os.path.join('test_output')
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
+
+    # def tearDown(self):
+    #     shutil.rmtree(self.output_dir)
+
+    def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
-        clip_image_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
+        clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
         clip_image_arr = get_nparray(dst_image_path)
         if show_image:
             plt.imshow(clip_image_arr)
-            plt.title("TestSatelliteIO" + ": " + "test_clip_image_by_shp")
+            plt.title("TestSatelliteIO" + ": " + "test_clip_tif_by_shp")
             plt.show()
         self.assertTrue(clip_image_arr.shape == (138, 225, 4))
 
@@ -113,7 +142,7 @@ class TestSatelliteIO(unittest.TestCase):
         composited_image_arr = get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(composited_image_arr[:, :, 4], cmap='gray')
-            plt.title("TestSatelliteIO" + ": " + "test_clip_image_by_shp")
+            plt.title("TestSatelliteIO" + ": " + "test_tif_composition")
             plt.show()
 
         self.assertTrue(composited_image_arr.shape == (512, 512, 5))
@@ -133,7 +162,7 @@ class TestSatelliteIO(unittest.TestCase):
 
     def test_write_output_tif(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
-        clip_image_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
+        clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
 
         cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(dst_image_path)
         clip_image_arr = get_nparray(dst_image_path)
@@ -174,6 +203,10 @@ class TestSatelliteIO(unittest.TestCase):
 
         self.assertTrue(df_shp.loc[0, 'geometry'].area == 2051200)
 
+    def test_raster_pixel_to_polygon(self):
+        src_tif_path = satellite_tif_path
+        dst_shp_path = os.path.join(self.output_dir, 'raster_pixel_to_polygon.shp')
+        raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=True, crs={'init' :'epsg:3826'})
 
 
 class TestAlgorithm(unittest.TestCase):

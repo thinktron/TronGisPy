@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PySatellite",
-    version="0.0.8",
+    version="0.0.9",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Satellite image Processing tool",
@@ -36,6 +36,7 @@ setuptools.setup(
 # 0.0.6 return no_data_value in get_geo_info
 # 0.0.7 add refine_resolution in SatelliteIO
 # 0.0.8 add polygonize & rasterize in SatelliteIO
+# 0.0.9 add raster_pixel_to_polygon in SatelliteIO, transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon in CRS
 
 
 # pip3 install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite

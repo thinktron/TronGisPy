@@ -22,3 +22,5 @@ PySatellite/data/P0015913_SP5_006_001_002_021_002_005_clipper.shx
 PySatellite/data/P0015913_SP5_006_001_002_021_002_005_kmeans.tif
 PySatellite/data/P0015913_SP5_006_001_002_049_006_001.tif
 PySatellite/data/P0015913_SP5_006_001_002_049_006_001.tif.aux.xml
+PySatellite/data/rasterized_image.tif
+PySatellite/data/rasterized_image.tif.aux.xml
