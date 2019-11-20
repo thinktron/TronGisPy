@@ -1,7 +1,7 @@
 class Normalizer():
     def fit(self, X, min_val=None, max_val=None):
-        self.min = X.min() if min_val == None else min_val
-        self.max = X.max() if max_val == None else max_val
+        self.min = np.nanmin(X) if min_val == None else min_val
+        self.max = np.nanmax(X) if max_val == None else max_val
         
     def transform(self, X):
         return (X - self.min) / (self.max - self.min)
