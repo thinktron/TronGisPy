@@ -17,17 +17,16 @@ import gdal
 
 # main
 from PySatellite.SplittedImage import SplittedImage
-from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon
+from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp
 from PySatellite.Algorithm import kmeans
 from PySatellite.CRS import transfer_npidx_to_coord, transfer_npidx_to_coord_polygon
 # from PySatellite.Interpolation import inverse_distance_weighted
 
 data_dir = os.path.join('PySatellite', 'data')
-satellite_tif_dir = data_dir
-satellite_tif_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005.tif')
-satellite_tif_clipper_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_clipper.shp')
-satellite_tif_kmeans_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_kmeans.tif')
-rasterized_image_path = os.path.join(satellite_tif_dir, 'rasterized_image.tif')
+satellite_tif_path = os.path.join(data_dir, 'satellite_tif', 'satellite_tif.tif')
+satellite_tif_clipper_path = os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp')
+satellite_tif_kmeans_path = os.path.join(data_dir, 'satellite_tif_kmeans', 'satellite_tif_kmeans.tif')
+rasterized_image_path = os.path.join(data_dir, 'rasterized_image', 'rasterized_image.tif')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
 # show_image = True
@@ -81,7 +80,7 @@ class TestSplittedImage(unittest.TestCase):
         self.assertTrue(area_test)
 
     def test_write_splitted_images(self):
-        self.splitted_image.write_splitted_images(self.output_dir, 'P0015913_SP5_006_001_002_021_002_005')
+        self.splitted_image.write_splitted_images(self.output_dir, 'test_satellite')
 
     def test_write_combined_tif(self):
         box_size = 101
@@ -210,6 +209,23 @@ class TestSatelliteIO(unittest.TestCase):
         src_tif_path = satellite_tif_path
         dst_shp_path = os.path.join(self.output_dir, 'raster_pixel_to_polygon.shp')
         raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=True, crs={'init' :'epsg:3826'})
+
+    def test_get_testing_fp(self):
+        fn = 'satellite_tif'
+        fp = get_testing_fp(fn)
+        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\satellite_tif\\satellite_tif.tif')
+        
+        fn = 'satellite_tif_clipper'
+        fp = get_testing_fp(fn)
+        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\satellite_tif_clipper\\satellite_tif_clipper.shp')
+
+        fn = 'satellite_tif_kmeans'
+        fp = get_testing_fp(fn)
+        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\satellite_tif_kmeans\\satellite_tif_kmeans.tif')
+
+        fn = 'rasterized_image'
+        fp = get_testing_fp(fn)
+        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\rasterized_image\\rasterized_image.tif')
 
 
 class TestAlgorithm(unittest.TestCase):

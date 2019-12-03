@@ -203,7 +203,17 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
 
 
 #==================================
-def get_testing_fp():
+def get_testing_fp(fn):
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    satellite_tif_path = os.path.join(base_dir, 'data', 'P0015913_SP5_006_001_002_021_002_005.tif')
-    return os.path.abspath(satellite_tif_path)
+    data_dir = os.path.join(base_dir, 'data')
+    if fn == 'satellite_tif':
+        fp = os.path.join(data_dir, 'satellite_tif', 'satellite_tif.tif')
+    elif fn == 'satellite_tif_clipper':
+        fp = os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp')
+    elif fn == 'satellite_tif_kmeans':
+        fp = os.path.join(data_dir, 'satellite_tif_kmeans', 'satellite_tif_kmeans.tif')
+    elif fn == 'rasterized_image':
+        fp = os.path.join(data_dir, 'rasterized_image', 'rasterized_image.tif')
+    else:
+        assert False, "cannot find the file!!"
+    return os.path.abspath(fp)

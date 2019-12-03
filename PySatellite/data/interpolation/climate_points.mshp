@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SAGA_METADATA>
+  <DATABASE>
+    <FIELDS>
+      <FIELD TYPE="LONGINT">F01</FIELD>
+      <FIELD TYPE="DOUBLE">lat</FIELD>
+      <FIELD TYPE="DOUBLE">lat_wgs84</FIELD>
+      <FIELD TYPE="STRING">locationName</FIELD>
+      <FIELD TYPE="DOUBLE">lon</FIELD>
+      <FIELD TYPE="DOUBLE">lon_wgs84</FIELD>
+      <FIELD TYPE="STRING">stationId</FIELD>
+      <FIELD TYPE="LONGINT">time</FIELD>
+      <FIELD TYPE="STRING">CITY</FIELD>
+      <FIELD TYPE="LONGINT">CITY_SN</FIELD>
+      <FIELD TYPE="STRING">TOWN</FIELD>
+      <FIELD TYPE="LONGINT">TOWN_SN</FIELD>
+      <FIELD TYPE="LONGINT">ELEV</FIELD>
+      <FIELD TYPE="LONGINT">WDIR</FIELD>
+      <FIELD TYPE="DOUBLE">WDSD</FIELD>
+      <FIELD TYPE="DOUBLE">TEMP</FIELD>
+      <FIELD TYPE="DOUBLE">HUMD</FIELD>
+      <FIELD TYPE="DOUBLE">PRES</FIELD>
+      <FIELD TYPE="LONGINT">SUN</FIELD>
+      <FIELD TYPE="DOUBLE">H_24R</FIELD>
+      <FIELD TYPE="DOUBLE">H_FX</FIELD>
+      <FIELD TYPE="LONGINT">H_XD</FIELD>
+      <FIELD TYPE="LONGINT">H_FXT</FIELD>
+      <FIELD TYPE="DOUBLE">D_TX</FIELD>
+      <FIELD TYPE="LONGINT">D_TXT</FIELD>
+      <FIELD TYPE="DOUBLE">D_TN</FIELD>
+      <FIELD TYPE="LONGINT">D_TNT</FIELD>
+    </FIELDS>
+  </DATABASE>
+  <SOURCE></SOURCE>
+  <HISTORY saga-version="7.0.0">
+    <TOOL library="shapes_points" id="11" name="Points Filter">
+      <OPTION type="table_field" id="FIELD" name="Attribute" index="15">TEMP</OPTION>
+      <OPTION type="double" id="RADIUS" name="Radius">1.000000</OPTION>
+      <OPTION type="integer" id="MINNUM" name="Minimum Number of Points">0</OPTION>
+      <OPTION type="integer" id="MAXNUM" name="Maximum Number of Points">5</OPTION>
+      <OPTION type="boolean" id="QUADRANTS" name="Quadrants">false</OPTION>
+      <OPTION type="choice" id="METHOD" name="Filter Criterion" index="3">remove minima (with tolerance)</OPTION>
+      <OPTION type="double" id="TOLERANCE" name="Tolerance">0.000000</OPTION>
+      <OPTION type="double" id="PERCENT" name="Percentile">50.000000</OPTION>
+      <INPUT type="shapes" id="POINTS" name="Points">
+        <TOOL library="shapes_points" id="0" name="Convert Table to Points">
+          <OPTION type="table_field" id="X" name="X" index="5">lon_wgs84</OPTION>
+          <OPTION type="table_field" id="Y" name="Y" index="2">lat_wgs84</OPTION>
+          <OPTION type="table_field" id="Z" name="Z" index="-1">&lt;no attributes&gt;</OPTION>
+          <INPUT type="table" id="TABLE" name="Table">
+            <FILE>/home/jeremywang/Projects/PySaga/PySaga/test_data/table/df_climate.csv</FILE>
+          </INPUT>
+          <OUTPUT type="shapes" id="POINTS" name="Points">df_climate</OUTPUT>
+        </TOOL>
+      </INPUT>
+      <OUTPUT type="shapes" id="FILTER" name="Filtered Points">POINTS [Filtered]</OUTPUT>
+    </TOOL>
+  </HISTORY>
+  <FILE>/home/jeremywang/Projects/PySaga/PySaga/test_data/climate_points_filtered/FILTER.shp</FILE>
+  <DESCRIPTION></DESCRIPTION>
+</SAGA_METADATA>
