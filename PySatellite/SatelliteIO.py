@@ -64,12 +64,6 @@ def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projecti
         
     dst_ds = None
 
-def get_testing_fp():
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    satellite_tif_path = os.path.join(base_dir, 'data', 'P0015913_SP5_006_001_002_021_002_005.tif')
-    return os.path.abspath(satellite_tif_path)
-
-
 def clip_tif_by_shp(src_tif_path, src_shp_path, dst_tif_path):
     result = gdal.Warp(dst_tif_path,
                        src_tif_path,
@@ -206,3 +200,10 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
        return df_shp
     else:
         df_shp.to_file(dst_shp_path)
+
+
+#==================================
+def get_testing_fp():
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    satellite_tif_path = os.path.join(base_dir, 'data', 'P0015913_SP5_006_001_002_021_002_005.tif')
+    return os.path.abspath(satellite_tif_path)

@@ -1,8 +1,8 @@
 import affine
 from shapely.geometry import Polygon
 
-def transfer_xy_to_coord(xy, geo_transform):
-    """
+def __transfer_xy_to_coord(xy, geo_transform):
+    """inner usage
     input opencv xy, return the coord_xy for the left top of the cell
     xy: should (row_idx, col_idx)
     coord_xy: (lng, lat)
@@ -11,7 +11,8 @@ def transfer_xy_to_coord(xy, geo_transform):
     coord_xy = forward_transform * xy
     return coord_xy
 
-def transfer_coord_to_xy(coord, geo_transform):
+def __transfer_coord_to_xy(coord, geo_transform):
+    """inner usage"""
     coord_x, coord_y = coord[0], coord[1]
     forward_transform =  affine.Affine.from_gdal(*geo_transform)
     reverse_transform = ~forward_transform
@@ -26,7 +27,7 @@ def transfer_npidx_to_coord(npidx, geo_transform):
     coord_xy: (lng, lat)
     """
     xy = (npidx[1], npidx[0])
-    coord_xy = transfer_xy_to_coord(xy, geo_transform)
+    coord_xy = __transfer_xy_to_coord(xy, geo_transform)
     return coord_xy
 
 def transfer_coord_to_npidx(coord, geo_transform):
@@ -35,7 +36,7 @@ def transfer_coord_to_npidx(coord, geo_transform):
     npidx: (row_idx, col_idx)
     coord_xy: (lng, lat)
     """
-    x, y = transfer_coord_to_xy(coord, geo_transform)
+    x, y = __transfer_coord_to_xy(coord, geo_transform)
     npidx = (y, x)
     return npidx
 

@@ -19,7 +19,8 @@ import gdal
 from PySatellite.SplittedImage import SplittedImage
 from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon
 from PySatellite.Algorithm import kmeans
-from PySatellite.CRS import transfer_xy_to_coord, transfer_npidx_to_coord_polygon
+from PySatellite.CRS import transfer_npidx_to_coord, transfer_npidx_to_coord_polygon
+# from PySatellite.Interpolation import inverse_distance_weighted
 
 data_dir = os.path.join('PySatellite', 'data')
 satellite_tif_dir = data_dir
@@ -27,6 +28,7 @@ satellite_tif_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_0
 satellite_tif_clipper_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_clipper.shp')
 satellite_tif_kmeans_path = os.path.join(satellite_tif_dir, 'P0015913_SP5_006_001_002_021_002_005_kmeans.tif')
 rasterized_image_path = os.path.join(satellite_tif_dir, 'rasterized_image.tif')
+# interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
 # show_image = True
 show_image = False
@@ -73,6 +75,7 @@ class TestSplittedImage(unittest.TestCase):
 
     def test_get_geo_attribute(self):
         df_attribute = self.splitted_image.get_geo_attribute()
+        df_attribute.to_file(os.path.join(self.output_dir, "df_attribute.shp"))
         pol = df_attribute.loc[0, 'geometry']
         area_test = pol.area == 1638400.0
         self.assertTrue(area_test)
@@ -96,11 +99,11 @@ class TestCRS(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.output_dir)
 
-    def test_transfer_xy_to_coord(self):
+    def test_transfer_coord_to_npidx(self):
         cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
-        xy = [1,1]
-        coord_xy = transfer_xy_to_coord(xy, geo_transform)
-        self.assertTrue(coord_xy == (328540.0, 2750780.0))
+        xy = [1,3]
+        coord_xy = transfer_npidx_to_coord(xy, geo_transform)
+        self.assertTrue(coord_xy == (328560.0, 2750780.0))
 
     def test_transfer_npidx_to_coord_polygon(self):
         cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
@@ -235,6 +238,42 @@ class TestAlgorithm(unittest.TestCase):
             plt.title("TestAlgorithm" + ": " + "test_kmeans")
             plt.show()
         self.assertTrue(Counter(list(np.hstack(kmeans_image_arr[:, :, 0])))[4] == 9511)
+
+# class TestInterpolation(unittest.TestCase):
+#     def setUp(self):
+#         self.output_dir = os.path.join('test_output')
+#         if not os.path.isdir(self.output_dir):
+#             os.mkdir(self.output_dir)
+
+#     # def tearDown(self):
+#     #     shutil.rmtree(self.output_dir)
+
+#     def test_inverse_distance_weighted(self):
+#         POINTS = os.path.abspath(interpolation_points_path)
+#         FIELD = "TEMP" # Field used for analysis
+#         DOWNLOAD_DIR = self.output_dir
+#         TARGET_TEMPLATE = None
+#         CV_METHOD = 0
+#         CV_SAMPLES = 10
+#         TARGET_DEFINITION = 0
+#         TARGET_USER_SIZE = 0.053 #Depends on the input shape
+#         TARGET_USER_XMIN = 118.19 #Changes depends on the extent of shp
+#         TARGET_USER_XMAX = 122.165 #Changes depends on the extent of shp
+#         TARGET_USER_YMIN = 21.677 #Changes depends on the extent of shp
+#         TARGET_USER_YMAX = 26.606 #Changes depends on the extent of shp
+#         TARGET_USER_FITS = 0
+#         SEARCH_RANGE = 1
+#         SEARCH_RADIUS = 1000.0
+#         SEARCH_POINTS_ALL = 1
+#         SEARCH_POINTS_MIN = 0
+#         SEARCH_POINTS_MAX = 20
+#         SEARCH_DIRECTION = 0
+#         DW_WEIGHTING = 1
+#         DW_IDW_POWER = 2.0
+#         DW_IDW_OFFSET = False
+#         DW_BANDWIDTH = 1.0
+#         out, err = inverse_distance_weighted(POINTS, FIELD, DOWNLOAD_DIR, TARGET_TEMPLATE, CV_METHOD, CV_SAMPLES, TARGET_DEFINITION, TARGET_USER_SIZE, TARGET_USER_XMIN, TARGET_USER_XMAX, TARGET_USER_YMIN, TARGET_USER_YMAX, TARGET_USER_FITS, SEARCH_RANGE, SEARCH_RADIUS, SEARCH_POINTS_ALL, SEARCH_POINTS_MIN, SEARCH_POINTS_MAX, SEARCH_DIRECTION, DW_WEIGHTING, DW_IDW_POWER, DW_IDW_OFFSET, DW_BANDWIDTH)
+#         self.assertEqual(err.decode(), "")
 
 if __name__ == "__main__":
     unittest.main()

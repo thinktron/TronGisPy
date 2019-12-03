@@ -2,7 +2,7 @@ import os
 import numpy as np
 import gdal
 import geopandas as gpd
-from PySatellite.CRS import transfer_xy_to_coord
+from PySatellite.CRS import transfer_npidx_to_coord
 from PySatellite.SatelliteIO import write_output_tif
 from shapely.geometry import Polygon
 epsilon = 10**-6
@@ -106,10 +106,10 @@ class SplittedImage():
             w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
             x_start, y_start, x_stop, y_stop = w_start_inner, h_start_inner, w_stop_inner, h_stop_inner
 
-            left_top_coord = transfer_xy_to_coord((x_start, y_start), self.geo_transform)
-            left_buttom_coord = transfer_xy_to_coord((x_start, y_stop), self.geo_transform)
-            right_buttom_coord = transfer_xy_to_coord((x_stop, y_stop), self.geo_transform)
-            right_top_coord = transfer_xy_to_coord((x_stop, y_start), self.geo_transform)
+            left_top_coord = transfer_npidx_to_coord((x_start, y_start), self.geo_transform)
+            left_buttom_coord = transfer_npidx_to_coord((x_start, y_stop), self.geo_transform)
+            right_buttom_coord = transfer_npidx_to_coord((x_stop, y_stop), self.geo_transform)
+            right_top_coord = transfer_npidx_to_coord((x_stop, y_start), self.geo_transform)
 
             x_min, y_max = left_top_coord
             pixel_size = self.geo_transform[1]
