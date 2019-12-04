@@ -21,7 +21,7 @@ pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.
 pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
 ```
 # Usage
-Please see ![Tutoirial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/PySatellite/blob/master/Tutoirial.ipynb)
+Please see [Tutoirial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/PySatellite/blob/master/Tutoirial.ipynb)
 
 # Build & deployee
 ```bash
