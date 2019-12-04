@@ -106,10 +106,10 @@ class TestCRS(unittest.TestCase):
 
     def test_transfer_coord_to_npidx(self):
         cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
-        coord = (328560.0+9, 2750780.0-9) # resolution is 10 meter, add 9 willbe in the same cell
+        coord = (328560.0+9, 2750780.0-9) # resolution is 10 meter, add 9 will be in the same cell
         npidx = transfer_coord_to_npidx(coord, geo_transform)
         self.assertTrue(npidx == (1, 3))
-        coord = (328560.0+11, 2750780.0-11) # resolution is 10 meter, add 9 willbe in the same cell
+        coord = (328560.0+11, 2750780.0-11) # resolution is 10 meter, add 11 will be in the next cell
         npidx = transfer_coord_to_npidx(coord, geo_transform)
         self.assertTrue(npidx == (2, 4))
 
