@@ -11,6 +11,7 @@ from collections import Counter
 import matplotlib.pyplot as plt
 
 # gis
+import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon
 import gdal
@@ -19,6 +20,7 @@ import gdal
 from PySatellite.SplittedImage import SplittedImage
 from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp
 from PySatellite.Algorithm import kmeans
+from PySatellite.Normalizer import Normalizer
 from PySatellite.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon
 # from PySatellite.Interpolation import inverse_distance_weighted
 
@@ -236,15 +238,27 @@ class TestSatelliteIO(unittest.TestCase):
         fp = get_testing_fp(fn)
         self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\rasterized_image\\rasterized_image.tif')
 
+class TestNormalizer(unittest.TestCase):
+    def setUp(self):
+        self.output_dir = os.path.join('test_output')
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
+        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.dtype_gdal, self.no_data_value = get_geo_info(satellite_tif_path)
+        self.X = get_nparray(satellite_tif_path)
+
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
+
+    def test_Normalizer(self):
+        X_norm = Normalizer().fit_transform(self.X) 
+        self.assertTrue(X_norm.min()==0)
+        self.assertTrue(X_norm.max()==1)
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
-
-        # window_size_h = window_size_w = step_size_h = step_size_w = 256
-        self.box_size = 128
         self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.dtype_gdal, self.no_data_value = get_geo_info(satellite_tif_path)
         self.X = get_nparray(satellite_tif_path)
 

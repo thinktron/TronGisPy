@@ -1,3 +1,5 @@
+import numpy as np
+
 class Normalizer():
     def fit(self, X, min_val=None, max_val=None):
         self.min = np.nanmin(X) if min_val == None else min_val
