@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PySatellite",
-    version="0.0.9",
+    version="0.1.0",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Satellite image Processing tool",
@@ -14,7 +14,7 @@ setuptools.setup(
     url="http://rd.thinktronltd.com/jeremywang/PySatellite",
     packages=setuptools.find_packages(),
     # package_data={'PySaga': ['saga_cmd_pkls/*']},
-    package_data={'PySatellite': ['data/*']},
+    package_data={'PySatellite': ['data/*', 'data/*/*']},
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -37,6 +37,7 @@ setuptools.setup(
 # 0.0.7 add refine_resolution in SatelliteIO
 # 0.0.8 add polygonize & rasterize in SatelliteIO
 # 0.0.9 add raster_pixel_to_polygon in SatelliteIO, transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon in CRS
+# 0.1.0 add get diff testing fp in SateloliteIO
 
 
 # pip3 install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite

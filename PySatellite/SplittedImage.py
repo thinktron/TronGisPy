@@ -146,6 +146,8 @@ class SplittedImage():
                 write_output_tif(target_img, path, self.num_bands, self.window_size_w, self.window_size_h, row['geo_transform'], self.projection)
 
     def write_combined_tif(self, X, dst_tif_path, dtype_gdal=gdal.GDT_Int32):
+        if len(X.shape) == 3:
+            X = np.expand_dims(X, axis=3) 
         rows = self.source_image.shape[0]
         cols = self.source_image.shape[1]
         bands = X.shape[3]

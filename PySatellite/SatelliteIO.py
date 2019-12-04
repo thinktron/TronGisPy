@@ -50,6 +50,8 @@ def get_extend(fp):
 
 
 def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projection, data_type=gdal.GDT_Int32, no_data_value=None):
+    if len(X.shape) == 2:
+        X = np.expand_dims(X, axis=2) 
     assert len(X.shape) == 3, "please reshape it to (n_rows, n_cols, n_bands)"
     dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, data_type) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
     dst_ds.SetGeoTransform(geo_transform)

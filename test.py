@@ -19,14 +19,14 @@ import gdal
 from PySatellite.SplittedImage import SplittedImage
 from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp
 from PySatellite.Algorithm import kmeans
-from PySatellite.CRS import transfer_npidx_to_coord, transfer_npidx_to_coord_polygon
+from PySatellite.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon
 # from PySatellite.Interpolation import inverse_distance_weighted
 
 data_dir = os.path.join('PySatellite', 'data')
-satellite_tif_path = os.path.join(data_dir, 'satellite_tif', 'satellite_tif.tif')
-satellite_tif_clipper_path = os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp')
-satellite_tif_kmeans_path = os.path.join(data_dir, 'satellite_tif_kmeans', 'satellite_tif_kmeans.tif')
-rasterized_image_path = os.path.join(data_dir, 'rasterized_image', 'rasterized_image.tif')
+satellite_tif_path = get_testing_fp('satellite_tif')
+satellite_tif_clipper_path = get_testing_fp('satellite_tif_clipper')
+satellite_tif_kmeans_path = get_testing_fp('satellite_tif_kmeans')
+rasterized_image_path = get_testing_fp('rasterized_image')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
 # show_image = True
@@ -85,7 +85,7 @@ class TestSplittedImage(unittest.TestCase):
     def test_write_combined_tif(self):
         box_size = 101
         splitted_image = SplittedImage(self.X, box_size, self.geo_transform, self.projection)
-        X_pred = splitted_image.get_splitted_images()
+        X_pred = splitted_image.get_splitted_images()[:,:,:,0]
         dst_tif_path = os.path.join(self.output_dir, "combined.tif")
         splitted_image.write_combined_tif(X_pred, dst_tif_path, self.dtype_gdal)
 
@@ -98,11 +98,20 @@ class TestCRS(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.output_dir)
 
+    def test_transfer_npidx_to_coord(self):
+        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
+        npidx = (1,3)
+        coord = transfer_npidx_to_coord(npidx, geo_transform)
+        self.assertTrue(coord == (328560.0, 2750780.0))
+
     def test_transfer_coord_to_npidx(self):
         cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
-        xy = [1,3]
-        coord_xy = transfer_npidx_to_coord(xy, geo_transform)
-        self.assertTrue(coord_xy == (328560.0, 2750780.0))
+        coord = (328560.0+9, 2750780.0-9) # resolution is 10 meter, add 9 willbe in the same cell
+        npidx = transfer_coord_to_npidx(coord, geo_transform)
+        self.assertTrue(npidx == (1, 3))
+        coord = (328560.0+11, 2750780.0-11) # resolution is 10 meter, add 9 willbe in the same cell
+        npidx = transfer_coord_to_npidx(coord, geo_transform)
+        self.assertTrue(npidx == (2, 4))
 
     def test_transfer_npidx_to_coord_polygon(self):
         cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
@@ -122,8 +131,8 @@ class TestSatelliteIO(unittest.TestCase):
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
 
-    # def tearDown(self):
-    #     shutil.rmtree(self.output_dir)
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
 
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
@@ -246,7 +255,7 @@ class TestAlgorithm(unittest.TestCase):
         X_kmeans = kmeans(self.X, n_clusters=5, no_data_value=0)
         dst_tif_path = os.path.join(self.output_dir, "X_kmeans.tif")
         bands = 1
-        write_output_tif(X_kmeans.reshape(*X_kmeans.shape, -1), dst_tif_path, bands, self.cols, self.rows, self.geo_transform, self.projection)
+        write_output_tif(X_kmeans, dst_tif_path, bands, self.cols, self.rows, self.geo_transform, self.projection)
 
         kmeans_image_arr = get_nparray(dst_tif_path)
         if show_image:

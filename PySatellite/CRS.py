@@ -17,7 +17,7 @@ def __transfer_coord_to_xy(coord, geo_transform):
     forward_transform =  affine.Affine.from_gdal(*geo_transform)
     reverse_transform = ~forward_transform
     x, y = reverse_transform * (coord_x, coord_y)
-    x, y = int(x + 0.5), int(y + 0.5)
+    x, y = int(x), int(y)
     return x, y
 
 def transfer_npidx_to_coord(npidx, geo_transform):
