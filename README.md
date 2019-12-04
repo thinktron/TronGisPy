@@ -22,7 +22,7 @@ pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.
 ```
 
 # Usage
-Please see [Tutorial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/PySatellite/blob/master/Tutoirial.ipynb)
+Please see [Tutorial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/PySatellite/blob/master/Tutorial.ipynb)
 
 # Build & deployee
 ```bash
