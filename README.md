@@ -10,11 +10,11 @@ pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.
 ```
 
 ## Install from wheel
-1. [gdal](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal):
-1. [shapely](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely
-1. [fiona](https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona
-1. [Rtree](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rtree
-1. [geopandas](https://www.lfd.uci.edu/~gohlke/pythonlibs/#geopandas
+1. [gdal](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)
+1. [shapely](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely)
+1. [fiona](https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona)
+1. [Rtree](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rtree)
+1. [geopandas](https://www.lfd.uci.edu/~gohlke/pythonlibs/#geopandas)
 
 # Install from pip server
 ```bash
