@@ -17,9 +17,10 @@ pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.
 1. [geopandas](https://www.lfd.uci.edu/~gohlke/pythonlibs/#geopandas)
 
 # Install from pip server
-```bash
+```
 pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
 ```
+
 # Usage
 Please see [Tutoirial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/PySatellite/blob/master/Tutoirial.ipynb)
 
