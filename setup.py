@@ -40,4 +40,5 @@ setuptools.setup(
 # 0.1.0 add get diff testing fp in SateloliteIO
 
 
-# pip3 install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
+# python setup.py sdist bdist_wheel
+# scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.1.0-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.1.0-py3-none-any.whl
