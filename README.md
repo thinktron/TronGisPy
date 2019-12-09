@@ -2,7 +2,7 @@
 This Repository helps to preprocess images before AI trainging. some functions are basically copy gis functions into python interface. Some functions are special for AI training processing.
 1. SatelliteIO: any file-based function, including `get_geo_info`, `get_nparray`, `get_exten`d, `write_output_tif`, `clip_tif_by_shp`, `tif_composition`, `refine_resolution`, `rasterize_layer`, `polygonize_layer`, `raster_pixel_to_polygon` functions.
 2. SplittedImage: help to split image into tiny images for model training. support indexing, saving, combining functions, including `get_inner_idx`, `get_padded_image`, `convert_to_inner_index_h`, `convert_to_inner_index_w`, `convert_location_to_order_index`, `convert_order_to_location_index`, `apply`, `get_splitted_images`, `get_geo_attribute`, `write_splitted_images`, `write_combined_tif` functions.
-3. CRS: help to convert npidx into coordinate and convert coordinate into npidx, including, `transfer_npidx_to_coord`, `transfer_coord_to_npidx`, `transfer_npidx_to_coord_polygon`
+3. CRS: help to convert npidx into coordinate and convert coordinate into npidx including, `transfer_npidx_to_coord`, `transfer_coord_to_npidx`, `transfer_npidx_to_coord_polygon` functions.
 
 # Preinstlall
 ## Windows 
