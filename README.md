@@ -1,12 +1,7 @@
 # Preinstlall
 ## Install from thinktron pypi server
 ```
-pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 Fiona
-pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 GDAL
-pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 Rtree
-pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 Shapely
-pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 pyproj
-pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 geopandas
+pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com Fiona GDAL Rtree Shapely pyproj geopandas
 ```
 
 ## Install from wheel
@@ -18,11 +13,11 @@ pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.
 
 # Install from pip server
 ```
-pip install -U --index-url http://192.168.0.167:28181/simple --trusted-host 192.168.0.167 PySatellite
+pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com PySatellite
 ```
 
 # Usage
-Please see [Tutorial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/PySatellite/blob/master/Tutorial.ipynb)
+Please see [Tutorial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/PySatellite/blob/master/Tutorial.ipynb) & [the Tutorial repo](http://rd.thinktronltd.com:21111/jeremywang/PySatelliteTutorial/)
 
 # Build & deployee
 ```bash

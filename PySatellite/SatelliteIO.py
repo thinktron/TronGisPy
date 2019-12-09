@@ -57,7 +57,7 @@ def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projecti
     dst_ds.SetGeoTransform(geo_transform)
     dst_ds.SetProjection(projection)
 
-    for b in range(bands):
+    for b in range(X.shape[2]):
         band = dst_ds.GetRasterBand(b+1)
         band.WriteArray(X[:, :, b], 0, 0)
         if no_data_value:
@@ -203,6 +203,10 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
     else:
         df_shp.to_file(dst_shp_path)
 
+
+#TODO
+# 1. raster pixel to points
+# 2. crs transformation
 
 #==================================
 def get_testing_fp(fn):
