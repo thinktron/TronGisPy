@@ -19,6 +19,8 @@ PySatellite/data/interpolation/climate_points.prj
 PySatellite/data/interpolation/climate_points.shp
 PySatellite/data/interpolation/climate_points.shx
 PySatellite/data/rasterized_image/rasterized_image.tif
+PySatellite/data/rasterized_image/rasterized_image_1.tif
+PySatellite/data/rasterized_image/rasterized_image_1.tif.aux.xml
 PySatellite/data/satellite_tif/satellite_tif.tif
 PySatellite/data/satellite_tif_clipper/satellite_tif_clipper.cpg
 PySatellite/data/satellite_tif_clipper/satellite_tif_clipper.dbf

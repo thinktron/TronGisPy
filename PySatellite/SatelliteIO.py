@@ -3,7 +3,9 @@ import numpy as np
 import ogr, osr
 import gdal
 import geopandas as gpd
-from PySatellite.CRS import transfer_npidx_to_coord_polygon
+from collections import Counter
+from shapely.geometry import Point, MultiPolygon
+from PySatellite.CRS import transfer_npidx_to_coord_polygon, transfer_npidx_to_coord
 
 # bands compositions
 def get_geo_info(fp):
@@ -156,9 +158,10 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     dst_ds = None
 
 
-def polygonize_layer(src_tif_path, dst_shp_path, remove_boundry=True):
+def polygonize_layer(src_tif_path, dst_shp_path, band_num=1, remove_boundry=True, multipolygon=False):
+    """band_num start from 1"""
     src_ds = gdal.Open(src_tif_path)
-    srcband = src_ds.GetRasterBand(1)
+    srcband = src_ds.GetRasterBand(band_num)
     src_srs=osr.SpatialReference(wkt=src_ds.GetProjection())
 
     if os.path.isfile(dst_shp_path):
@@ -179,6 +182,15 @@ def polygonize_layer(src_tif_path, dst_shp_path, remove_boundry=True):
         df_shp.drop(np.argmax(df_shp['geometry'].apply(lambda x:x.area).values), inplace=True)
         df_shp.to_file(dst_shp_path)
 
+    if multipolygon:
+        zonal(dst_shp_path, src_tif_path, dst_shp_path, operator='max_count')
+        df_shp = gpd.read_file(dst_shp_path)
+        multi_polygons = df_shp.groupby('value')['geometry'].apply(list).apply(MultiPolygon)
+        values = df_shp.groupby('value')['value'].first()
+        df_shp = gpd.GeoDataFrame(geometry=multi_polygons)
+        df_shp['value'] = values
+        df_shp.to_file(dst_shp_path)
+
 def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=False, crs=None, return_gdf=False):
     """
     crs should be dict type {'init' :'epsg:<epsg_code>'}, e.g. {'init' :'epsg:4326>'}
@@ -187,6 +199,7 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
     X = get_nparray(src_tif_path)
     idxs = np.where(np.ones_like(X[:,:,0], dtype=np.bool))
     rows = []
+
     for row_idx, col_idx in zip(*idxs):
         row = {}
         npidx = (row_idx, col_idx)
@@ -203,6 +216,41 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
     else:
         df_shp.to_file(dst_shp_path)
 
+def zonal(src_shp_path, src_tif_path, dst_shp_path, band_num=1, operator='mean'):
+    """band_num start from 1"""
+    df_shp = gpd.read_file(src_shp_path)
+    df_shp['poly_idx'] = list(range(len(df_shp)))
+    
+    X = get_nparray(src_tif_path)
+    cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(src_tif_path)
+    npidxs = list(zip(*np.where(np.ones_like(X))))
+    coords = [Point(transfer_npidx_to_coord(npidx, geo_transform)) for npidx in npidxs]
+    gdf_raster = gpd.GeoDataFrame(geometry=coords, crs=df_shp.crs)
+    gdf_raster['np_idx'] = npidxs
+    gdf_raster['order_idx'] = list(range(len(gdf_raster)))
+    gdf_raster['value'] = X[:, :, band_num-1].flatten().tolist()
+
+    gdf_join = gpd.sjoin(gdf_raster, df_shp)
+    values = []
+    for poly_idx in set(df_shp['poly_idx']):
+        if operator == 'mean':
+            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].mean()
+        elif operator == 'max':
+            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].max()
+        elif operator == 'min':
+            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].min()
+        elif operator == 'sum':
+            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].sum()
+        elif operator == 'std':
+            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].std()
+        elif operator == 'max_count':
+            value = sorted(Counter(gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value']).items(), key=lambda x:x[1], reverse=True)[0][0]
+        else:
+            assert False, "no this operator"
+        values.append(value)
+
+    df_shp['value'] = values
+    df_shp.to_file(dst_shp_path)
 
 #TODO
 # 1. raster pixel to points
@@ -220,6 +268,8 @@ def get_testing_fp(fn):
         fp = os.path.join(data_dir, 'satellite_tif_kmeans', 'satellite_tif_kmeans.tif')
     elif fn == 'rasterized_image':
         fp = os.path.join(data_dir, 'rasterized_image', 'rasterized_image.tif')
+    elif fn == 'rasterized_image_1':
+        fp = os.path.join(data_dir, 'rasterized_image', 'rasterized_image_1.tif')
     else:
         assert False, "cannot find the file!!"
     return os.path.abspath(fp)

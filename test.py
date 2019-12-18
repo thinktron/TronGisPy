@@ -29,6 +29,7 @@ satellite_tif_path = get_testing_fp('satellite_tif')
 satellite_tif_clipper_path = get_testing_fp('satellite_tif_clipper')
 satellite_tif_kmeans_path = get_testing_fp('satellite_tif_kmeans')
 rasterized_image_path = get_testing_fp('rasterized_image')
+rasterized_image_1_path = get_testing_fp('rasterized_image_1')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
 # show_image = True
@@ -133,8 +134,8 @@ class TestSatelliteIO(unittest.TestCase):
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
 
-    def tearDown(self):
-        shutil.rmtree(self.output_dir)
+    # def tearDown(self):
+    #     shutil.rmtree(self.output_dir)
 
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
@@ -208,13 +209,20 @@ class TestSatelliteIO(unittest.TestCase):
         src_tif_path = rasterized_image_path
         dst_shp_path = os.path.join(self.output_dir, 'polygonized_layer.shp')
         polygonize_layer(src_tif_path, dst_shp_path)
-
         df_shp = gpd.read_file(dst_shp_path)
         if show_image:
             df_shp.plot()
             plt.show()
-
         self.assertTrue(df_shp.loc[0, 'geometry'].area == 2051200)
+
+        src_tif_path = rasterized_image_1_path
+        polygonize_layer(src_tif_path, dst_shp_path, remove_boundry=False, multipolygon=True)
+        df_shp = gpd.read_file(dst_shp_path)
+        if show_image:
+            df_shp.plot()
+            plt.show()
+        self.assertTrue(df_shp.loc[0, 'geometry'].area == 3624400.0)
+
 
     def test_raster_pixel_to_polygon(self):
         src_tif_path = satellite_tif_path
