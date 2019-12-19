@@ -158,7 +158,7 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     dst_ds = None
 
 
-def polygonize_layer(src_tif_path, dst_shp_path, band_num=1, remove_boundry=True, multipolygon=False):
+def polygonize_layer(src_tif_path, dst_shp_path, field_name='value', band_num=1, remove_boundry=True, multipolygon=False):
     """band_num start from 1"""
     src_ds = gdal.Open(src_tif_path)
     srcband = src_ds.GetRasterBand(band_num)
@@ -170,8 +170,8 @@ def polygonize_layer(src_tif_path, dst_shp_path, band_num=1, remove_boundry=True
     dst_ds = drv.CreateDataSource(dst_shp_path)
     layer_name = os.path.split(dst_shp_path)[-1].replace(".shp", "")
     dst_layer = dst_ds.CreateLayer(layer_name, srs=src_srs)
-    dst_field = -1 #the attribute field index indicating the feature attribute into which the pixel value of the polygon should be written.
-
+    dst_layer.CreateField(ogr.FieldDefn(field_name, ogr.OFTInteger))
+    dst_field = dst_layer.GetLayerDefn().GetFieldIndex(field_name)
     gdal.Polygonize(srcband, None, dst_layer, dst_field, [], callback=None)
 
     src_ds = None
@@ -183,12 +183,11 @@ def polygonize_layer(src_tif_path, dst_shp_path, band_num=1, remove_boundry=True
         df_shp.to_file(dst_shp_path)
 
     if multipolygon:
-        zonal(dst_shp_path, src_tif_path, dst_shp_path, operator='max_count')
         df_shp = gpd.read_file(dst_shp_path)
-        multi_polygons = df_shp.groupby('value')['geometry'].apply(list).apply(MultiPolygon)
-        values = df_shp.groupby('value')['value'].first()
+        multi_polygons = df_shp.groupby(field_name)['geometry'].apply(list).apply(MultiPolygon)
+        values = df_shp.groupby(field_name)[field_name].first()
         df_shp = gpd.GeoDataFrame(geometry=multi_polygons)
-        df_shp['value'] = values
+        df_shp[field_name] = values
         df_shp.to_file(dst_shp_path)
 
 def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=False, crs=None, return_gdf=False):

@@ -134,8 +134,8 @@ class TestSatelliteIO(unittest.TestCase):
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
 
-    # def tearDown(self):
-    #     shutil.rmtree(self.output_dir)
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
 
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
