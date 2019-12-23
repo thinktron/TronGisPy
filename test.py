@@ -18,7 +18,7 @@ import gdal
 
 # main
 from PySatellite.SplittedImage import SplittedImage
-from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp
+from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp
 from PySatellite.Algorithm import kmeans
 from PySatellite.Normalizer import Normalizer
 from PySatellite.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon
@@ -30,6 +30,12 @@ satellite_tif_clipper_path = get_testing_fp('satellite_tif_clipper')
 satellite_tif_kmeans_path = get_testing_fp('satellite_tif_kmeans')
 rasterized_image_path = get_testing_fp('rasterized_image')
 rasterized_image_1_path = get_testing_fp('rasterized_image_1')
+poly_to_be_clipped_path = get_testing_fp('poly_to_be_clipped')
+point_to_be_clipped_path = get_testing_fp('point_to_be_clipped')
+line_to_be_clipped_path = get_testing_fp('line_to_be_clipped')
+multiline_to_be_clipped_path = get_testing_fp('multiline_to_be_clipped')
+
+shp_clipper_path = get_testing_fp('shp_clipper')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
 # show_image = True
@@ -146,6 +152,39 @@ class TestSatelliteIO(unittest.TestCase):
             plt.title("TestSatelliteIO" + ": " + "test_clip_tif_by_shp")
             plt.show()
         self.assertTrue(clip_image_arr.shape == (138, 225, 4))
+
+    def test_clip_shp_by_shp(self):
+        # polygon clipping
+        src_shp_path = poly_to_be_clipped_path
+        clipper_shp_path = shp_clipper_path
+        dst_shp_path = os.path.join(self.output_dir, 'clipped_poly.shp')
+        clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
+        gdf_clipped_poly = gpd.read_file(dst_shp_path)
+        self.assertTrue(gdf_clipped_poly['geometry'].apply(lambda x:x.area).sum() == 3)
+
+        # points clipping
+        src_shp_path = point_to_be_clipped_path
+        clipper_shp_path = shp_clipper_path
+        dst_shp_path = os.path.join(self.output_dir, 'clipped_point.shp')
+        clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
+        gdf_clipped_point = gpd.read_file(dst_shp_path)
+        self.assertTrue(gdf_clipped_point['geometry'].iloc[0].coords[0] == (3,3))
+
+        # line clipping
+        src_shp_path = line_to_be_clipped_path
+        clipper_shp_path = shp_clipper_path
+        dst_shp_path = os.path.join(self.output_dir, 'clipped_line.shp')
+        clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
+        gdf_clipped_line = gpd.read_file(dst_shp_path)
+        self.assertTrue(np.sum([line.length for line in gdf_clipped_line['geometry'] if line != None]) == 4)
+
+        # multiline clipping
+        src_shp_path = multiline_to_be_clipped_path
+        clipper_shp_path = shp_clipper_path
+        dst_shp_path = os.path.join(self.output_dir, 'clipped_multiline.shp')
+        clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
+        gdf_clipped_multiline = gpd.read_file(dst_shp_path)
+        self.assertTrue(np.sum([line.length for line in gdf_clipped_line['geometry'] if line != None]) == 4)
 
     def test_tif_composition(self):
         crs_tif_image = satellite_tif_path
