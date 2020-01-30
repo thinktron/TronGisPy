@@ -48,16 +48,19 @@ def get_extend(fp):
             y=gt[3]+(px*gt[4])+(py*gt[5])
             extend.append([x,y])
         yarr.reverse()
-    return extend
+    return np.array(extend)
 
 
-def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform, projection, data_type=gdal.GDT_Int32, no_data_value=None):
+def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform=None, projection=None, data_type=gdal.GDT_Int32, no_data_value=None):
+    """X should be in (n_rows, n_cols, n_bands) shape"""
     if len(X.shape) == 2:
         X = np.expand_dims(X, axis=2) 
     assert len(X.shape) == 3, "please reshape it to (n_rows, n_cols, n_bands)"
     dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, data_type) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
-    dst_ds.SetGeoTransform(geo_transform)
-    dst_ds.SetProjection(projection)
+    if geo_transform:
+        dst_ds.SetGeoTransform(geo_transform)
+    if projection:
+        dst_ds.SetProjection(projection)
 
     for b in range(X.shape[2]):
         band = dst_ds.GetRasterBand(b+1)
@@ -214,7 +217,7 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     dst_ds = None
 
 
-def polygonize_layer(src_tif_path, dst_shp_path, field_name='value', band_num=1, remove_boundry=True, multipolygon=False):
+def polygonize_layer(src_tif_path, dst_shp_path, field_name='value', band_num=1, remove_boundry=False, multipolygon=False):
     """band_num start from 1"""
     src_ds = gdal.Open(src_tif_path)
     srcband = src_ds.GetRasterBand(band_num)

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PySatellite",
-    version="0.1.4",
+    version="0.1.6",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Satellite image Processing tool",
@@ -42,7 +42,9 @@ setuptools.setup(
 # 0.1.2 change zonal to default gdal polygonize function
 # 0.1.3 add clip_shp_by_shp
 # 0.1.4 add LineString in clip_shp_by_shp
+# 0.1.5 write output tif can be without projection & geo_transform
+# 0.1.6 get_extend return nparray not list
 
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.1.4-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.1.4-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.1.6-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.1.6-py3-none-any.whl

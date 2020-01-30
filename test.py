@@ -222,13 +222,19 @@ class TestSatelliteIO(unittest.TestCase):
         padded_image_arr = np.pad(clip_image_arr, ((0,62), (0,75), (0,0)), mode='constant', constant_values=0)
         dst_tif_path = os.path.join(self.output_dir, 'padded_image.tif')
         write_output_tif(padded_image_arr,dst_tif_path,4,300,200,geo_transform, projection)
-
         padded_image_arr = get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(padded_image_arr)
             plt.title("TestSatelliteIO" + ": " + "test_write_output_tif")
             plt.show()
         self.assertTrue(padded_image_arr.shape == (200, 300, 4))
+
+        # test write output without projection & geotransform
+        X = np.random.rand(10000).reshape(100,100)
+        dst_tif_path = os.path.join(self.output_dir, "test_output.tif")
+        write_output_tif(X, dst_tif_path, 1, 100, 100, data_type=gdal.GDT_Float32)
+        test_output = get_nparray(dst_tif_path)
+        self.assertTrue(test_output.shape == (100, 100, 1))
 
     def test_rasterize_layer(self):
         src_shp_path = satellite_tif_clipper_path
