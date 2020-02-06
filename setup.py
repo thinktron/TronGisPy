@@ -47,5 +47,6 @@ setuptools.setup(
 
 # 0.2.1 change name to TronGisPy
 
+
 # python setup.py sdist bdist_wheel
 # scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.2.0-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.2.0-py3-none-any.whl
