@@ -14,7 +14,8 @@ setuptools.setup(
     url="http://rd.thinktronltd.com/jeremywang/PySatellite",
     packages=setuptools.find_packages(),
     # package_data={'PySaga': ['saga_cmd_pkls/*']},
-    package_data={'PySatellite': ['data/*', 'data/*/*']},
+    # package_data={'PySatellite': ['data/*', 'data/*/*']},
+    package_data={'TronGisPy': ['data/*', 'data/*/*']},
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

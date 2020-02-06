@@ -55,16 +55,16 @@ Description: # Introduction
         
         # Install from pip server
         ```
-        pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com PySatellite
+        pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
         ```
         
         # Usage
-        Please see [Tutorial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/PySatellite/blob/master/Tutorial.ipynb) & [the Tutorial repo](http://rd.thinktronltd.com:21111/jeremywang/PySatelliteTutorial/)
+        Please see [Tutorial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/TronGisPyTutorial/blob/master/Tutorial.ipynb) & [the Tutorial repo](http://rd.thinktronltd.com:21111/jeremywang/TronGisPyTutorial/)
         
         # Build & deployee
         ```bash
         python setup.py sdist bdist_wheel
-        scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.1.0-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.1.0-py3-none-any.whl
+        scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.2.0-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.2.0-py3-none-any.whl
         ```
         
         
