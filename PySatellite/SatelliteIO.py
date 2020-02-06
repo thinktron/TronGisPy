@@ -90,45 +90,45 @@ def clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path):
         df_dst_shp = gpd.sjoin(df_src, df_clipper, how='inner')
     elif geom_type in ['Polygon', 'MultiPolygon']:
         df_dst_shp = gpd.overlay(df_src, df_clipper, how='intersection')
-    elif geom_type in ['LineString', 'MultiLineString']:
-        # TODO
-        ## ogr solution: https://pcjericks.github.io/py-gdalogr-cookbook/vector_layers.html#get-geometry-from-each-feature-in-a-layer
-        ## geopandas solution: MultiLineString intersection will in trounble
-        # poly_to_be_clipped_path = get_testing_fp('poly_to_be_clipped')
-        # point_to_be_clipped_path = get_testing_fp('point_to_be_clipped')
-        # shp_clipper_path = get_testing_fp('shp_clipper')
-        # df_poly = gpd.read_file(poly_to_be_clipped_path)
-        # df_point = gpd.read_file(point_to_be_clipped_path)
-        # lines = [np.stack([np.ones((4))*i, np.arange(1, 5)]).T for i in [1,3,7]] + \
-        #         [np.stack([np.ones((2))*i, np.arange(3, 5)]).T for i in [0.5,2,6]]
-        # df_line = gpd.GeoDataFrame(geometry=[LineString(line) for line in lines])
-        # df_multiline = gpd.GeoDataFrame(geometry=[MultiLineString(lines)])
-        # df_clipper = gpd.read_file(shp_clipper_path)
-        # 
-        # fig, ax = plt.subplots(1,1)
-        # df_clipper.plot(ax=ax)
-        # df_line.plot(ax=ax, color='red')
-        # 
-        # df_line.intersection(df_clipper) 
-        ## 1. num of clipper polygons will have different return rows
-        ## 2. not intersect line will return None or "GEOMETRYCOLLECTION EMPTY"
-        # df_multiline.intersection(df_clipper) 
-        ## some part of WultiLine willdisappear
-        # assert False, "We temporarily does not support for line strings clipping"
-        multi_lines = []
-        for line in df_src['geometry']:
-            lines = []
-            for poly in df_clipper['geometry']:
-                line_intersection = line.intersection(poly)
-                if not line_intersection.is_empty:
-                    if line_intersection.geom_type == 'MultiLineString':
-                        lines.extend(line.intersection(poly))
-                    elif line_intersection.geom_type == 'LineString':
-                        lines.append(line.intersection(poly))
-            multi_lines.append(MultiLineString(lines))
-        df_dst_shp = df_src.copy()
-        df_dst_shp['geometry'] = multi_lines
-        df_dst_shp.dropna(inplace=True)
+    # elif geom_type in ['LineString', 'MultiLineString']:
+    #     # TODO
+    #     ## ogr solution: https://pcjericks.github.io/py-gdalogr-cookbook/vector_layers.html#get-geometry-from-each-feature-in-a-layer
+    #     ## geopandas solution: MultiLineString intersection will in trounble
+    #     # poly_to_be_clipped_path = get_testing_fp('poly_to_be_clipped')
+    #     # point_to_be_clipped_path = get_testing_fp('point_to_be_clipped')
+    #     # shp_clipper_path = get_testing_fp('shp_clipper')
+    #     # df_poly = gpd.read_file(poly_to_be_clipped_path)
+    #     # df_point = gpd.read_file(point_to_be_clipped_path)
+    #     # lines = [np.stack([np.ones((4))*i, np.arange(1, 5)]).T for i in [1,3,7]] + \
+    #     #         [np.stack([np.ones((2))*i, np.arange(3, 5)]).T for i in [0.5,2,6]]
+    #     # df_line = gpd.GeoDataFrame(geometry=[LineString(line) for line in lines])
+    #     # df_multiline = gpd.GeoDataFrame(geometry=[MultiLineString(lines)])
+    #     # df_clipper = gpd.read_file(shp_clipper_path)
+    #     # 
+    #     # fig, ax = plt.subplots(1,1)
+    #     # df_clipper.plot(ax=ax)
+    #     # df_line.plot(ax=ax, color='red')
+    #     # 
+    #     # df_line.intersection(df_clipper) 
+    #     ## 1. num of clipper polygons will have different return rows
+    #     ## 2. not intersect line will return None or "GEOMETRYCOLLECTION EMPTY"
+    #     # df_multiline.intersection(df_clipper) 
+    #     ## some part of WultiLine willdisappear
+    #     # assert False, "We temporarily does not support for line strings clipping"
+    #     multi_lines = []
+    #     for line in df_src['geometry']:
+    #         lines = []
+    #         for poly in df_clipper['geometry']:
+    #             line_intersection = line.intersection(poly)
+    #             if not line_intersection.is_empty:
+    #                 if line_intersection.geom_type == 'MultiLineString':
+    #                     lines.extend(line.intersection(poly))
+    #                 elif line_intersection.geom_type == 'LineString':
+    #                     lines.append(line.intersection(poly))
+    #         multi_lines.append(MultiLineString(lines))
+    #     df_dst_shp = df_src.copy()
+    #     df_dst_shp['geometry'] = multi_lines
+    #     df_dst_shp.dropna(inplace=True)
     else:
         assert False, "geom_type must be Point, MultiPoint, Polygon or MultiPolygon!"
 
@@ -274,41 +274,41 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
     else:
         df_shp.to_file(dst_shp_path)
 
-def zonal(src_shp_path, src_tif_path, dst_shp_path, band_num=1, operator='mean'):
-    """band_num start from 1"""
-    df_shp = gpd.read_file(src_shp_path)
-    df_shp['poly_idx'] = list(range(len(df_shp)))
+# def zonal(src_shp_path, src_tif_path, dst_shp_path, band_num=1, operator='mean'):
+#     """band_num start from 1"""
+#     df_shp = gpd.read_file(src_shp_path)
+#     df_shp['poly_idx'] = list(range(len(df_shp)))
     
-    X = get_nparray(src_tif_path)
-    cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(src_tif_path)
-    npidxs = list(zip(*np.where(np.ones_like(X))))
-    coords = [Point(transfer_npidx_to_coord(npidx, geo_transform)) for npidx in npidxs]
-    gdf_raster = gpd.GeoDataFrame(geometry=coords, crs=df_shp.crs)
-    gdf_raster['np_idx'] = npidxs
-    gdf_raster['order_idx'] = list(range(len(gdf_raster)))
-    gdf_raster['value'] = X[:, :, band_num-1].flatten().tolist()
+#     X = get_nparray(src_tif_path)
+#     cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(src_tif_path)
+#     npidxs = list(zip(*np.where(np.ones_like(X))))
+#     coords = [Point(transfer_npidx_to_coord(npidx, geo_transform)) for npidx in npidxs]
+#     gdf_raster = gpd.GeoDataFrame(geometry=coords, crs=df_shp.crs)
+#     gdf_raster['np_idx'] = npidxs
+#     gdf_raster['order_idx'] = list(range(len(gdf_raster)))
+#     gdf_raster['value'] = X[:, :, band_num-1].flatten().tolist()
 
-    gdf_join = gpd.sjoin(gdf_raster, df_shp)
-    values = []
-    for poly_idx in set(df_shp['poly_idx']):
-        if operator == 'mean':
-            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].mean()
-        elif operator == 'max':
-            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].max()
-        elif operator == 'min':
-            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].min()
-        elif operator == 'sum':
-            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].sum()
-        elif operator == 'std':
-            value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].std()
-        elif operator == 'max_count':
-            value = sorted(Counter(gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value']).items(), key=lambda x:x[1], reverse=True)[0][0]
-        else:
-            assert False, "no this operator"
-        values.append(value)
+#     gdf_join = gpd.sjoin(gdf_raster, df_shp)
+#     values = []
+#     for poly_idx in set(df_shp['poly_idx']):
+#         if operator == 'mean':
+#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].mean()
+#         elif operator == 'max':
+#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].max()
+#         elif operator == 'min':
+#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].min()
+#         elif operator == 'sum':
+#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].sum()
+#         elif operator == 'std':
+#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].std()
+#         elif operator == 'max_count':
+#             value = sorted(Counter(gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value']).items(), key=lambda x:x[1], reverse=True)[0][0]
+#         else:
+#             assert False, "no this operator"
+#         values.append(value)
 
-    df_shp['value'] = values
-    df_shp.to_file(dst_shp_path)
+#     df_shp['value'] = values
+#     df_shp.to_file(dst_shp_path)
 
 #TODO
 # 1. raster pixel to points
