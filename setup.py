@@ -4,11 +4,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="PySatellite",
-    version="0.1.6",
+    name="TronGisPy",
+    version="0.2.0",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
-    description="Satellite image Processing tool",
+    description="Gis image Processing tool",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="http://rd.thinktronltd.com/jeremywang/PySatellite",
@@ -45,6 +45,7 @@ setuptools.setup(
 # 0.1.5 write output tif can be without projection & geo_transform
 # 0.1.6 get_extend return nparray not list
 
+# 0.2.1 change name to TronGisPy
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\PySatellite\dist\PySatellite-0.1.6-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/PySatellite-0.1.6-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.2.0-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.2.0-py3-none-any.whl

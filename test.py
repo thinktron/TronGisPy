@@ -17,14 +17,14 @@ from shapely.geometry import Polygon
 import gdal
 
 # main
-from PySatellite.SplittedImage import SplittedImage
-from PySatellite.SatelliteIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp
-from PySatellite.Algorithm import kmeans
-from PySatellite.Normalizer import Normalizer
-from PySatellite.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon
+from TronGisPy.SplittedImage import SplittedImage
+from TronGisPy.GisIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp
+from TronGisPy.Algorithm import kmeans
+from TronGisPy.Normalizer import Normalizer
+from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon
 # from PySatellite.Interpolation import inverse_distance_weighted
 
-data_dir = os.path.join('PySatellite', 'data')
+data_dir = os.path.join('TronGisPy', 'data')
 satellite_tif_path = get_testing_fp('satellite_tif')
 satellite_tif_clipper_path = get_testing_fp('satellite_tif_clipper')
 satellite_tif_kmeans_path = get_testing_fp('satellite_tif_kmeans')
@@ -134,14 +134,14 @@ class TestCRS(unittest.TestCase):
         self.assertTrue(centroid == (328555.0, 2750785.0))
 
 
-class TestSatelliteIO(unittest.TestCase):
+class TestGisIO(unittest.TestCase):
     def setUp(self):
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
 
-    def tearDown(self):
-        shutil.rmtree(self.output_dir)
+    # def tearDown(self):
+    #     shutil.rmtree(self.output_dir)
 
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
@@ -277,19 +277,19 @@ class TestSatelliteIO(unittest.TestCase):
     def test_get_testing_fp(self):
         fn = 'satellite_tif'
         fp = get_testing_fp(fn)
-        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\satellite_tif\\satellite_tif.tif')
+        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif\\satellite_tif.tif')
         
         fn = 'satellite_tif_clipper'
         fp = get_testing_fp(fn)
-        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\satellite_tif_clipper\\satellite_tif_clipper.shp')
+        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif_clipper\\satellite_tif_clipper.shp')
 
         fn = 'satellite_tif_kmeans'
         fp = get_testing_fp(fn)
-        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\satellite_tif_kmeans\\satellite_tif_kmeans.tif')
+        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif_kmeans\\satellite_tif_kmeans.tif')
 
         fn = 'rasterized_image'
         fp = get_testing_fp(fn)
-        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\PySatellite\\PySatellite\\data\\rasterized_image\\rasterized_image.tif')
+        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\rasterized_image\\rasterized_image.tif')
 
 class TestNormalizer(unittest.TestCase):
     def setUp(self):

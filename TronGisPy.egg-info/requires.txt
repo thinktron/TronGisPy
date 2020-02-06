@@ -1,0 +1,4 @@
+affine
+scikit-learn
+descartes
+matplotlib

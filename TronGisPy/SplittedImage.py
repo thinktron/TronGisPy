@@ -2,8 +2,8 @@ import os
 import numpy as np
 import gdal
 import geopandas as gpd
-from PySatellite.CRS import transfer_npidx_to_coord
-from PySatellite.SatelliteIO import write_output_tif
+from TronGisPy.CRS import transfer_npidx_to_coord
+from TronGisPy.GisIO import write_output_tif
 from shapely.geometry import Polygon
 epsilon = 10**-6
 

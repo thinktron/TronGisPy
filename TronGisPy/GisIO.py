@@ -5,7 +5,7 @@ import gdal
 import geopandas as gpd
 from collections import Counter
 from shapely.geometry import Point, MultiPolygon, LineString, MultiLineString
-from PySatellite.CRS import transfer_npidx_to_coord_polygon, transfer_npidx_to_coord
+from TronGisPy.CRS import transfer_npidx_to_coord_polygon, transfer_npidx_to_coord
 
 # bands compositions
 def get_geo_info(fp):
@@ -90,47 +90,47 @@ def clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path):
         df_dst_shp = gpd.sjoin(df_src, df_clipper, how='inner')
     elif geom_type in ['Polygon', 'MultiPolygon']:
         df_dst_shp = gpd.overlay(df_src, df_clipper, how='intersection')
-    # elif geom_type in ['LineString', 'MultiLineString']:
-    #     # TODO
-    #     ## ogr solution: https://pcjericks.github.io/py-gdalogr-cookbook/vector_layers.html#get-geometry-from-each-feature-in-a-layer
-    #     ## geopandas solution: MultiLineString intersection will in trounble
-    #     # poly_to_be_clipped_path = get_testing_fp('poly_to_be_clipped')
-    #     # point_to_be_clipped_path = get_testing_fp('point_to_be_clipped')
-    #     # shp_clipper_path = get_testing_fp('shp_clipper')
-    #     # df_poly = gpd.read_file(poly_to_be_clipped_path)
-    #     # df_point = gpd.read_file(point_to_be_clipped_path)
-    #     # lines = [np.stack([np.ones((4))*i, np.arange(1, 5)]).T for i in [1,3,7]] + \
-    #     #         [np.stack([np.ones((2))*i, np.arange(3, 5)]).T for i in [0.5,2,6]]
-    #     # df_line = gpd.GeoDataFrame(geometry=[LineString(line) for line in lines])
-    #     # df_multiline = gpd.GeoDataFrame(geometry=[MultiLineString(lines)])
-    #     # df_clipper = gpd.read_file(shp_clipper_path)
-    #     # 
-    #     # fig, ax = plt.subplots(1,1)
-    #     # df_clipper.plot(ax=ax)
-    #     # df_line.plot(ax=ax, color='red')
-    #     # 
-    #     # df_line.intersection(df_clipper) 
-    #     ## 1. num of clipper polygons will have different return rows
-    #     ## 2. not intersect line will return None or "GEOMETRYCOLLECTION EMPTY"
-    #     # df_multiline.intersection(df_clipper) 
-    #     ## some part of WultiLine willdisappear
-    #     # assert False, "We temporarily does not support for line strings clipping"
-    #     multi_lines = []
-    #     for line in df_src['geometry']:
-    #         lines = []
-    #         for poly in df_clipper['geometry']:
-    #             line_intersection = line.intersection(poly)
-    #             if not line_intersection.is_empty:
-    #                 if line_intersection.geom_type == 'MultiLineString':
-    #                     lines.extend(line.intersection(poly))
-    #                 elif line_intersection.geom_type == 'LineString':
-    #                     lines.append(line.intersection(poly))
-    #         multi_lines.append(MultiLineString(lines))
-    #     df_dst_shp = df_src.copy()
-    #     df_dst_shp['geometry'] = multi_lines
-    #     df_dst_shp.dropna(inplace=True)
+    elif geom_type in ['LineString', 'MultiLineString']:
+        # TODO
+        ## ogr solution: https://pcjericks.github.io/py-gdalogr-cookbook/vector_layers.html#get-geometry-from-each-feature-in-a-layer
+        ## geopandas solution: MultiLineString intersection will in trounble
+        # poly_to_be_clipped_path = get_testing_fp('poly_to_be_clipped')
+        # point_to_be_clipped_path = get_testing_fp('point_to_be_clipped')
+        # shp_clipper_path = get_testing_fp('shp_clipper')
+        # df_poly = gpd.read_file(poly_to_be_clipped_path)
+        # df_point = gpd.read_file(point_to_be_clipped_path)
+        # lines = [np.stack([np.ones((4))*i, np.arange(1, 5)]).T for i in [1,3,7]] + \
+        #         [np.stack([np.ones((2))*i, np.arange(3, 5)]).T for i in [0.5,2,6]]
+        # df_line = gpd.GeoDataFrame(geometry=[LineString(line) for line in lines])
+        # df_multiline = gpd.GeoDataFrame(geometry=[MultiLineString(lines)])
+        # df_clipper = gpd.read_file(shp_clipper_path)
+        # 
+        # fig, ax = plt.subplots(1,1)
+        # df_clipper.plot(ax=ax)
+        # df_line.plot(ax=ax, color='red')
+        # 
+        # df_line.intersection(df_clipper) 
+        ## 1. num of clipper polygons will have different return rows
+        ## 2. not intersect line will return None or "GEOMETRYCOLLECTION EMPTY"
+        # df_multiline.intersection(df_clipper) 
+        ## some part of WultiLine willdisappear
+        # assert False, "We temporarily does not support for line strings clipping"
+        multi_lines = []
+        for line in df_src['geometry']:
+            lines = []
+            for poly in df_clipper['geometry']:
+                line_intersection = line.intersection(poly)
+                if not line_intersection.is_empty:
+                    if line_intersection.geom_type == 'MultiLineString':
+                        lines.extend(line.intersection(poly))
+                    elif line_intersection.geom_type == 'LineString':
+                        lines.append(line.intersection(poly))
+            multi_lines.append(MultiLineString(lines))
+        df_dst_shp = df_src.copy()
+        df_dst_shp['geometry'] = multi_lines
+        df_dst_shp.dropna(inplace=True)
     else:
-        assert False, "geom_type must be Point, MultiPoint, Polygon or MultiPolygon!"
+        assert False, "geom_type must be Point, MultiPoint, Polygon, MultiPolygon, LineString or MultiLineString!"
 
     df_dst_shp.to_file(dst_shp_path)
 
