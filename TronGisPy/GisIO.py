@@ -51,11 +51,13 @@ def get_extend(fp):
     return np.array(extend)
 
 
-def write_output_tif(X, dst_tif_path, bands, cols, rows, geo_transform=None, projection=None, data_type=gdal.GDT_Int32, no_data_value=None):
+def write_output_tif(X, dst_tif_path, bands=None, cols=None, rows=None, geo_transform=None, projection=None, data_type=gdal.GDT_Int32, no_data_value=None):
     """X should be in (n_rows, n_cols, n_bands) shape"""
     if len(X.shape) == 2:
         X = np.expand_dims(X, axis=2) 
-    assert len(X.shape) == 3, "please reshape it to (n_rows, n_cols, n_bands)"
+    bands = X.shape[2] if bands is None else bands
+    cols = X.shape[1] if cols is None else cols
+    rows = X.shape[0] if rows is None else rows
     dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, data_type) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
     if geo_transform:
         dst_ds.SetGeoTransform(geo_transform)
