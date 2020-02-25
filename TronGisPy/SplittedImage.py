@@ -96,19 +96,20 @@ class SplittedImage():
     def get_splitted_images(self):
         return np.array(self.apply(lambda x:x))
         
-    def get_geo_attribute(self, return_geo_transform=False, crs={'init' :'epsg:4326'}):
+    def get_geo_attribute(self, return_geo_transform=False, crs=None):
+        """crs={'init' :'epsg:xxxx'} e.g.{'init' :'epsg:4326'} """
         rows = []
         for i in range(self.n_splitted_images):
             idx_h , idx_w = self.convert_order_to_location_index(i)
 
             h_start_inner, h_stop_inner = self.convert_to_inner_index_h(idx_h, idx_h)
             w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
-            x_start, y_start, x_stop, y_stop = w_start_inner, h_start_inner, w_stop_inner, h_stop_inner
+            w_start_inner, h_start_inner, w_stop_inner, h_stop_inner
 
-            left_top_coord = transfer_npidx_to_coord((x_start, y_start), self.geo_transform)
-            left_buttom_coord = transfer_npidx_to_coord((x_start, y_stop), self.geo_transform)
-            right_buttom_coord = transfer_npidx_to_coord((x_stop, y_stop), self.geo_transform)
-            right_top_coord = transfer_npidx_to_coord((x_stop, y_start), self.geo_transform)
+            left_top_coord = transfer_npidx_to_coord((h_start_inner, w_start_inner), self.geo_transform)
+            left_buttom_coord = transfer_npidx_to_coord((h_start_inner, w_stop_inner), self.geo_transform)
+            right_buttom_coord = transfer_npidx_to_coord((h_stop_inner, w_stop_inner), self.geo_transform)
+            right_top_coord = transfer_npidx_to_coord((h_stop_inner, w_start_inner), self.geo_transform)
 
             x_min, y_max = left_top_coord
             pixel_size = self.geo_transform[1]
@@ -124,11 +125,16 @@ class SplittedImage():
                                     left_top_coord]),
             }
             rows.append(row)
-        df_attribute = gpd.GeoDataFrame(rows, geometry='geometry', crs=crs)
-        if return_geo_transform:
-            return df_attribute[["idx", "idx_h", "idx_w", "geometry", "geo_transform"]]
-        else:
-            return df_attribute[["idx", "idx_h", "idx_w", "geometry"]]
+        df_attribute = gpd.GeoDataFrame(rows, geometry='geometry')
+
+        if crs is not None:
+            df_attribute.crs = crs
+
+        if not return_geo_transform:
+            df_attribute.drop('geo_transform', axis=1, inplace=True)
+
+        return df_attribute
+
 
     def write_splitted_images(self, target_dir, filename, projection=None, gdaldtype=None, no_data_value=None):
         """
