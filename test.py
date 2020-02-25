@@ -2,6 +2,7 @@ import unittest
 
 # basic
 import os
+import time
 import shutil
 import numpy as np
 
@@ -18,10 +19,12 @@ import gdal
 
 # main
 from TronGisPy.SplittedImage import SplittedImage
-from TronGisPy.GisIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp
+from TronGisPy.GisIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_projection
 from TronGisPy.Algorithm import kmeans
 from TronGisPy.Normalizer import Normalizer
 from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon
+from TronGisPy.TypeCast import get_gdaldtype_name_by_idx, convert_gdaldtype_to_npdtype, convert_npdtype_to_gdaldtype
+
 # from PySatellite.Interpolation import inverse_distance_weighted
 
 data_dir = os.path.join('TronGisPy', 'data')
@@ -44,6 +47,7 @@ show_image = False
 
 class TestSplittedImage(unittest.TestCase):
     def setUp(self):
+        time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
@@ -51,16 +55,18 @@ class TestSplittedImage(unittest.TestCase):
         # window_size_h = window_size_w = step_size_h = step_size_w = 256
         self.box_size = 128
         
-        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
         self.geo_transform = geo_transform
         self.projection = projection
-        self.dtype_gdal = dtype_gdal
+        self.gdaldtype = gdaldtype
+        self.no_data_value = no_data_value
         self.X = get_nparray(satellite_tif_path)
 
-        self.splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform, self.projection)
+        self.splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform)
 
     def tearDown(self):
         shutil.rmtree(self.output_dir)
+        time.sleep(1)
 
     def test___getitem__(self):
         slice_test1 = Counter(pd.cut(self.splitted_image[1].flatten(), bins=3, labels=range(3))) == Counter({1: 137343, 0: 122742, 2: 2059})
@@ -89,32 +95,34 @@ class TestSplittedImage(unittest.TestCase):
         self.assertTrue(area_test)
 
     def test_write_splitted_images(self):
-        self.splitted_image.write_splitted_images(self.output_dir, 'test_satellite')
+        self.splitted_image.write_splitted_images(self.output_dir, 'test_satellite', projection=self.projection, gdaldtype=self.gdaldtype, no_data_value=self.no_data_value)
 
     def test_write_combined_tif(self):
         box_size = 101
-        splitted_image = SplittedImage(self.X, box_size, self.geo_transform, self.projection)
+        splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform)
         X_pred = splitted_image.get_splitted_images()[:,:,:,0]
         dst_tif_path = os.path.join(self.output_dir, "combined.tif")
-        splitted_image.write_combined_tif(X_pred, dst_tif_path, self.dtype_gdal)
+        splitted_image.write_combined_tif(X_pred, dst_tif_path, projection=self.projection, gdaldtype=self.gdaldtype)
 
 class TestCRS(unittest.TestCase):
     def setUp(self):
+        time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
 
     def tearDown(self):
         shutil.rmtree(self.output_dir)
+        time.sleep(1)
 
     def test_transfer_npidx_to_coord(self):
-        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
         npidx = (1,3)
         coord = transfer_npidx_to_coord(npidx, geo_transform)
         self.assertTrue(coord == (328560.0, 2750780.0))
 
     def test_transfer_coord_to_npidx(self):
-        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
         coord = (328560.0+9, 2750780.0-9) # resolution is 10 meter, add 9 will be in the same cell
         npidx = transfer_coord_to_npidx(coord, geo_transform)
         self.assertTrue(npidx == (1, 3))
@@ -123,7 +131,7 @@ class TestCRS(unittest.TestCase):
         self.assertTrue(npidx == (2, 4))
 
     def test_transfer_npidx_to_coord_polygon(self):
-        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
         npidx = [0,2]
         polygon = transfer_npidx_to_coord_polygon(npidx, geo_transform)
         # df_lands_boundry = gpd.GeoDataFrame([{'geometry':polygon}], geometry='geometry')
@@ -136,12 +144,22 @@ class TestCRS(unittest.TestCase):
 
 class TestGisIO(unittest.TestCase):
     def setUp(self):
+        time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
 
-    # def tearDown(self):
-    #     shutil.rmtree(self.output_dir)
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
+        time.sleep(1)
+
+    def test_update_projection(self):
+        fp = os.path.join(self.output_dir, os.path.split(satellite_tif_path)[-1])
+        shutil.copyfile(satellite_tif_path, fp)
+        projection = 'PROJCS["Projection: Transverse Mercator; Datum: Taiwan (TWD97); Ellipsoid: GRS80",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.2572221010042,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]]]'
+        update_projection(fp, projection)
+        cols, rows, bands, geo_transform, projection_new, gdaldtype, no_data_value = get_geo_info(fp)
+        self.assertTrue(projection_new == projection)
 
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
@@ -217,7 +235,7 @@ class TestGisIO(unittest.TestCase):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
         clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
 
-        cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(dst_image_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_image_path)
         clip_image_arr = get_nparray(dst_image_path)
         padded_image_arr = np.pad(clip_image_arr, ((0,62), (0,75), (0,0)), mode='constant', constant_values=0)
         dst_tif_path = os.path.join(self.output_dir, 'padded_image.tif')
@@ -232,7 +250,7 @@ class TestGisIO(unittest.TestCase):
         # test write output without projection & geotransform
         X = np.random.rand(10000).reshape(100,100)
         dst_tif_path = os.path.join(self.output_dir, "test_output.tif")
-        write_output_tif(X, dst_tif_path, 1, 100, 100, data_type=gdal.GDT_Float32)
+        write_output_tif(X, dst_tif_path, 1, 100, 100, gdaldtype=gdal.GDT_Float32)
         test_output = get_nparray(dst_tif_path)
         self.assertTrue(test_output.shape == (100, 100, 1))
 
@@ -293,14 +311,16 @@ class TestGisIO(unittest.TestCase):
 
 class TestNormalizer(unittest.TestCase):
     def setUp(self):
+        time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
-        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.dtype_gdal, self.no_data_value = get_geo_info(satellite_tif_path)
+        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value = get_geo_info(satellite_tif_path)
         self.X = get_nparray(satellite_tif_path)
 
     def tearDown(self):
         shutil.rmtree(self.output_dir)
+        time.sleep(1)
 
     def test_Normalizer(self):
         X_norm = Normalizer().fit_transform(self.X) 
@@ -309,14 +329,16 @@ class TestNormalizer(unittest.TestCase):
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
+        time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
-        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.dtype_gdal, self.no_data_value = get_geo_info(satellite_tif_path)
+        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value = get_geo_info(satellite_tif_path)
         self.X = get_nparray(satellite_tif_path)
 
     def tearDown(self):
         shutil.rmtree(self.output_dir)
+        time.sleep(1)
 
     def test_kmeans(self):
         X_kmeans = kmeans(self.X, n_clusters=5, no_data_value=0)
@@ -331,14 +353,36 @@ class TestAlgorithm(unittest.TestCase):
             plt.show()
         self.assertTrue(Counter(list(np.hstack(kmeans_image_arr[:, :, 0])))[4] == 9511)
 
+class TestTypeCast(unittest.TestCase):
+    def setUp(self):
+        time.sleep(1)
+        self.output_dir = os.path.join('test_output')
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
+        time.sleep(1)
+
+    def test_get_gdaldtype_by_idx(self):
+        self.assertTrue(get_gdaldtype_by_idx(5) == 'GDT_Int32')
+
+    def test_convert_gdaldtype_to_npdtype(self):
+        self.assertTrue(convert_gdaldtype_to_npdtype(5) == np.int32)
+
+    def test_convert_npdtype_to_gdaldtype(self):
+        self.assertTrue(convert_npdtype_to_gdaldtype(np.int32) == 5)
+
 # class TestInterpolation(unittest.TestCase):
-#     def setUp(self):
+    # def setUp(self):
+    #     time.sleep(1)
 #         self.output_dir = os.path.join('test_output')
 #         if not os.path.isdir(self.output_dir):
 #             os.mkdir(self.output_dir)
 
 #     # def tearDown(self):
 #     #     shutil.rmtree(self.output_dir)
+#           time.sleep(1)
 
 #     def test_inverse_distance_weighted(self):
 #         POINTS = os.path.abspath(interpolation_points_path)

@@ -5,6 +5,7 @@ import gdal
 import geopandas as gpd
 from collections import Counter
 from shapely.geometry import Point, MultiPolygon, LineString, MultiLineString
+from TronGisPy.TypeCast import convert_npdtype_to_gdaldtype
 from TronGisPy.CRS import transfer_npidx_to_coord_polygon, transfer_npidx_to_coord
 
 # bands compositions
@@ -16,10 +17,10 @@ def get_geo_info(fp):
     bands = ds.RasterCount 
     geo_transform = ds.GetGeoTransform()
     projection = ds.GetProjection()
-    dtype_gdal = ds.GetRasterBand(1).DataType
+    gdaldtype = ds.GetRasterBand(1).DataType
     no_data_value = ds.GetRasterBand(1).GetNoDataValue()
     ds = None 
-    return cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value
+    return cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value
 
 def get_nparray(fp, opencv_shape=True):
     """if opencv_shape the shape will be (cols, rows, bnads), else (bnads, cols, rows)"""
@@ -48,20 +49,26 @@ def get_extend(fp):
             y=gt[3]+(px*gt[4])+(py*gt[5])
             extend.append([x,y])
         yarr.reverse()
+    ds = None 
     return np.array(extend)
 
+def update_projection(fp, projection):
+    ds = gdal.Open(fp, gdal.GA_Update)
+    ds.SetProjection(projection)
+    ds = None 
 
-def write_output_tif(X, dst_tif_path, bands=None, cols=None, rows=None, geo_transform=None, projection=None, data_type=gdal.GDT_Int32, no_data_value=None):
+def write_output_tif(X, dst_tif_path, bands=None, cols=None, rows=None, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None):
     """X should be in (n_rows, n_cols, n_bands) shape"""
     if len(X.shape) == 2:
-        X = np.expand_dims(X, axis=2) 
+        X = np.expand_dims(X, axis=2)
+    gdaldtype = convert_npdtype_to_gdaldtype(X.dtype) if gdaldtype is None else gdaldtype
     bands = X.shape[2] if bands is None else bands
     cols = X.shape[1] if cols is None else cols
     rows = X.shape[0] if rows is None else rows
-    dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, data_type) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
-    if geo_transform:
+    dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, gdaldtype) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
+    if geo_transform is not None:
         dst_ds.SetGeoTransform(geo_transform)
-    if projection:
+    if projection is not None:
         dst_ds.SetProjection(projection)
 
     for b in range(X.shape[2]):
@@ -173,7 +180,7 @@ def refine_resolution(src_tif_path, dst_tif_path, dst_resolution):
     result = gdal.Warp(dst_tif_path, src_tif_path, xRes=dst_resolution, yRes=dst_resolution)
     result = None
 
-def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None):
+def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None, gdaldtype=None):
     """
     src_shp_path: rasterize which shp.
     dst_tif_path: rasterize output, should be in tiff type.
@@ -184,9 +191,10 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     df_shp = gpd.read_file(src_shp_path)
     if not use_attribute:
         use_attribute = 'positive'
-        df_shp['positive'] = 1
+        df_shp[use_attribute] = 1
     else:
         assert use_attribute in df_shp.columns, "attribute not exists!"
+    gdaldtype = convert_npdtype_to_gdaldtype(df_shp[use_attribute].dtype) if gdaldtype is None else gdaldtype
     src_shp_ds = ogr.Open(df_shp.to_json())
     src_shp_layer = src_shp_ds.GetLayer()
 
@@ -199,7 +207,7 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     ref_tif_ds = gdal.Open(ref_tif_path)
     ref_tif_cols, ref_tif_rows = ref_tif_ds.RasterXSize, ref_tif_ds.RasterYSize
     
-    dst_tif_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, ref_tif_cols, ref_tif_rows, 1, gdal.GDT_Byte) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
+    dst_tif_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, ref_tif_cols, ref_tif_rows, 1, gdaldtype) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
     dst_tif_ds.SetGeoTransform(ref_tif_ds.GetGeoTransform())
 
     band = dst_tif_ds.GetRasterBand(1)

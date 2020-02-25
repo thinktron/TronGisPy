@@ -6,6 +6,7 @@ TronGisPy/GisIO.py
 TronGisPy/Interpolation.py
 TronGisPy/Normalizer.py
 TronGisPy/SplittedImage.py
+TronGisPy/TypeCast.py
 TronGisPy/__init__.py
 TronGisPy.egg-info/PKG-INFO
 TronGisPy.egg-info/SOURCES.txt

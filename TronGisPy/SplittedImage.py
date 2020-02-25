@@ -8,7 +8,7 @@ from shapely.geometry import Polygon
 epsilon = 10**-6
 
 class SplittedImage():
-    def __init__(self, source_image, box_size, geo_transform, projection, padding='right'):
+    def __init__(self, source_image, box_size, geo_transform, padding='right'):
         """padding: ['right', 'left', 'center']"""
         self.source_image = source_image
         self.window_size_h = self.window_size_w = self.step_size_h = self.step_size_w = box_size
@@ -17,7 +17,6 @@ class SplittedImage():
         # self.step_size_h = step_size_h
         # self.step_size_w = step_size_w
         self.geo_transform = geo_transform
-        self.projection = projection
         self.padding = padding
         self.img_h, self.img_w = self.source_image.shape[:2]
         self.is_single_band = len(self.source_image.shape) == 2
@@ -97,7 +96,7 @@ class SplittedImage():
     def get_splitted_images(self):
         return np.array(self.apply(lambda x:x))
         
-    def get_geo_attribute(self, return_geo_transform=False):
+    def get_geo_attribute(self, return_geo_transform=False, crs={'init' :'epsg:4326'}):
         rows = []
         for i in range(self.n_splitted_images):
             idx_h , idx_w = self.convert_order_to_location_index(i)
@@ -125,14 +124,15 @@ class SplittedImage():
                                     left_top_coord]),
             }
             rows.append(row)
-        df_attribute = gpd.GeoDataFrame(rows, geometry='geometry')
+        df_attribute = gpd.GeoDataFrame(rows, geometry='geometry', crs=crs)
         if return_geo_transform:
             return df_attribute[["idx", "idx_h", "idx_w", "geometry", "geo_transform"]]
         else:
             return df_attribute[["idx", "idx_h", "idx_w", "geometry"]]
 
-    def write_splitted_images(self, target_dir, filename):
-        """target_dir: where you want to store all aplitted images; filename: index number will be followed by the output filename you defined, e.g. <filename>_idx_idxh_idxw;
+    def write_splitted_images(self, target_dir, filename, projection=None, gdaldtype=None, no_data_value=None):
+        """
+        target_dir: where you want to store all aplitted images; filename: index number will be followed by the output filename you defined, e.g. <filename>_idx_idxh_idxw;
         """
         df_attribute = self.get_geo_attribute(return_geo_transform=True)
         splitted_images = self.get_splitted_images()
@@ -143,18 +143,18 @@ class SplittedImage():
             idx_w_str = "_" + ("%3i"%row['idx_w']).replace(" ", "0")
             path = os.path.join(target_dir, filename + idx_str + idx_h_str + idx_w_str + ".tif")
             if target_img.std() != 0:
-                write_output_tif(target_img, path, self.num_bands, self.window_size_w, self.window_size_h, row['geo_transform'], self.projection)
+                bands, cols, rows = self.num_bands, self.window_size_w, self.window_size_h
+                geo_transform = row['geo_transform']
+                write_output_tif(target_img, path, bands, cols, rows, geo_transform, projection, gdaldtype, no_data_value)
 
-    def write_combined_tif(self, X, dst_tif_path, dtype_gdal=gdal.GDT_Int32):
+    def write_combined_tif(self, X, dst_tif_path, projection=None, gdaldtype=None, no_data_value=None):
         if len(X.shape) == 3:
             X = np.expand_dims(X, axis=3) 
         rows = self.source_image.shape[0]
         cols = self.source_image.shape[1]
         bands = X.shape[3]
-        dst_ds = gdal.GetDriverByName('GTiff').Create(dst_tif_path, cols, rows, bands, dtype_gdal)
-        dst_ds.SetGeoTransform(self.geo_transform)
-        dst_ds.SetProjection(self.projection)
         
+        X_combined_bands = np.zeros((rows, cols, bands))
         for b in range(bands):
             X_combined = np.zeros((rows, cols))
             for i in range(len(X)):
@@ -163,10 +163,6 @@ class SplittedImage():
                 w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
                 h_length, w_length = X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner].shape
                 X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner] = X[i, :h_length, :w_length, b]
-                
-            band = dst_ds.GetRasterBand(b+1)
-            band.WriteArray(X_combined, 0, 0)
-            band.FlushCache()
-            band.SetNoDataValue(-99)
+            X_combined_bands[:, :, b] = X_combined
 
-        dst_ds = None
+        write_output_tif(X_combined_bands, dst_tif_path, bands, cols, rows, self.geo_transform, projection, gdaldtype, no_data_value)

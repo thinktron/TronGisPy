@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="0.2.1",
+    version="0.2.5",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -48,6 +48,11 @@ setuptools.setup(
 
 # 0.2.0 change name to TronGisPy
 # 0.2.1 no need to give rows, cols, bend in write tif
+# 0.2.2 add update_projection
+# 0.2.3 cast npdtype to gdaldtype in TypeCast
+# 0.2.4 set gdaldtyp in rasterize_layer function
+# 0.2.5 change projection, gdadtype and no_data_value to write function in SplittedImage
+
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.2.1-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.2.1-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.2.5-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.2.5-py3-none-any.whl
