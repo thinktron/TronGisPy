@@ -8,7 +8,7 @@ from shapely.geometry import Polygon
 epsilon = 10**-6
 
 class SplittedImage():
-    def __init__(self, source_image, box_size, geo_transform, padding='right'):
+    def __init__(self, source_image, box_size, geo_transform, padding='right', pad_val=0):
         """padding: ['right', 'left', 'center']"""
         self.source_image = source_image
         self.window_size_h = self.window_size_w = self.step_size_h = self.step_size_w = box_size
@@ -18,6 +18,7 @@ class SplittedImage():
         # self.step_size_w = step_size_w
         self.geo_transform = geo_transform
         self.padding = padding
+        self.pad_val = pad_val
         self.img_h, self.img_w = self.source_image.shape[:2]
         self.is_single_band = len(self.source_image.shape) == 2
         self.num_bands = 1 if self.is_single_band else self.source_image.shape[2]
@@ -56,9 +57,9 @@ class SplittedImage():
     def get_padded_image(self):
         if self.padding == 'right':
             if self.is_single_band: # s`ingle band (gray scale)
-                img_resized = np.pad(self.source_image, ((0, self.img_h_resized-self.img_h), (0, self.img_w_resized-self.img_w)), 'constant', constant_values=0)
+                img_resized = np.pad(self.source_image, ((0, self.img_h_resized-self.img_h), (0, self.img_w_resized-self.img_w)), 'constant', constant_values=self.pad_val)
             else: # multiple bands
-                img_resized = np.pad(self.source_image, ((0, self.img_h_resized-self.img_h), (0, self.img_w_resized-self.img_w), (0,0)), 'constant', constant_values=0)
+                img_resized = np.pad(self.source_image, ((0, self.img_h_resized-self.img_h), (0, self.img_w_resized-self.img_w), (0,0)), 'constant', constant_values=self.pad_val)
         return img_resized
 
     def convert_to_inner_index_h(self, h_start, h_stop):
@@ -136,9 +137,10 @@ class SplittedImage():
         return df_attribute
 
 
-    def write_splitted_images(self, target_dir, filename, projection=None, gdaldtype=None, no_data_value=None):
+    def write_splitted_images(self, target_dir, filename, projection=None, gdaldtype=None, no_data_value=None, filter_fun=lambda x:True):
         """
         target_dir: where you want to store all aplitted images; filename: index number will be followed by the output filename you defined, e.g. <filename>_idx_idxh_idxw;
+        filter_fun(x_splitted): if return True, the image will be stored.
         """
         df_attribute = self.get_geo_attribute(return_geo_transform=True)
         splitted_images = self.get_splitted_images()
@@ -148,12 +150,12 @@ class SplittedImage():
             idx_h_str = "_" + ("%3i"%row['idx_h']).replace(" ", "0")
             idx_w_str = "_" + ("%3i"%row['idx_w']).replace(" ", "0")
             path = os.path.join(target_dir, filename + idx_str + idx_h_str + idx_w_str + ".tif")
-            if target_img.std() != 0:
-                bands, cols, rows = self.num_bands, self.window_size_w, self.window_size_h
-                geo_transform = row['geo_transform']
+            bands, cols, rows = self.num_bands, self.window_size_w, self.window_size_h
+            geo_transform = row['geo_transform']
+            if filter_fun(target_img):
                 write_output_tif(target_img, path, bands, cols, rows, geo_transform, projection, gdaldtype, no_data_value)
 
-    def write_combined_tif(self, X, dst_tif_path, projection=None, gdaldtype=None, no_data_value=None):
+    def get_combined_image(self, X):
         if len(X.shape) == 3:
             X = np.expand_dims(X, axis=3) 
         rows = self.source_image.shape[0]
@@ -170,5 +172,9 @@ class SplittedImage():
                 h_length, w_length = X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner].shape
                 X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner] = X[i, :h_length, :w_length, b]
             X_combined_bands[:, :, b] = X_combined
+        
+        return X_combined_bands
 
-        write_output_tif(X_combined_bands, dst_tif_path, bands, cols, rows, self.geo_transform, projection, gdaldtype, no_data_value)
+    def write_combined_tif(self, X, dst_tif_path, projection=None, gdaldtype=None, no_data_value=None):
+        X_combined_bands = self.get_combined_image(X)
+        write_output_tif(X_combined_bands, dst_tif_path, geo_transform=self.geo_transform, projection=projection, gdaldtype=gdaldtype, no_data_value=no_data_value)

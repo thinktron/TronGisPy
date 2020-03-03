@@ -364,8 +364,8 @@ class TestTypeCast(unittest.TestCase):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
 
-    def test_get_gdaldtype_by_idx(self):
-        self.assertTrue(get_gdaldtype_by_idx(5) == 'GDT_Int32')
+    def test_get_gdaldtype_name_by_idx(self):
+        self.assertTrue(get_gdaldtype_name_by_idx(5) == 'GDT_Int32')
 
     def test_convert_gdaldtype_to_npdtype(self):
         self.assertTrue(convert_gdaldtype_to_npdtype(5) == np.int32)
