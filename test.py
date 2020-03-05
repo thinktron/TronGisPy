@@ -22,7 +22,7 @@ from TronGisPy.SplittedImage import SplittedImage
 from TronGisPy.GisIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_projection
 from TronGisPy.Algorithm import kmeans
 from TronGisPy.Normalizer import Normalizer
-from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon
+from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon, reproject, get_wkt_from_epsg
 from TronGisPy.TypeCast import get_gdaldtype_name_by_idx, convert_gdaldtype_to_npdtype, convert_npdtype_to_gdaldtype
 
 # from PySatellite.Interpolation import inverse_distance_weighted
@@ -41,9 +41,8 @@ multiline_to_be_clipped_path = get_testing_fp('multiline_to_be_clipped')
 shp_clipper_path = get_testing_fp('shp_clipper')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
-# show_image = True
-show_image = False
-
+show_image = True
+# show_image = False
 
 class TestSplittedImage(unittest.TestCase):
     def setUp(self):
@@ -53,7 +52,10 @@ class TestSplittedImage(unittest.TestCase):
             os.mkdir(self.output_dir)
 
         # window_size_h = window_size_w = step_size_h = step_size_w = 256
-        self.box_size = 128
+        # self.box_size = 128
+        # self.step_size = 64
+        self.box_size = 254
+        self.step_size = 127
         
         cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
         self.geo_transform = geo_transform
@@ -62,47 +64,47 @@ class TestSplittedImage(unittest.TestCase):
         self.no_data_value = no_data_value
         self.X = get_nparray(satellite_tif_path)
 
-        self.splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform)
+        self.splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform, step_size=self.step_size)
 
     def tearDown(self):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
 
     def test___getitem__(self):
-        slice_test1 = Counter(pd.cut(self.splitted_image[1].flatten(), bins=3, labels=range(3))) == Counter({1: 137343, 0: 122742, 2: 2059})
-        slice_test2 = Counter(pd.cut(self.splitted_image[:2].flatten(), bins=3, labels=range(3))) == Counter({1: 412579, 0: 366496, 2: 7357})
-        slice_test3 = Counter(pd.cut(self.splitted_image[:2, 2].flatten(), bins=3, labels=range(3))) == Counter({0: 97945, 1: 95721, 2: 2942})
-        slice_test4 = Counter(pd.cut(self.splitted_image[:2, :2].flatten(), bins=3, labels=range(3))) == Counter({1: 333569, 0: 250291, 2: 5964})
-
-        self.assertTrue(slice_test1)
-        self.assertTrue(slice_test2)
-        self.assertTrue(slice_test3)
-        self.assertTrue(slice_test4)
+        self.assertTrue(self.splitted_image.convert_to_inner_index_h(0,0) == (0, 254))
+        self.assertTrue(self.splitted_image.convert_to_inner_index_h(1,1) == (127, 381))
+        self.assertTrue(self.splitted_image.convert_to_inner_index_h(2,2) == (254, 508))
+        self.assertTrue(Counter(pd.cut(self.splitted_image[1].flatten(), bins=3, labels=range(3))) == Counter({0: 268790, 1: 247772, 2: 3630}))
+        self.assertTrue(Counter(pd.cut(self.splitted_image[:2].flatten(), bins=3, labels=range(3))) == Counter({1: 523687, 0: 508289, 2: 8408}))
+        self.assertTrue(Counter(pd.cut(self.splitted_image[:2, 2].flatten(), bins=3, labels=range(3))) == Counter({0: 285697, 1: 225614, 2: 4817}))
+        self.assertTrue(Counter(pd.cut(self.splitted_image[:2, :2].flatten(), bins=3, labels=range(3))) == Counter({1: 521447, 0: 502404, 2: 8405}))
 
     def test_get_padded_image(self):
-        shape_test = self.splitted_image.padded_image.shape == (512, 512, 4)
+        shape_test = self.splitted_image.padded_image.shape == (635, 635, 4)
         self.assertTrue(shape_test)
 
     def test_get_splitted_images(self):
-        shape_test = self.splitted_image.get_splitted_images().shape == (16, 128, 128, 4)
+        shape_test = self.splitted_image.get_splitted_images().shape == (16, 254, 254, 4)
         self.assertTrue(shape_test)
 
     def test_get_geo_attribute(self):
         df_attribute = self.splitted_image.get_geo_attribute()
         df_attribute.to_file(os.path.join(self.output_dir, "df_attribute.shp"))
         pol = df_attribute.loc[0, 'geometry']
-        area_test = pol.area == 1638400.0
+        area_test = pol.area == 6451600.0
         self.assertTrue(area_test)
 
     def test_write_splitted_images(self):
         self.splitted_image.write_splitted_images(self.output_dir, 'test_satellite', projection=self.projection, gdaldtype=self.gdaldtype, no_data_value=self.no_data_value)
 
+    def test_get_combined_image(self):
+        X_pred = self.splitted_image.get_splitted_images()
+        X_combined = self.splitted_image.get_combined_image(X_pred, padding=3, aggregator='mean')
+
     def test_write_combined_tif(self):
-        box_size = 101
-        splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform)
-        X_pred = splitted_image.get_splitted_images()[:,:,:,0]
+        X_pred = self.splitted_image.get_splitted_images()
         dst_tif_path = os.path.join(self.output_dir, "combined.tif")
-        splitted_image.write_combined_tif(X_pred, dst_tif_path, projection=self.projection, gdaldtype=self.gdaldtype)
+        self.splitted_image.write_combined_tif(X_pred, dst_tif_path, projection=self.projection, gdaldtype=self.gdaldtype)
 
 class TestCRS(unittest.TestCase):
     def setUp(self):
@@ -141,6 +143,27 @@ class TestCRS(unittest.TestCase):
         centroid = polygon.centroid.x, polygon.centroid.y
         self.assertTrue(centroid == (328555.0, 2750785.0))
 
+    def test_reproject(self):
+        src_tif_path = satellite_tif_path
+        dst_tif_path = os.path.join(self.output_dir, "X_reprojected.tif")
+        reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:3826')
+        WKT3826 = 'PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],AUTHORITY["EPSG","3826"]]'
+        self.assertTrue(get_geo_info(dst_tif_path)[4] == WKT3826)
+
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_tif_path)
+        tif_without_projection_path = os.path.join(self.output_dir, "X_without_projection.tif")
+        write_output_tif(get_nparray(dst_tif_path), tif_without_projection_path, geo_transform=geo_transform, gdaldtype=gdaldtype)
+
+        src_tif_path = tif_without_projection_path
+        dst_tif_path = os.path.join(self.output_dir, "X_reprojected_2.tif")
+        reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:4326', src_crs='EPSG:3826')
+        WKT4326 = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]]'
+        self.assertTrue(get_geo_info(dst_tif_path)[4] == WKT4326)
+
+    def test_get_wkt_from_epsg(self):
+        WKT4326 = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]'
+        target_WKT = get_wkt_from_epsg(4326)
+        self.assertTrue(WKT4326 == target_WKT)
 
 class TestGisIO(unittest.TestCase):
     def setUp(self):

@@ -10,7 +10,7 @@ from TronGisPy.CRS import transfer_npidx_to_coord_polygon, transfer_npidx_to_coo
 
 # bands compositions
 def get_geo_info(fp):
-    """cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(fp)"""
+    """cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(fp)"""
     ds = gdal.Open(fp)
     cols = ds.RasterXSize
     rows = ds.RasterYSize

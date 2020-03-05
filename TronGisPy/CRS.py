@@ -1,3 +1,5 @@
+import osr
+import gdal
 import affine
 from shapely.geometry import Polygon
 
@@ -47,3 +49,14 @@ def transfer_npidx_to_coord_polygon(npidx, geo_transform):
     minx, miny, maxx, maxy = coord_x, coord_y+px_h, coord_x+px_w, coord_y
     polygon = Polygon([(minx, miny), (maxx, miny),  (maxx, maxy),  (minx, maxy)])
     return polygon
+
+def reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:4326', src_crs=None):
+    if src_crs:
+        gdal.Warp(dst_tif_path, src_tif_path, srcSRS=src_crs, dstSRS=dst_crs)
+    else:
+        gdal.Warp(dst_tif_path, src_tif_path, dstSRS=dst_crs)
+
+def get_wkt_from_epsg(epsg=4326):
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(epsg)
+    return source.ExportToWkt()

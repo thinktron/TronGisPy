@@ -8,14 +8,14 @@ from shapely.geometry import Polygon
 epsilon = 10**-6
 
 class SplittedImage():
-    def __init__(self, source_image, box_size, geo_transform, padding='right', pad_val=0):
+    def __init__(self, source_image, box_size, geo_transform, step_size=None, padding='right', pad_val=0):
         """padding: ['right', 'left', 'center']"""
         self.source_image = source_image
-        self.window_size_h = self.window_size_w = self.step_size_h = self.step_size_w = box_size
-        # self.window_size_h = window_size_h
-        # self.window_size_w = window_size_w
-        # self.step_size_h = step_size_h
-        # self.step_size_w = step_size_w
+        self.window_size_h = self.window_size_w = box_size
+        if step_size:
+            self.step_size_h = self.step_size_w = step_size
+        else:
+            self.step_size_h = self.step_size_w = box_size
         self.geo_transform = geo_transform
         self.padding = padding
         self.pad_val = pad_val
@@ -155,7 +155,11 @@ class SplittedImage():
             if filter_fun(target_img):
                 write_output_tif(target_img, path, bands, cols, rows, geo_transform, projection, gdaldtype, no_data_value)
 
-    def get_combined_image(self, X):
+    def get_combined_image(self, X, padding=3, aggregator='mean'):
+        """
+        padding:segmentation may wrong result at the boundry for each splitted image, it can be resolve to pad each image when combining it.
+        aggregator: if multuple predicting result is overlapped in the combined image, aggregator is necessary to combine them into one band. "mean", "median", "max" and "min" is available.
+        """
         if len(X.shape) == 3:
             X = np.expand_dims(X, axis=3) 
         rows = self.source_image.shape[0]
@@ -163,18 +167,38 @@ class SplittedImage():
         bands = X.shape[3]
         
         X_combined_bands = np.zeros((rows, cols, bands))
+        X_combined_bands_count = np.zeros((rows, cols, bands))
         for b in range(bands):
-            X_combined = np.zeros((rows, cols))
+            self.n_steps_h = int((self.img_h - self.window_size_h) / (self.step_size_h + epsilon)) + 1
+
+            overlapped_count = np.max([
+                int(self.window_size_w/(self.step_size_w + epsilon)) + 1, 
+                int(self.window_size_h/(self.step_size_h + epsilon)) + 1
+                ])
+
+            X_combined = np.full((rows, cols, overlapped_count), np.nan)
             for i in range(len(X)):
                 idx_h , idx_w = self.convert_order_to_location_index(i)
                 h_start_inner, h_stop_inner = self.convert_to_inner_index_h(idx_h, idx_h)
                 w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
-                h_length, w_length = X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner].shape
-                X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner] = X[i, :h_length, :w_length, b]
+                h_start_inner, h_stop_inner = h_start_inner + padding, h_stop_inner - padding
+                w_start_inner, w_stop_inner = w_start_inner + padding, w_stop_inner - padding
+                h_length, w_length, b_length = X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner].shape
+                
+                X_combined_inner = X_combined[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner]
+                next_idx = np.argmax(np.isnan(X_combined_inner), axis=2).flatten()
+                img_idx_x, img_idx_y = np.where(np.ones_like(X_combined_inner[:,:,0]))
+                X_combined_inner[img_idx_x, img_idx_y, next_idx] = X[i, padding:padding+h_length, padding:padding+w_length, b].flatten()
+
+            if aggregator=='mean': X_combined = np.nanmean(X_combined, axis=2)
+            elif aggregator=='median': X_combined = np.nanmedian(X_combined, axis=2)
+            elif aggregator=='max': X_combined = np.nanmax(X_combined, axis=2)
+            elif aggregator=='min': X_combined = np.nanmin(X_combined, axis=2)
             X_combined_bands[:, :, b] = X_combined
-        
         return X_combined_bands
 
     def write_combined_tif(self, X, dst_tif_path, projection=None, gdaldtype=None, no_data_value=None):
         X_combined_bands = self.get_combined_image(X)
+        if no_data_value: 
+            X_combined_bands[np.isnan(X_combined_bands)] = no_data_value
         write_output_tif(X_combined_bands, dst_tif_path, geo_transform=self.geo_transform, projection=projection, gdaldtype=gdaldtype, no_data_value=no_data_value)
