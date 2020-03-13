@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="0.3.2",
+    version="0.3.5",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -59,6 +59,10 @@ setuptools.setup(
 # 0.3.0 step size different from window size is acceptable in SplittedImage 
 # 0.3.1 add reproject function in CRS.py
 # 0.3.2 get_WKT_from epsg
+# 0.3.3 add interpolation function
+# 0.3.4 add clipper in Normalizer
+# 0.3.5 get_epsg_from_wkt in CRS & remap_tif and reproject in GisIO
+
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.3.2-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.3.2-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.3.5-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.3.5-py3-none-any.whl

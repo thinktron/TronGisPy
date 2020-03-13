@@ -6,7 +6,7 @@ import geopandas as gpd
 from collections import Counter
 from shapely.geometry import Point, MultiPolygon, LineString, MultiLineString
 from TronGisPy.TypeCast import convert_npdtype_to_gdaldtype
-from TronGisPy.CRS import transfer_npidx_to_coord_polygon, transfer_npidx_to_coord
+from TronGisPy.CRS import transfer_npidx_to_coord_polygon, transfer_npidx_to_coord, get_epsg_from_wkt
 
 # bands compositions
 def get_geo_info(fp):
@@ -52,9 +52,14 @@ def get_extend(fp):
     ds = None 
     return np.array(extend)
 
-def update_projection(fp, projection):
+def update_geo_info(fp, geo_transform=None, projection=None):
+    all_none = geo_transform is None and projection is None
+    assert not all_none, "at least one of geo_transform and projection params should not be None!"
     ds = gdal.Open(fp, gdal.GA_Update)
-    ds.SetProjection(projection)
+    if geo_transform is not None:
+        ds.SetGeoTransform(geo_transform)
+    if projection is not None:
+        ds.SetProjection(projection)
     ds = None 
 
 def write_output_tif(X, dst_tif_path, bands=None, cols=None, rows=None, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None):
@@ -285,6 +290,35 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
     else:
         df_shp.to_file(dst_shp_path)
 
+
+def reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:4326', src_crs=None):
+    if src_crs:
+        gdal.Warp(dst_tif_path, src_tif_path, srcSRS=src_crs, dstSRS=dst_crs)
+    else:
+        gdal.Warp(dst_tif_path, src_tif_path, dstSRS=dst_crs)
+
+
+def remap_tif(src_tif_path, dst_tif_path, ref_tif_path):
+    from TronGisPy import GisIO 
+    cols, rows, bands, src_geo_transform, src_projection, src_gdaldtype, src_no_data_value = GisIO.get_geo_info(src_tif_path)
+    cols, rows, bands, ref_geo_transform, ref_projection, ref_gdaldtype, ref_no_data_value = GisIO.get_geo_info(ref_tif_path)
+    extend_poly = GisIO.get_extend(ref_tif_path)
+    output_bounds = minX, minY, maxX, maxY = np.min(extend_poly[:,0]), np.min(extend_poly[:,1]), np.max(extend_poly[:,0]), np.max(extend_poly[:,1])
+    x_res, y_res = ref_geo_transform[1], ref_geo_transform[5]
+    output_type = src_gdaldtype
+    src_srs = "EPSG:" + str(get_epsg_from_wkt(src_projection))
+    dst_srs = "EPSG:" + str(get_epsg_from_wkt(ref_projection))
+    gdal.Warp(dst_tif_path, src_tif_path, 
+            outputBounds=output_bounds,
+            xRes=x_res,
+            yRes=y_res,
+            outputType=output_type,
+            srcSRS=src_srs,
+            dstSRS=dst_srs)
+
+
+
+
 # def zonal(src_shp_path, src_tif_path, dst_shp_path, band_num=1, operator='mean'):
 #     """band_num start from 1"""
 #     df_shp = gpd.read_file(src_shp_path)
@@ -349,6 +383,10 @@ def get_testing_fp(fn):
         fp = os.path.join(data_dir, 'clip_shp_by_shp', 'multiline_to_be_clipped.shp')
     elif fn == 'shp_clipper':
         fp = os.path.join(data_dir, 'clip_shp_by_shp', 'shp_clipper.shp')
+    elif fn == 'remap_rgb_clipper_path':
+        fp = os.path.join(data_dir, 'remap', 'rgb_3826_clipper.tif')
+    elif fn == 'remap_ndvi_path':
+        fp = os.path.join(data_dir, 'remap', 'ndvi_32651.tif')
     else:
         assert False, "cannot find the file!!"
     return os.path.abspath(fp)

@@ -19,13 +19,12 @@ import gdal
 
 # main
 from TronGisPy.SplittedImage import SplittedImage
-from TronGisPy.GisIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_projection
+from TronGisPy.GisIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_geo_info, reproject, remap_tif
 from TronGisPy.Algorithm import kmeans
 from TronGisPy.Normalizer import Normalizer
-from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon, reproject, get_wkt_from_epsg
+from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon, get_wkt_from_epsg
 from TronGisPy.TypeCast import get_gdaldtype_name_by_idx, convert_gdaldtype_to_npdtype, convert_npdtype_to_gdaldtype
-
-# from PySatellite.Interpolation import inverse_distance_weighted
+from TronGisPy.Interpolation import img_interpolation
 
 data_dir = os.path.join('TronGisPy', 'data')
 satellite_tif_path = get_testing_fp('satellite_tif')
@@ -37,12 +36,15 @@ poly_to_be_clipped_path = get_testing_fp('poly_to_be_clipped')
 point_to_be_clipped_path = get_testing_fp('point_to_be_clipped')
 line_to_be_clipped_path = get_testing_fp('line_to_be_clipped')
 multiline_to_be_clipped_path = get_testing_fp('multiline_to_be_clipped')
+remap_rgb_clipper_path = get_testing_fp('remap_rgb_clipper_path')
+remap_ndvi_path = get_testing_fp('remap_ndvi_path')
+
 
 shp_clipper_path = get_testing_fp('shp_clipper')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
-show_image = True
-# show_image = False
+# show_image = True
+show_image = False
 
 class TestSplittedImage(unittest.TestCase):
     def setUp(self):
@@ -143,23 +145,6 @@ class TestCRS(unittest.TestCase):
         centroid = polygon.centroid.x, polygon.centroid.y
         self.assertTrue(centroid == (328555.0, 2750785.0))
 
-    def test_reproject(self):
-        src_tif_path = satellite_tif_path
-        dst_tif_path = os.path.join(self.output_dir, "X_reprojected.tif")
-        reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:3826')
-        WKT3826 = 'PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],AUTHORITY["EPSG","3826"]]'
-        self.assertTrue(get_geo_info(dst_tif_path)[4] == WKT3826)
-
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_tif_path)
-        tif_without_projection_path = os.path.join(self.output_dir, "X_without_projection.tif")
-        write_output_tif(get_nparray(dst_tif_path), tif_without_projection_path, geo_transform=geo_transform, gdaldtype=gdaldtype)
-
-        src_tif_path = tif_without_projection_path
-        dst_tif_path = os.path.join(self.output_dir, "X_reprojected_2.tif")
-        reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:4326', src_crs='EPSG:3826')
-        WKT4326 = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]]'
-        self.assertTrue(get_geo_info(dst_tif_path)[4] == WKT4326)
-
     def test_get_wkt_from_epsg(self):
         WKT4326 = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]'
         target_WKT = get_wkt_from_epsg(4326)
@@ -175,14 +160,6 @@ class TestGisIO(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
-
-    def test_update_projection(self):
-        fp = os.path.join(self.output_dir, os.path.split(satellite_tif_path)[-1])
-        shutil.copyfile(satellite_tif_path, fp)
-        projection = 'PROJCS["Projection: Transverse Mercator; Datum: Taiwan (TWD97); Ellipsoid: GRS80",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.2572221010042,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]]]'
-        update_projection(fp, projection)
-        cols, rows, bands, geo_transform, projection_new, gdaldtype, no_data_value = get_geo_info(fp)
-        self.assertTrue(projection_new == projection)
 
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
@@ -254,6 +231,19 @@ class TestGisIO(unittest.TestCase):
             plt.show()
         self.assertTrue(resolution_refined_image_arr.shape == (1024, 1024, 4))
 
+    def test_update_geo_info(self):
+        dst_tif_path = os.path.join(self.output_dir, 'X_geo_info_updated.tif')
+        shutil.copyfile(satellite_tif_path, dst_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_tif_path)
+        projection = get_wkt_from_epsg(3826)
+        geo_transform = list(geo_transform)
+        geo_transform[0] += 10
+        geo_transform[3] -= 10
+        update_geo_info(dst_tif_path, projection=projection, geo_transform=geo_transform)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_tif_path)
+        self.assertTrue(geo_transform == (328540.0, 10.0, 0.0, 2750780.0, 0.0, -10.0))
+        self.assertTrue(projection == 'PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],AUTHORITY["EPSG","3826"]]')
+
     def test_write_output_tif(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
         clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
@@ -309,11 +299,39 @@ class TestGisIO(unittest.TestCase):
             plt.show()
         self.assertTrue(df_shp.loc[0, 'geometry'].area == 3624400.0)
 
-
     def test_raster_pixel_to_polygon(self):
         src_tif_path = satellite_tif_path
         dst_shp_path = os.path.join(self.output_dir, 'raster_pixel_to_polygon.shp')
         raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=True, crs={'init' :'epsg:3826'})
+
+    def test_reproject(self):
+        src_tif_path = satellite_tif_path
+        dst_tif_path = os.path.join(self.output_dir, "X_reprojected.tif")
+        reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:3826')
+        WKT3826 = 'PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],AUTHORITY["EPSG","3826"]]'
+        self.assertTrue(get_geo_info(dst_tif_path)[4] == WKT3826)
+
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_tif_path)
+        tif_without_projection_path = os.path.join(self.output_dir, "X_without_projection.tif")
+        write_output_tif(get_nparray(dst_tif_path), tif_without_projection_path, geo_transform=geo_transform, gdaldtype=gdaldtype)
+
+        src_tif_path = tif_without_projection_path
+        dst_tif_path = os.path.join(self.output_dir, "X_reprojected_2.tif")
+        reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:4326', src_crs='EPSG:3826')
+        WKT4326 = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]]'
+        self.assertTrue(get_geo_info(dst_tif_path)[4] == WKT4326)
+    
+    def test_remap_tif(self):
+        src_tif_path = get_testing_fp('remap_ndvi_path')
+        ref_tif_path = get_testing_fp('remap_rgb_clipper_path')
+        dst_tif_path = os.path.join(self.output_dir, 'X_remapped.tif')
+        remap_tif(src_tif_path, dst_tif_path, ref_tif_path)
+
+        ref_cols, ref_rows, ref_bands, ref_geo_transform, ref_projection, ref_gdaldtype, ref_no_data_value = get_geo_info(ref_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
+        self.assertTrue((ref_cols, ref_rows) == (dst_cols, dst_rows))
+        self.assertTrue(ref_geo_transform == dst_geo_transform)
+        self.assertTrue(ref_projection == dst_projection)
 
     def test_get_testing_fp(self):
         fn = 'satellite_tif'
@@ -347,8 +365,16 @@ class TestNormalizer(unittest.TestCase):
 
     def test_Normalizer(self):
         X_norm = Normalizer().fit_transform(self.X) 
-        self.assertTrue(X_norm.min()==0)
-        self.assertTrue(X_norm.max()==1)
+        self.assertTrue(np.sum(X_norm==1) == 289)
+        self.assertTrue(np.sum(X_norm==0) == 1)
+
+        X_norm = Normalizer().fit_transform(self.X, min_max_val=(20, 240)) 
+        self.assertTrue(np.sum(X_norm==1) == 727)
+        self.assertTrue(np.sum(X_norm==0) == 76876)
+
+        X_norm = Normalizer().fit_transform(self.X, clip_percentage=0.1) 
+        self.assertTrue(np.sum(X_norm==1) == 105926)
+        self.assertTrue(np.sum(X_norm==0) == 112995)
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
@@ -396,16 +422,40 @@ class TestTypeCast(unittest.TestCase):
     def test_convert_npdtype_to_gdaldtype(self):
         self.assertTrue(convert_npdtype_to_gdaldtype(np.int32) == 5)
 
-# class TestInterpolation(unittest.TestCase):
-    # def setUp(self):
-    #     time.sleep(1)
-#         self.output_dir = os.path.join('test_output')
-#         if not os.path.isdir(self.output_dir):
-#             os.mkdir(self.output_dir)
+class TestInterpolation(unittest.TestCase):
+    def setUp(self):
+        time.sleep(1)
+        X = get_nparray(satellite_tif_path).astype(np.float)
+        raw_shape = X.shape
+        X = X.flatten()
+        rand_idx = np.random.randint(0, len(X), int(len(X)*0.3))
+        X[rand_idx] = np.nan
+        self.X = X.reshape(raw_shape)
+        self.output_dir = os.path.join('test_output')
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
 
-#     # def tearDown(self):
-#     #     shutil.rmtree(self.output_dir)
-#           time.sleep(1)
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
+        time.sleep(1)
+
+
+    def test_img_interpolation(self):
+        X_band0 = self.X[:, :, 0]
+        X_band0_interp_nearest = img_interpolation(X_band0, method='nearest')
+        X_band0_interp_linear = img_interpolation(X_band0, method='linear')
+        X_band0_interp_cubic = img_interpolation(X_band0, method='cubic')
+        if show_image:
+            fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+            axes[0].imshow(X_band0, cmap='gray')
+            axes[1].imshow(X_band0_interp_nearest, cmap='gray')
+            axes[2].imshow(X_band0_interp_linear, cmap='gray')
+            axes[3].imshow(X_band0_interp_cubic, cmap='gray')
+            
+        self.assertTrue(np.sum(np.isnan(X_band0_interp_nearest)) < np.product(X_band0_interp_nearest.shape) * 0.05)
+        self.assertTrue(np.sum(np.isnan(X_band0_interp_linear)) < np.product(X_band0_interp_nearest.shape) * 0.05)
+        self.assertTrue(np.sum(np.isnan(X_band0_interp_cubic)) < np.product(X_band0_interp_nearest.shape) * 0.05)
+    
 
 #     def test_inverse_distance_weighted(self):
 #         POINTS = os.path.abspath(interpolation_points_path)

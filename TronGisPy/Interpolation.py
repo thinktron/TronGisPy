@@ -1,3 +1,28 @@
+import os
+import numpy as np
+from scipy.interpolate import griddata
+
+def img_interpolation(X, method='linear', mask=None):
+    """
+    X: please whole image.
+    method: 'nearest', 'linear', 'cubic', see scipy.interpolate.griddata documentation.
+    mask: The location to be filled with value. If mask == None, use np.nan(X) as mask.
+    """
+    assert len(X.shape) == 2, "X should be one band image!"
+    if mask is not None:
+        assert X.shape == mask.shape, 'X.shape should be mask.shape!'
+        assert mask.dtype == np.bool, 'mask.dtype should be np.bool!'
+        points = np.array(np.where(~mask)).T
+        values = X[~mask].copy()
+    else:
+        points = np.array(np.where(~np.isnan(X))).T
+        values = X[~np.isnan(X)].copy()
+    grid_x, grid_y = np.where(X)
+    grid_x, grid_y = grid_x.reshape(X.shape), grid_y.reshape(X.shape)
+    X_interp = griddata(points, values, (grid_x, grid_y), method=method)
+    return X_interp
+
+
 # import os
 # import subprocess
 # base_dir = os.path.dirname(os.path.realpath(__file__))
