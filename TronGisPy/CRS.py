@@ -3,6 +3,7 @@ import gdal
 import affine
 import numpy as np
 from shapely.geometry import Polygon
+import numba
 
 def __transfer_xy_to_coord(xy, geo_transform):
     """inner usage
