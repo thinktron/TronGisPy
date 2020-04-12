@@ -22,7 +22,7 @@ from TronGisPy.SplittedImage import SplittedImage
 from TronGisPy.GisIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_geo_info, reproject, remap_tif
 from TronGisPy.Algorithm import kmeans
 from TronGisPy.Normalizer import Normalizer
-from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon, get_wkt_from_epsg
+from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon, get_wkt_from_epsg, numba_transfer_group_coord_to_npidx
 from TronGisPy.TypeCast import get_gdaldtype_name_by_idx, convert_gdaldtype_to_npdtype, convert_npdtype_to_gdaldtype
 from TronGisPy.Interpolation import img_interpolation
 
@@ -150,6 +150,19 @@ class TestCRS(unittest.TestCase):
         target_WKT = get_wkt_from_epsg(4326)
         self.assertTrue(WKT4326 == target_WKT)
 
+
+    def test_numba_transfer_group_coord_to_npidx(self):
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
+        coord = (328560.0+9, 2750780.0-9) # resolution is 10 meter, add 9 will be in the same cell
+        npidx = numba_transfer_group_coord_to_npidx(np.array([list(coord)]), geo_transform)
+        print(npidx)
+        # self.assertTrue(npidx == [(1, 3)])
+        # coord = (328560.0+11, 2750780.0-11) # resolution is 10 meter, add 11 will be in the next cell
+        # npidx = numba_transfer_group_coord_to_npidx([list(coord)], geo_transform)
+        # print(npidx)
+        # self.assertTrue(npidx == [(2, 4)])
+
+        
 class TestGisIO(unittest.TestCase):
     def setUp(self):
         time.sleep(1)
