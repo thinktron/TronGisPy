@@ -54,7 +54,7 @@ def numba_transfer_group_coord_to_npidx(coords, geo_transform):
         x, y = coords[i][0], coords[i][1]
         x, y = __numba_transfer_coord_to_xy(x, y, *geo_transform)
         group_npidx.append((y, x))
-    return group_npidx
+    return group_npidx.astype(np.int)
 
 
 def __transfer_xy_to_coord(xy, geo_transform):
