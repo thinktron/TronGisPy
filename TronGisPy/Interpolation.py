@@ -17,7 +17,7 @@ def img_interpolation(X, method='linear', mask=None):
     else:
         points = np.array(np.where(~np.isnan(X))).T
         values = X[~np.isnan(X)].copy()
-    grid_x, grid_y = np.where(X)
+    grid_x, grid_y = np.where(np.ones_like(X))
     grid_x, grid_y = grid_x.reshape(X.shape), grid_y.reshape(X.shape)
     X_interp = griddata(points, values, (grid_x, grid_y), method=method)
     return X_interp

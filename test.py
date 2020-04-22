@@ -19,7 +19,7 @@ import gdal
 
 # main
 from TronGisPy.SplittedImage import SplittedImage
-from TronGisPy.GisIO import get_geo_info, get_nparray, get_extend, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_geo_info, reproject, remap_tif
+from TronGisPy.GisIO import get_geo_info, get_nparray, get_extent, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_geo_info, reproject, remap_tif
 from TronGisPy.Algorithm import kmeans
 from TronGisPy.Normalizer import Normalizer
 from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon, get_wkt_from_epsg, numba_transfer_group_coord_to_npidx

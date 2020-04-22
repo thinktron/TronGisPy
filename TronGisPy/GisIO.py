@@ -34,23 +34,27 @@ def get_nparray(fp, opencv_shape=True):
             X = X.reshape(-1, *X.shape)
         return np.transpose(X, axes=[1,2,0])
 
-def get_extend(fp):
-    """get the extend(boundry) coordnate"""
+def get_extent(fp, return_poly=True):
+    """get the extent(boundry) coordnate"""
     ds = gdal.Open(fp)
     cols = ds.RasterXSize
     rows = ds.RasterYSize
     gt = ds.GetGeoTransform()
-    extend=[]
+    extent=[]
     xarr=[0,cols]
     yarr=[0,rows]
     for px in xarr:
         for py in yarr:
             x=gt[0]+(px*gt[1])+(py*gt[2])
             y=gt[3]+(px*gt[4])+(py*gt[5])
-            extend.append([x,y])
+            extent.append([x,y])
         yarr.reverse()
     ds = None 
-    return np.array(extend)
+    poly = np.array(extent)
+    if return_poly:
+        return poly
+    else:
+        return (np.min(poly[:, 0]), np.max(poly[:, 0]), np.min(poly[:, 1]), np.max(poly[:, 1]))
 
 def update_geo_info(fp, geo_transform=None, projection=None):
     all_none = geo_transform is None and projection is None
@@ -302,7 +306,7 @@ def remap_tif(src_tif_path, dst_tif_path, ref_tif_path):
     from TronGisPy import GisIO 
     cols, rows, bands, src_geo_transform, src_projection, src_gdaldtype, src_no_data_value = GisIO.get_geo_info(src_tif_path)
     cols, rows, bands, ref_geo_transform, ref_projection, ref_gdaldtype, ref_no_data_value = GisIO.get_geo_info(ref_tif_path)
-    extend_poly = GisIO.get_extend(ref_tif_path)
+    extend_poly = GisIO.get_extent(ref_tif_path)
     output_bounds = minX, minY, maxX, maxY = np.min(extend_poly[:,0]), np.min(extend_poly[:,1]), np.max(extend_poly[:,0]), np.max(extend_poly[:,1])
     x_res, y_res = ref_geo_transform[1], ref_geo_transform[5]
     output_type = src_gdaldtype

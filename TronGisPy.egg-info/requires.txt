@@ -1,3 +1,4 @@
+numba
 affine
 scikit-learn
 descartes
