@@ -14,6 +14,7 @@ TronGisPy.egg-info/dependency_links.txt
 TronGisPy.egg-info/requires.txt
 TronGisPy.egg-info/top_level.txt
 TronGisPy/data/P0015913_SP5_006_001_002_049_006_001.tif
+TronGisPy/data/P0015913_SP5_006_001_002_049_006_001.tif.aux.xml
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.cpg
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.dbf
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.shp
@@ -43,7 +44,9 @@ TronGisPy/data/rasterized_image/rasterized_image.tif
 TronGisPy/data/rasterized_image/rasterized_image_1.tif
 TronGisPy/data/rasterized_image/rasterized_image_1.tif.aux.xml
 TronGisPy/data/remap/ndvi_32651.tif
+TronGisPy/data/remap/ndvi_32651.tif.aux.xml
 TronGisPy/data/remap/rgb_3826_clipper.tif
+TronGisPy/data/remap/rgb_3826_clipper.tif.aux.xml
 TronGisPy/data/satellite_tif/satellite_tif.tif
 TronGisPy/data/satellite_tif_clipper/satellite_tif_clipper.cpg
 TronGisPy/data/satellite_tif_clipper/satellite_tif_clipper.dbf

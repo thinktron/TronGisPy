@@ -1,8 +1,8 @@
 Metadata-Version: 2.1
 Name: TronGisPy
-Version: 0.3.8
+Version: 0.3.9
 Summary: Gis image Processing tool
-Home-page: http://rd.thinktronltd.com/jeremywang/PySatellite
+Home-page: http://rd.thinktronltd.com/jeremywang/TronGisPy
 Author: GoatWang
 Author-email: jeremywang@thinktronltd.com
 License: UNKNOWN

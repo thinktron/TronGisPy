@@ -3,6 +3,6 @@ venv
 __pycache__
 build
 dist
-SplittedImage.egg-info
+*.egg-info
 *.aux.xml
 test_output

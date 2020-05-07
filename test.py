@@ -283,14 +283,20 @@ class TestGisIO(unittest.TestCase):
         dst_tif_path = os.path.join(self.output_dir, 'rasterized_image.tif')
         ref_tif_path = satellite_tif_path
         rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path)
-
         rasterized_image = get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(rasterized_image[:,:,0], cmap='gray')
             plt.title("TestSatelliteIO" + ": " + "test_rasterize_layer")
             plt.show()
-        
         self.assertTrue(np.sum(rasterized_image==1) == 20512)
+
+        rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, all_touched=True)
+        rasterized_image = get_nparray(dst_tif_path)
+        if show_image:
+            plt.imshow(rasterized_image[:,:,0], cmap='gray')
+            plt.title("TestSatelliteIO" + ": " + "test_rasterize_layer")
+            plt.show()
+        self.assertTrue(np.sum(rasterized_image==1) == 20876)
 
     def test_polygonize_layer(self):
         src_tif_path = rasterized_image_path

@@ -189,7 +189,7 @@ def refine_resolution(src_tif_path, dst_tif_path, dst_resolution):
     result = gdal.Warp(dst_tif_path, src_tif_path, xRes=dst_resolution, yRes=dst_resolution)
     result = None
 
-def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None, gdaldtype=None, no_data_value=None):
+def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None, all_touched=False, gdaldtype=None, no_data_value=None):
     """
     src_shp_path: rasterize which shp.
     dst_tif_path: rasterize output, should be in tiff type.
@@ -225,7 +225,10 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     band.FlushCache()
 
     # set it to the attribute that contains the relevant unique
-    gdal.RasterizeLayer(dst_tif_ds, [1], src_shp_layer, options = ["ATTRIBUTE="+use_attribute]) # target_ds, band_list, source_layer, options = options
+    options = ["ATTRIBUTE="+use_attribute]
+    if all_touched:
+        options.append('ALL_TOUCHED=TRUE')
+    gdal.RasterizeLayer(dst_tif_ds, [1], src_shp_layer, options=options) # target_ds, band_list, source_layer, options = options
 
     # Add a spatial reference
     dst_tif_ds.SetProjection(ref_tif_ds.GetProjection())
