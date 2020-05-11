@@ -2,7 +2,9 @@ import os
 import numpy as np
 from scipy.interpolate import griddata
 
-def img_interpolation(X, method='linear', mask=None):
+
+
+def band_interpolation(X, method='linear', mask=None):
     """
     X: please whole image.
     method: 'nearest', 'linear', 'cubic', see scipy.interpolate.griddata documentation.
@@ -22,6 +24,13 @@ def img_interpolation(X, method='linear', mask=None):
     X_interp = griddata(points, values, (grid_x, grid_y), method=method)
     return X_interp
 
+def img_interpolation(X, method='linear', mask=None):
+    X_interp = X.copy()
+    if len(X_interp.shape) == 2:
+        X_interp = np.expand_dims(X_interp, axis=2)
+    for b in range(X_interp.shape[2]):
+        X_interp[:,:,b] = band_interpolation(X_interp[:,:,b])
+    return X_interp
 
 # import os
 # import subprocess
