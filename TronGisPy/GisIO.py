@@ -394,6 +394,8 @@ def get_testing_fp(fn):
         fp = os.path.join(data_dir, 'remap', 'rgb_3826_clipper.tif')
     elif fn == 'remap_ndvi_path':
         fp = os.path.join(data_dir, 'remap', 'ndvi_32651.tif')
+    elif fn == 'dem_process_path':
+        fp = os.path.join(data_dir, 'dem_tif', 'crop_dem.tif')
     else:
         assert False, "cannot find the file!!"
     return os.path.abspath(fp)
