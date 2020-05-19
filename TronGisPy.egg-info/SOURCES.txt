@@ -2,6 +2,7 @@ README.md
 setup.py
 TronGisPy/Algorithm.py
 TronGisPy/CRS.py
+TronGisPy/DEMProcessor.py
 TronGisPy/GisIO.py
 TronGisPy/Interpolation.py
 TronGisPy/Normalizer.py
@@ -35,6 +36,7 @@ TronGisPy/data/clip_shp_by_shp/shp_clipper.cpg
 TronGisPy/data/clip_shp_by_shp/shp_clipper.dbf
 TronGisPy/data/clip_shp_by_shp/shp_clipper.shp
 TronGisPy/data/clip_shp_by_shp/shp_clipper.shx
+TronGisPy/data/dem_tif/crop_dem.tif
 TronGisPy/data/interpolation/climate_points.dbf
 TronGisPy/data/interpolation/climate_points.mshp
 TronGisPy/data/interpolation/climate_points.prj
