@@ -49,6 +49,14 @@ def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
 
 @numba.jit(nopython=True)
 def numba_transfer_group_coord_to_npidx(coords, geo_transform):
+    """
+    input numpy idxs, return the coords of left-top points of the cells, using the function
+    | x' |   | a  b  c | | x |
+    | y' | = | d  e  f | | y |
+    | 1  |   | 0  0  1 | | 1 |
+    npidxs: [(row_idx, col_idx), ......]
+    coords: must be np.array() type. [(lng, lat), ......]
+    """
     group_npidx = []
     for i in range(0, len(coords)):
         x, y = coords[i][0], coords[i][1]
@@ -59,12 +67,9 @@ def numba_transfer_group_coord_to_npidx(coords, geo_transform):
 
 def transfer_group_npidx_to_coord(npidxs, geo_transform):
     """
-    input numpy idxs, return the coord_xy for the left top of the cell, using the function
-    | x' |   | a  b  c | | x |
-    | y' | = | d  e  f | | y |
-    | 1  |   | 0  0  1 | | 1 |
+    input coord idxs, return the npidxs of the cells.
+    coords: should be np.array() type, [(lng, lat), ......].
     npidxs: [(row_idx, col_idx), ......]
-    coord_xy: (lng, lat)
     """
     # prepare M
     c, a, b, f, d, e = geo_transform
@@ -83,9 +88,9 @@ def transfer_group_npidx_to_coord(npidxs, geo_transform):
 
 def transfer_npidx_to_coord(npidx, geo_transform):
     """
-    input numpy idx, return the coord_xy for the left top of the cell
+    input numpy idx, return the coord of the left-top point of the cell.
     npidx: (row_idx, col_idx)
-    coord_xy: (lng, lat)
+    coord: (lng, lat)
     """
     npidx_reverse = (npidx[1], npidx[0])
     forward_transform =  affine.Affine.from_gdal(*geo_transform)
@@ -94,7 +99,7 @@ def transfer_npidx_to_coord(npidx, geo_transform):
 
 def transfer_coord_to_npidx(coord, geo_transform, convert_to_int=True):
     """
-    input npumpy idx, return the coord_xy for the left top of the cell
+    input coord idx, return the npidx of the cell.
     npidx: (row_idx, col_idx)
     coord: (lng, lat)
     """
