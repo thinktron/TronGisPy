@@ -461,7 +461,6 @@ class TestInterpolation(unittest.TestCase):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
 
-
     def test_img_interpolation(self):
         X_band0 = self.X[:, :, 0]
         X_band0_interp_nearest = img_interpolation(X_band0, method='nearest')
@@ -557,33 +556,6 @@ class TestDEMProcessor(unittest.TestCase):
         self.assertTrue(self.dem_geo_transform == dst_geo_transform)
         self.assertTrue(self.dem_no_data_value == dst_no_data_value)
         self.assertGreaterEqual(np.nanmin(dst_array), 0)
-
-#     def test_inverse_distance_weighted(self):
-#         POINTS = os.path.abspath(interpolation_points_path)
-#         FIELD = "TEMP" # Field used for analysis
-#         DOWNLOAD_DIR = self.output_dir
-#         TARGET_TEMPLATE = None
-#         CV_METHOD = 0
-#         CV_SAMPLES = 10
-#         TARGET_DEFINITION = 0
-#         TARGET_USER_SIZE = 0.053 #Depends on the input shape
-#         TARGET_USER_XMIN = 118.19 #Changes depends on the extent of shp
-#         TARGET_USER_XMAX = 122.165 #Changes depends on the extent of shp
-#         TARGET_USER_YMIN = 21.677 #Changes depends on the extent of shp
-#         TARGET_USER_YMAX = 26.606 #Changes depends on the extent of shp
-#         TARGET_USER_FITS = 0
-#         SEARCH_RANGE = 1
-#         SEARCH_RADIUS = 1000.0
-#         SEARCH_POINTS_ALL = 1
-#         SEARCH_POINTS_MIN = 0
-#         SEARCH_POINTS_MAX = 20
-#         SEARCH_DIRECTION = 0
-#         DW_WEIGHTING = 1
-#         DW_IDW_POWER = 2.0
-#         DW_IDW_OFFSET = False
-#         DW_BANDWIDTH = 1.0
-#         out, err = inverse_distance_weighted(POINTS, FIELD, DOWNLOAD_DIR, TARGET_TEMPLATE, CV_METHOD, CV_SAMPLES, TARGET_DEFINITION, TARGET_USER_SIZE, TARGET_USER_XMIN, TARGET_USER_XMAX, TARGET_USER_YMIN, TARGET_USER_YMAX, TARGET_USER_FITS, SEARCH_RANGE, SEARCH_RADIUS, SEARCH_POINTS_ALL, SEARCH_POINTS_MIN, SEARCH_POINTS_MAX, SEARCH_DIRECTION, DW_WEIGHTING, DW_IDW_POWER, DW_IDW_OFFSET, DW_BANDWIDTH)
-#         self.assertEqual(err.decode(), "")
 
 if __name__ == "__main__":
     unittest.main()
