@@ -57,43 +57,51 @@ def numba_transfer_group_coord_to_npidx(coords, geo_transform):
     return np.array(group_npidx, np.int64)
 
 
-def __transfer_xy_to_coord(xy, geo_transform):
-    """inner usage
-    input opencv xy, return the coord_xy for the left top of the cell
-    xy: should (row_idx, col_idx)
+def transfer_group_npidx_to_coord(npidxs, geo_transform):
+    """
+    input numpy idxs, return the coord_xy for the left top of the cell, using the function
+    | x' |   | a  b  c | | x |
+    | y' | = | d  e  f | | y |
+    | 1  |   | 0  0  1 | | 1 |
+    npidxs: [(row_idx, col_idx), ......]
     coord_xy: (lng, lat)
     """
-    forward_transform =  affine.Affine.from_gdal(*geo_transform)
-    coord_xy = forward_transform * xy
-    return coord_xy
+    # prepare M
+    c, a, b, f, d, e = geo_transform
+    M = np.array([[a, b, c], 
+                  [d, e, f], 
+                  [0, 0, 1]])
 
-def __transfer_coord_to_xy(coord, geo_transform):
-    """inner usage"""
-    coord_x, coord_y = coord[0], coord[1]
-    forward_transform =  affine.Affine.from_gdal(*geo_transform)
-    reverse_transform = ~forward_transform
-    x, y = reverse_transform * (coord_x, coord_y)
-    x, y = int(x), int(y)
-    return x, y
+    # prepare npidxs_maxtrix
+    row_idxs, col_idxs = np.array(npidxs).T
+    npidxs_maxtrix = np.ones((len(npidxs), 3)).T # => (3, -1)
+    npidxs_maxtrix[0], npidxs_maxtrix[1] = col_idxs, row_idxs
+
+    # apply multiplication
+    coords = np.dot(M, npidxs_maxtrix).T[:, :2] # (3, 3) ‧ (3, -1) => (3, -1) => (-1, 3)
+    return coords
 
 def transfer_npidx_to_coord(npidx, geo_transform):
     """
-    input npumpy idx, return the coord_xy for the left top of the cell
+    input numpy idx, return the coord_xy for the left top of the cell
     npidx: (row_idx, col_idx)
     coord_xy: (lng, lat)
     """
-    xy = (npidx[1], npidx[0])
-    coord_xy = __transfer_xy_to_coord(xy, geo_transform)
-    return coord_xy
+    npidx_reverse = (npidx[1], npidx[0])
+    forward_transform =  affine.Affine.from_gdal(*geo_transform)
+    coord = forward_transform * npidx_reverse
+    return coord
 
-def transfer_coord_to_npidx(coord, geo_transform):
+def transfer_coord_to_npidx(coord, geo_transform, convert_to_int=True):
     """
     input npumpy idx, return the coord_xy for the left top of the cell
     npidx: (row_idx, col_idx)
-    coord_xy: (lng, lat)
+    coord: (lng, lat)
     """
-    x, y = __transfer_coord_to_xy(coord, geo_transform)
-    npidx = (y, x)
+    reverse_transform = ~affine.Affine.from_gdal(*geo_transform)
+    col_idx, row_idx = reverse_transform * tuple(coord)
+    if convert_to_int: col_idx, row_idx = int(col_idx), int(row_idx)
+    npidx = (row_idx, col_idx)
     return npidx
 
 def transfer_npidx_to_coord_polygon(npidx, geo_transform):
