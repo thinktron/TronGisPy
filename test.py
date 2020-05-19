@@ -25,6 +25,7 @@ from TronGisPy.Normalizer import Normalizer
 from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon, get_wkt_from_epsg, numba_transfer_group_coord_to_npidx, transfer_group_npidx_to_coord
 from TronGisPy.TypeCast import get_gdaldtype_name_by_idx, convert_gdaldtype_to_npdtype, convert_npdtype_to_gdaldtype
 from TronGisPy.Interpolation import img_interpolation
+from TronGisPy.DEMProcessor import dem_to_hillshade, dem_to_slope, dem_to_aspect, dem_to_TRI, dem_to_TPI, dem_to_roughness
 
 data_dir = os.path.join('TronGisPy', 'data')
 satellite_tif_path = get_testing_fp('satellite_tif')
@@ -39,8 +40,8 @@ multiline_to_be_clipped_path = get_testing_fp('multiline_to_be_clipped')
 remap_rgb_clipper_path = get_testing_fp('remap_rgb_clipper_path')
 remap_ndvi_path = get_testing_fp('remap_ndvi_path')
 
-
 shp_clipper_path = get_testing_fp('shp_clipper')
+dem_process_path = get_testing_fp('dem_process_path')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
 # show_image = True
@@ -477,6 +478,85 @@ class TestInterpolation(unittest.TestCase):
         self.assertTrue(np.sum(np.isnan(X_band0_interp_linear)) < np.product(X_band0_interp_nearest.shape) * 0.05)
         self.assertTrue(np.sum(np.isnan(X_band0_interp_cubic)) < np.product(X_band0_interp_nearest.shape) * 0.05)
     
+class TestDEMProcessor(unittest.TestCase):
+    def setUp(self):
+        time.sleep(1)
+        self.dem_cols, self.dem_rows, self.dem_bands, self.dem_geo_transform, self.dem_projection, self.dem_gdaldtype, self.dem_no_data_value = get_geo_info(dem_process_path)
+        self.output_dir = os.path.join('test_output')
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
+        time.sleep(1)
+
+    def test_dem_to_hillshade(self):
+        dst_tif_path = os.path.join(self.output_dir, 'hillshade.tif')
+        dem_to_hillshade(dem_process_path, dst_tif_path, azimuth=0, altitude=30)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
+        dst_array = get_nparray(dst_tif_path)
+
+        self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
+        self.assertTrue(self.dem_geo_transform == dst_geo_transform)
+        self.assertTrue(self.dem_no_data_value == dst_no_data_value)
+        self.assertGreaterEqual(np.nanmin(dst_array), 0)
+        self.assertLessEqual(np.nanmax(dst_array), 255)
+
+    def test_dem_to_slope(self):
+        dst_tif_path = os.path.join(self.output_dir, 'slope.tif')
+        dem_to_slope(dem_process_path, dst_tif_path, slope_format='degree')
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
+        dst_array = get_nparray(dst_tif_path)
+
+        self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
+        self.assertTrue(self.dem_geo_transform == dst_geo_transform)
+        self.assertTrue(self.dem_no_data_value == dst_no_data_value)
+        self.assertGreaterEqual(np.nanmin(dst_array), 0)
+        self.assertLessEqual(np.nanmax(dst_array), 90)
+    
+    def test_dem_to_aspect(self):
+        dst_tif_path = os.path.join(self.output_dir, 'aspect.tif')
+        dem_to_aspect(dem_process_path, dst_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
+        dst_array = get_nparray(dst_tif_path)
+
+        self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
+        self.assertTrue(self.dem_geo_transform == dst_geo_transform)
+        self.assertTrue(self.dem_no_data_value == dst_no_data_value)
+        self.assertGreaterEqual(np.nanmin(dst_array), 0)
+        self.assertLessEqual(np.nanmax(dst_array), 360)
+    
+    def test_dem_to_TRI(self):
+        dst_tif_path = os.path.join(self.output_dir, 'tri.tif')
+        dem_to_TRI(dem_process_path, dst_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
+        dst_array = get_nparray(dst_tif_path)
+
+        self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
+        self.assertTrue(self.dem_geo_transform == dst_geo_transform)
+        self.assertTrue(self.dem_no_data_value == dst_no_data_value)
+        self.assertGreaterEqual(np.nanmin(dst_array), 0)
+
+    def test_dem_to_TPI(self):
+        dst_tif_path = os.path.join(self.output_dir, 'tpi.tif')
+        dem_to_TRI(dem_process_path, dst_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
+        dst_array = get_nparray(dst_tif_path)
+
+        self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
+        self.assertTrue(self.dem_geo_transform == dst_geo_transform)
+        self.assertTrue(self.dem_no_data_value == dst_no_data_value)
+    
+    def test_dem_to_roughness(self):
+        dst_tif_path = os.path.join(self.output_dir, 'roughness.tif')
+        dem_to_TRI(dem_process_path, dst_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
+        dst_array = get_nparray(dst_tif_path)
+
+        self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
+        self.assertTrue(self.dem_geo_transform == dst_geo_transform)
+        self.assertTrue(self.dem_no_data_value == dst_no_data_value)
+        self.assertGreaterEqual(np.nanmin(dst_array), 0)
 
 #     def test_inverse_distance_weighted(self):
 #         POINTS = os.path.abspath(interpolation_points_path)
