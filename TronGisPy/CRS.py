@@ -48,7 +48,7 @@ def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
     return x, y
 
 @numba.jit(nopython=True)
-def numba_transfer_group_coord_to_npidx(coords, geo_transform):
+def transfer_group_coord_to_npidx(coords, geo_transform):
     """
     input numpy idxs, return the coords of left-top points of the cells, using the function
     | x' |   | a  b  c | | x |
@@ -83,7 +83,7 @@ def transfer_group_npidx_to_coord(npidxs, geo_transform):
     npidxs_maxtrix[0], npidxs_maxtrix[1] = col_idxs, row_idxs
 
     # apply multiplication
-    coords = np.dot(M, npidxs_maxtrix).T[:, :2] # (3, 3) ‧ (3, -1) => (3, -1) => (-1, 3)
+    coords = np.matmul(M, npidxs_maxtrix).T[:, :2] # (3, 3) ‧ (3, -1) => (3, -1) => (-1, 3)
     return coords
 
 def transfer_npidx_to_coord(npidx, geo_transform):

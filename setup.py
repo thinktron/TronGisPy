@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="0.4.3",
+    version="0.4.4",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -71,7 +71,8 @@ setuptools.setup(
 # 0.4.1 add transfer_npidx_to_coord
 # 0.4.2 add DEMProcessor.py & crop_dem.tif as testing data
 # 0.4.3 add function not in CRS
+# 0.4.4 change CRS interface: numba_transfer_group_coord_to_npidx => transfer_group_coord_to_npidx
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.4.3-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.4.3-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.4.3-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.4.3-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.4.4-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.4.4-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.4.4-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.4.4-py3-none-any.whl
