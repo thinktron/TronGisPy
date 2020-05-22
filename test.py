@@ -22,7 +22,7 @@ from TronGisPy.SplittedImage import SplittedImage
 from TronGisPy.GisIO import get_geo_info, get_nparray, get_extent, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_geo_info, reproject, remap_tif
 from TronGisPy.Algorithm import kmeans
 from TronGisPy.Normalizer import Normalizer
-from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, transfer_npidx_to_coord_polygon, get_wkt_from_epsg, transfer_group_coord_to_npidx, transfer_group_npidx_to_coord
+from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, get_wkt_from_epsg, transfer_group_coord_to_npidx, transfer_group_npidx_to_coord, transfer_npidx_to_coord_polygon
 from TronGisPy.TypeCast import get_gdaldtype_name_by_idx, convert_gdaldtype_to_npdtype, convert_npdtype_to_gdaldtype
 from TronGisPy.Interpolation import img_interpolation
 from TronGisPy.DEMProcessor import dem_to_hillshade, dem_to_slope, dem_to_aspect, dem_to_TRI, dem_to_TPI, dem_to_roughness
@@ -139,8 +139,7 @@ class TestCRS(unittest.TestCase):
         cols, rows, bancds, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
         npidx = [0,2]
         polygon = transfer_npidx_to_coord_polygon(npidx, geo_transform)
-        # df_lands_boundry = gpd.GeoDataFrame([{'geometry':polygon}], geometry='geometry')
-        # df_lands_boundry.crs = {'init' :'epsg:3826'}
+        # df_lands_boundry = gpd.GeoDataFrame([{'geometry':polygon}], geometry='geometry', crs={'init' :'epsg:3826'})
         # dst_shp_path = os.path.join(self.output_dir, 'df_lands_boundry.shp')
         # df_lands_boundry.to_file(dst_shp_path)
         centroid = polygon.centroid.x, polygon.centroid.y

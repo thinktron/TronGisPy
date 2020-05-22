@@ -27,12 +27,12 @@ def invert_geo_transform( a, b, c, d, e, f):
          0.0, 0.0, 1.0]
 
 
-@numba.jit(nopython=True)
-def numba_transfer_coord_to_npidx(coord, geo_transform):
-    x, y = coord[0], coord[1]
-    x, y = __numba_transfer_coord_to_xy(x, y, *geo_transform)
-    npidx = [y, x]
-    return npidx
+# @numba.jit(nopython=True)
+# def numba_transfer_coord_to_npidx(coord, geo_transform):
+#     x, y = coord[0], coord[1]
+#     x, y = __numba_transfer_coord_to_xy(x, y, *geo_transform)
+#     npidx = [y, x]
+#     return npidx
 
 
 @numba.jit(nopython=True)
@@ -44,7 +44,7 @@ def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
                                              forward_transform[3], forward_transform[4], forward_transform[5] )
     reverse_transform = np.array(reverse_transform).reshape((3, 3))
     x, y, _ = reverse_transform.dot(np.array([coord_x, coord_y, 1]))
-    x, y = np.int(x), np.int(y)
+    # x, y = np.int(x), np.int(y)
     return x, y
 
 @numba.jit(nopython=True)
@@ -111,11 +111,12 @@ def transfer_coord_to_npidx(coord, geo_transform, convert_to_int=True):
 
 def transfer_npidx_to_coord_polygon(npidx, geo_transform):
     """return shapely.geometry.Polygon"""
-    coord_x, coord_y = transfer_npidx_to_coord(npidx, geo_transform)
-    xoffset, px_w, rot1, yoffset, rot2, px_h = geo_transform
-    minx, miny, maxx, maxy = coord_x, coord_y+px_h, coord_x+px_w, coord_y
-    polygon = Polygon([(minx, miny), (maxx, miny),  (maxx, maxy),  (minx, maxy)])
-    return polygon
+    poly_points = [ [npidx[0]+0, npidx[1]+0],  # ul
+                    [npidx[0]+0, npidx[1]+1],  # ur
+                    [npidx[0]+1, npidx[1]+1],  # lr
+                    [npidx[0]+1, npidx[1]+0],] # ll
+    poly_points = transfer_group_npidx_to_coord(poly_points, geo_transform)
+    return Polygon(poly_points)
 
 def get_wkt_from_epsg(epsg=4326):
     srs = osr.SpatialReference()
