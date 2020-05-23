@@ -185,8 +185,17 @@ def tif_composition(ref_tif_path, src_tif_paths, dst_tif_path, dst_tif_dtype_gda
             band_num += 1
     dst_ds = None
 
-def refine_resolution(src_tif_path, dst_tif_path, dst_resolution):
-    result = gdal.Warp(dst_tif_path, src_tif_path, xRes=dst_resolution, yRes=dst_resolution)
+def refine_resolution(src_tif_path, dst_tif_path, dst_resolution, resample_alg='near'):
+    """
+    near: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
+    bilinear: bilinear resampling.
+    cubic: cubic resampling.
+    cubicspline: cubic spline resampling.
+    lanczos: Lanczos windowed sinc resampling.
+    average: average resampling, computes the weighted average of all non-NODATA contributing pixels.
+    mode: mode resampling, selects the value which appears most often of all the sampled points.
+    """
+    result = gdal.Warp(dst_tif_path, src_tif_path, xRes=dst_resolution, yRes=dst_resolution, resampleAlg=resample_alg)
     result = None
 
 def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None, all_touched=False, gdaldtype=None, no_data_value=None):

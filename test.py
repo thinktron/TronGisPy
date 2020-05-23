@@ -44,8 +44,8 @@ shp_clipper_path = get_testing_fp('shp_clipper')
 dem_process_path = get_testing_fp('dem_process_path')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
-# show_image = True
-show_image = False
+show_image = True
+# show_image = False
 
 class TestSplittedImage(unittest.TestCase):
     def setUp(self):
@@ -237,7 +237,7 @@ class TestGisIO(unittest.TestCase):
         src_tif_path = satellite_tif_path
         dst_tif_path = os.path.join(self.output_dir, 'resolution_refined_image.tif')
         dst_resolution = 5
-        refine_resolution(src_tif_path, dst_tif_path, dst_resolution)
+        refine_resolution(src_tif_path, dst_tif_path, dst_resolution, 'bilinear')
 
         resolution_refined_image_arr = get_nparray(dst_tif_path)
         if show_image:

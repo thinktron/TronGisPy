@@ -25,11 +25,16 @@ def band_interpolation(X, method='linear', mask=None):
     return X_interp
 
 def img_interpolation(X, method='linear', mask=None):
+    """
+    X: please whole image.
+    method: 'nearest', 'linear', 'cubic', see scipy.interpolate.griddata documentation.
+    mask: The location to be filled with value. If mask == None, use np.nan(X) as mask.
+    """
     X_interp = X.copy()
     if len(X_interp.shape) == 2:
         X_interp = np.expand_dims(X_interp, axis=2)
     for b in range(X_interp.shape[2]):
-        X_interp[:,:,b] = band_interpolation(X_interp[:,:,b])
+        X_interp[:,:,b] = band_interpolation(X_interp[:,:,b], method='linear', mask=None)
     return X_interp
 
 # import os
