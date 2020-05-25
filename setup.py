@@ -81,3 +81,4 @@ setuptools.setup(
 # python setup.py sdist bdist_wheel
 # scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.4.8-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.4.8-py3-none-any.whl
 # scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.4.8-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.4.8-py3-none-any.whl
+
