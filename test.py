@@ -44,8 +44,8 @@ shp_clipper_path = get_testing_fp('shp_clipper')
 dem_process_path = get_testing_fp('dem_process_path')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
-show_image = True
-# show_image = False
+# show_image = True
+show_image = False
 
 class TestSplittedImage(unittest.TestCase):
     def setUp(self):
@@ -175,6 +175,12 @@ class TestGisIO(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
+
+    def test_get_nparray(self):
+        dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
+        clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
+        clip_image_arr = get_nparray(dst_image_path, fill_na=True)
+        self.assertTrue(np.sum(np.isnan(clip_image_arr)) == 42144)
 
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')

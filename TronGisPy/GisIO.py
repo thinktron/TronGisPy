@@ -22,12 +22,18 @@ def get_geo_info(fp):
     ds = None 
     return cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value
 
-def get_nparray(fp, opencv_shape=True):
-    """if opencv_shape the shape will be (cols, rows, bnads), else (bnads, cols, rows)"""
+def get_nparray(fp, numpy_shape=True, fill_na=False):
+    """if numpy_shape the shape will be (cols, rows, bnads), else (bnads, cols, rows)"""
     ds = gdal.Open(fp)
     X = ds.ReadAsArray()
     ds = None 
-    if not opencv_shape:
+    if fill_na:
+        X = X.astype(np.float)
+        no_data_value = get_geo_info(fp)[6]
+        assert no_data_value is not None, "no_data_value is None which cannot be filled!"
+        X[X == no_data_value] = np.nan
+
+    if not numpy_shape:
         return X
     else:
         if len(X.shape) == 2:
