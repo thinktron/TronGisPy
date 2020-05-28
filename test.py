@@ -576,19 +576,19 @@ class TestShapeGrid(unittest.TestCase):
     def test_clip_tif_by_shp(self):
         X = GisIO.get_nparray(satellite_tif_path)
         cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
-        clip_image_arr = ShapeGrid.clip_tif_by_shp(X, satellite_tif_clipper_path, geo_transform, projection)
+        X_clipped, geo_transform_clipped = ShapeGrid.clip_tif_by_shp(X, geo_transform, projection, satellite_tif_clipper_path)
         if show_image:
-            plt.imshow(clip_image_arr)
+            plt.imshow(X_clipped)
             plt.title("TestShapeGrid" + ": " + "test_clip_tif_by_shp")
             plt.show()
-        self.assertTrue(clip_image_arr.shape == (138, 225, 4))
-
-    def test_clip_tif_by_bounds(self):
+        self.assertTrue(X_clipped.shape == (138, 225, 4))
+        self.assertTrue(geo_transform_clipped == (329460.0, 10.0, 0.0, 2748190.0, 0.0, -10.0))
+        
+    def test_clip_tif_by_extent(self):
         X = GisIO.get_nparray(satellite_tif_path)
         cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
         gdf = gpd.read_file(satellite_tif_clipper_path)
-        bounds = gdf.total_bounds
-        X_clipped = ShapeGrid.clip_tif_by_bounds(X, bounds, geo_transform, projection)
+        X_clipped, geo_transform_clipped = ShapeGrid.clip_tif_by_extent(X, geo_transform, gdf.total_bounds)
         if show_image:
             fig, (ax1 ,ax2) = plt.subplots(1, 2, figsize=(10, 5))
             ax1.imshow(X)
@@ -596,6 +596,7 @@ class TestShapeGrid(unittest.TestCase):
             plt.title("TestShapeGrid" + ": " + "test_clip_tif_by_bounds")
             plt.show()
         self.assertTrue(X_clipped.shape == (138, 226, 4))
+        self.assertTrue(geo_transform_clipped == (329405.4857111082, 10.00517198347499, 0.0, 2748181.2743610824, 0.0, -10.010622679670949))
 
     def test_refine_resolution(self):
         X = GisIO.get_nparray(satellite_tif_path)

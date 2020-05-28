@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="0.5.1",
+    version="0.5.2",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -78,9 +78,10 @@ setuptools.setup(
 # 0.4.8 fill in nan when reading data in get_nparray of GisIO
 # 0.5.0 add ShapeGrid.py to process data in memory, get_nparray => GisIO.get_nparray in test.py
 # 0.5.1 add get_extent in ShapeGrid.py 
+# 0.5.2 clip_tif_by_bound => clip_tif_by_extent, remove projection fron clip_tif_by_extent params, return clipped geo_transform in clip_tif_by_extent & clip_tif_by_shp
 
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.5.1-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.1-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.5.1-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.1-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.5.2-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.2-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.5.2-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.2-py3-none-any.whl
 

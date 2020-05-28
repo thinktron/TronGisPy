@@ -76,28 +76,30 @@ def rasterize_layer(gdf_shp, rows, cols, geo_ransform, use_attribute, all_touche
     out_arr = dst_ds.GetRasterBand(1).ReadAsArray()
     return out_arr
 
-def clip_tif_by_shp(X, src_shp_path, geo_transform, projection):
+def clip_tif_by_shp(X, geo_transform, projection, src_shp_path):
     src_ds = build_gdal_ds(X, geo_transform=geo_transform, projection=projection)
     dst_ds = gdal.Warp('',
                        src_ds,
                        format= 'MEM',
                        cutlineDSName=src_shp_path,
                        cropToCutline=True)
-    arr = read_gdal_ds(dst_ds)
-    return arr
+    X_dst = read_gdal_ds(dst_ds)
+    geo_transform_dst = dst_ds.GetGeoTransform()
+    return X_dst, geo_transform_dst
 
-def clip_tif_by_bounds(X, bounds, geo_transform, projection):
+def clip_tif_by_extent(X, geo_transform, extent):
     """
-    outputBounds --- output bounds as (minX, minY, maxX, maxY) in target SRS
+    extent --- output bounds as (minX, minY, maxX, maxY) in target SRS
     """
-    src_ds = build_gdal_ds(X, geo_transform=geo_transform, projection=projection)
+    src_ds = build_gdal_ds(X, geo_transform=geo_transform)
     dst_ds = gdal.Warp('',
                        src_ds,
                        format= 'MEM',
-                       outputBounds=bounds,
+                       outputBounds=extent,
                        cropToCutline=True)
-    arr = read_gdal_ds(dst_ds)
-    return arr
+    X_dst = read_gdal_ds(dst_ds)
+    geo_transform_dst = dst_ds.GetGeoTransform()
+    return X_dst, geo_transform_dst
 
 
 def refine_resolution(X, geo_transform, projection, dst_resolution, resample_alg='near'):
