@@ -6,6 +6,7 @@ TronGisPy/DEMProcessor.py
 TronGisPy/GisIO.py
 TronGisPy/Interpolation.py
 TronGisPy/Normalizer.py
+TronGisPy/ShapeGrid.py
 TronGisPy/SplittedImage.py
 TronGisPy/TypeCast.py
 TronGisPy/__init__.py
