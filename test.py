@@ -601,12 +601,13 @@ class TestShapeGrid(unittest.TestCase):
     def test_refine_resolution(self):
         X = GisIO.get_nparray(satellite_tif_path)
         cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
-        X_refined = ShapeGrid.refine_resolution(X, geo_transform, dst_resolution=5, resample_alg='bilinear')
+        X_refined, geo_transform_refined = ShapeGrid.refine_resolution(X, geo_transform, dst_resolution=5, resample_alg='bilinear')
         if show_image:
             plt.imshow(X_refined)
             plt.title("TestShapeGrid" + ": " + "test_refine_resolution")
             plt.show()
         self.assertTrue(X_refined.shape == (1024, 1024, 4))
+        self.assertTrue(geo_transform_refined == (328530.0, 5.0, 0.0, 2750790.0, 0.0, -5.0))
 
     def test_get_extent(self):
         cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)

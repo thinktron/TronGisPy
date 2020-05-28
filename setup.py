@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="0.5.3",
+    version="0.5.4",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -80,9 +80,11 @@ setuptools.setup(
 # 0.5.1 add get_extent in ShapeGrid.py 
 # 0.5.2 clip_tif_by_bound => clip_tif_by_extent, remove projection fron clip_tif_by_extent params in ShapeGrid.py, return clipped geo_transform in clip_tif_by_extent & clip_tif_by_shp
 # 0.5.3 remove projection from refine_resolution params in ShapeGrid.py
+# 0.5.4 add geo_transform as return of refine_resolution function in ShapeGrid.py
+
 
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.5.3-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.3-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.5.3-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.3-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.5.4-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.4-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.5.4-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.4-py3-none-any.whl
 
