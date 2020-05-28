@@ -102,7 +102,7 @@ def clip_tif_by_extent(X, geo_transform, extent):
     return X_dst, geo_transform_dst
 
 
-def refine_resolution(X, geo_transform, dst_resolution, extent=None, resample_alg='near'):
+def refine_resolution(X, geo_transform, dst_resolution, resample_alg='near', extent=None):
     """
     near: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
     bilinear: bilinear resampling.
