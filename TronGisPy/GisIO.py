@@ -42,24 +42,8 @@ def get_nparray(fp, numpy_shape=True, fill_na=False):
 def get_extent(fp, return_poly=True):
     """get the extent(boundry) coordnate"""
     ds = gdal.Open(fp)
-    cols = ds.RasterXSize
-    rows = ds.RasterYSize
-    gt = ds.GetGeoTransform()
-    extent=[]
-    xarr=[0,cols]
-    yarr=[0,rows]
-    for px in xarr:
-        for py in yarr:
-            x=gt[0]+(px*gt[1])+(py*gt[2])
-            y=gt[3]+(px*gt[4])+(py*gt[5])
-            extent.append([x,y])
-        yarr.reverse()
-    ds = None 
-    poly = np.array(extent)
-    if return_poly:
-        return poly
-    else:
-        return (np.min(poly[:, 0]), np.max(poly[:, 0]), np.min(poly[:, 1]), np.max(poly[:, 1]))
+    rows, cols, geo_transform = ds.RasterYSize, ds.RasterXSize, ds.GetGeoTransform()
+    return ShapeGrid.get_extent(rows, cols, geo_transform, return_poly)
 
 def update_geo_info(fp, geo_transform=None, projection=None):
     all_none = geo_transform is None and projection is None

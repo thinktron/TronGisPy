@@ -114,3 +114,22 @@ def refine_resolution(X, geo_transform, projection, dst_resolution, resample_alg
     dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, format='MEM', resampleAlg=resample_alg)
     arr = read_gdal_ds(dst_ds)
     return arr
+
+def get_extent(rows, cols, geo_transform, return_poly=True):
+    """get the extent(boundry) coordnate"""
+    gt = geo_transform
+    extent=[]
+    xarr=[0,cols]
+    yarr=[0,rows]
+    for px in xarr:
+        for py in yarr:
+            x=gt[0]+(px*gt[1])+(py*gt[2])
+            y=gt[3]+(px*gt[4])+(py*gt[5])
+            extent.append([x,y])
+        yarr.reverse()
+    ds = None 
+    poly = np.array(extent)
+    if return_poly:
+        return poly
+    else:
+        return (np.min(poly[:, 0]), np.max(poly[:, 0]), np.min(poly[:, 1]), np.max(poly[:, 1]))

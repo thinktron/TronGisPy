@@ -177,13 +177,18 @@ class TestGisIO(unittest.TestCase):
         clip_image_arr = GisIO.get_nparray(dst_image_path, fill_na=True)
         self.assertTrue(np.sum(np.isnan(clip_image_arr)) == 42144)
 
+    def test_get_extent(self):
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
+        extent = GisIO.get_extent(satellite_tif_path, False)
+        self.assertTrue(extent == (328530.0, 333650.0, 2745670.0, 2750790.0))
+
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
         GisIO.clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
         clip_image_arr = GisIO.get_nparray(dst_image_path)
         if show_image:
             plt.imshow(clip_image_arr)
-            plt.title("TestSatelliteIO" + ": " + "test_clip_tif_by_shp")
+            plt.title("TestGisIO" + ": " + "test_clip_tif_by_shp")
             plt.show()
         self.assertTrue(clip_image_arr.shape == (138, 225, 4))
 
@@ -229,7 +234,7 @@ class TestGisIO(unittest.TestCase):
         composited_image_arr = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(composited_image_arr[:, :, 4], cmap='gray')
-            plt.title("TestSatelliteIO" + ": " + "test_tif_composition")
+            plt.title("TestGisIO" + ": " + "test_tif_composition")
             plt.show()
 
         self.assertTrue(composited_image_arr.shape == (512, 512, 5))
@@ -243,7 +248,7 @@ class TestGisIO(unittest.TestCase):
         resolution_refined_image_arr = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(resolution_refined_image_arr)
-            plt.title("TestSatelliteIO" + ": " + "test_refine_resolution")
+            plt.title("TestGisIO" + ": " + "test_refine_resolution")
             plt.show()
         self.assertTrue(resolution_refined_image_arr.shape == (1024, 1024, 4))
 
@@ -272,7 +277,7 @@ class TestGisIO(unittest.TestCase):
         padded_image_arr = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(padded_image_arr)
-            plt.title("TestSatelliteIO" + ": " + "test_write_output_tif")
+            plt.title("TestGisIO" + ": " + "test_write_output_tif")
             plt.show()
         self.assertTrue(padded_image_arr.shape == (200, 300, 4))
 
@@ -291,7 +296,7 @@ class TestGisIO(unittest.TestCase):
         rasterized_image = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(rasterized_image[:,:,0], cmap='gray')
-            plt.title("TestSatelliteIO" + ": " + "test_rasterize_layer")
+            plt.title("TestGisIO" + ": " + "test_rasterize_layer")
             plt.show()
         self.assertTrue(np.sum(rasterized_image==1) == 20512)
 
@@ -299,7 +304,7 @@ class TestGisIO(unittest.TestCase):
         rasterized_image = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(rasterized_image[:,:,0], cmap='gray')
-            plt.title("TestSatelliteIO" + ": " + "test_rasterize_layer")
+            plt.title("TestGisIO" + ": " + "test_rasterize_layer")
             plt.show()
         self.assertTrue(np.sum(rasterized_image==1) == 20876)
 
@@ -602,6 +607,10 @@ class TestShapeGrid(unittest.TestCase):
             plt.show()
         self.assertTrue(X_refined.shape == (1024, 1024, 4))
 
+    def test_get_extent(self):
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
+        extent = ShapeGrid.get_extent(rows, cols, geo_transform, False)
+        self.assertTrue(extent == (328530.0, 333650.0, 2745670.0, 2750790.0))
 
 if __name__ == "__main__":
     unittest.main()
