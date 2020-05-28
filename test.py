@@ -19,29 +19,24 @@ import gdal
 
 # main
 from TronGisPy.SplittedImage import SplittedImage
-from TronGisPy.GisIO import get_geo_info, get_nparray, get_extent, write_output_tif, clip_tif_by_shp, tif_composition, refine_resolution, rasterize_layer, polygonize_layer, raster_pixel_to_polygon, get_testing_fp, clip_shp_by_shp, update_geo_info, reproject, remap_tif
-from TronGisPy.Algorithm import kmeans
 from TronGisPy.Normalizer import Normalizer
-from TronGisPy.CRS import transfer_npidx_to_coord, transfer_coord_to_npidx, get_wkt_from_epsg, transfer_group_coord_to_npidx, transfer_group_npidx_to_coord, transfer_npidx_to_coord_polygon
-from TronGisPy.TypeCast import get_gdaldtype_name_by_idx, convert_gdaldtype_to_npdtype, convert_npdtype_to_gdaldtype
-from TronGisPy.Interpolation import img_interpolation
-from TronGisPy.DEMProcessor import dem_to_hillshade, dem_to_slope, dem_to_aspect, dem_to_TRI, dem_to_TPI, dem_to_roughness
+from TronGisPy import GisIO, Algorithm, CRS, TypeCast, Interpolation, DEMProcessor, ShapeGrid
 
 data_dir = os.path.join('TronGisPy', 'data')
-satellite_tif_path = get_testing_fp('satellite_tif')
-satellite_tif_clipper_path = get_testing_fp('satellite_tif_clipper')
-satellite_tif_kmeans_path = get_testing_fp('satellite_tif_kmeans')
-rasterized_image_path = get_testing_fp('rasterized_image')
-rasterized_image_1_path = get_testing_fp('rasterized_image_1')
-poly_to_be_clipped_path = get_testing_fp('poly_to_be_clipped')
-point_to_be_clipped_path = get_testing_fp('point_to_be_clipped')
-line_to_be_clipped_path = get_testing_fp('line_to_be_clipped')
-multiline_to_be_clipped_path = get_testing_fp('multiline_to_be_clipped')
-remap_rgb_clipper_path = get_testing_fp('remap_rgb_clipper_path')
-remap_ndvi_path = get_testing_fp('remap_ndvi_path')
+satellite_tif_path = GisIO.get_testing_fp('satellite_tif')
+satellite_tif_clipper_path = GisIO.get_testing_fp('satellite_tif_clipper')
+satellite_tif_kmeans_path = GisIO.get_testing_fp('satellite_tif_kmeans')
+rasterized_image_path = GisIO.get_testing_fp('rasterized_image')
+rasterized_image_1_path = GisIO.get_testing_fp('rasterized_image_1')
+poly_to_be_clipped_path = GisIO.get_testing_fp('poly_to_be_clipped')
+point_to_be_clipped_path = GisIO.get_testing_fp('point_to_be_clipped')
+line_to_be_clipped_path = GisIO.get_testing_fp('line_to_be_clipped')
+multiline_to_be_clipped_path = GisIO.get_testing_fp('multiline_to_be_clipped')
+remap_rgb_clipper_path = GisIO.get_testing_fp('remap_rgb_clipper_path')
+remap_ndvi_path = GisIO.get_testing_fp('remap_ndvi_path')
 
-shp_clipper_path = get_testing_fp('shp_clipper')
-dem_process_path = get_testing_fp('dem_process_path')
+shp_clipper_path = GisIO.get_testing_fp('shp_clipper')
+dem_process_path = GisIO.get_testing_fp('dem_process_path')
 # interpolation_points_path = os.path.join(data_dir, 'interpolation', 'climate_points.shp')
 
 # show_image = True
@@ -60,12 +55,12 @@ class TestSplittedImage(unittest.TestCase):
         self.box_size = 254
         self.step_size = 127
         
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
         self.geo_transform = geo_transform
         self.projection = projection
         self.gdaldtype = gdaldtype
         self.no_data_value = no_data_value
-        self.X = get_nparray(satellite_tif_path)
+        self.X = GisIO.get_nparray(satellite_tif_path)
 
         self.splitted_image = SplittedImage(self.X, self.box_size, self.geo_transform, step_size=self.step_size)
 
@@ -121,24 +116,24 @@ class TestCRS(unittest.TestCase):
         time.sleep(1)
 
     def test_transfer_npidx_to_coord(self):
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
         npidx = (1,3)
-        coord = transfer_npidx_to_coord(npidx, geo_transform)
+        coord = CRS.transfer_npidx_to_coord(npidx, geo_transform)
         self.assertTrue(coord == (328560.0, 2750780.0))
 
     def test_transfer_coord_to_npidx(self):
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
         coord = (328560.0+9, 2750780.0-9) # resolution is 10 meter, add 9 will be in the same cell
-        npidx = transfer_coord_to_npidx(coord, geo_transform)
+        npidx = CRS.transfer_coord_to_npidx(coord, geo_transform)
         self.assertTrue(npidx == (1, 3))
         coord = (328560.0+11, 2750780.0-11) # resolution is 10 meter, add 11 will be in the next cell
-        npidx = transfer_coord_to_npidx(coord, geo_transform)
+        npidx = CRS.transfer_coord_to_npidx(coord, geo_transform)
         self.assertTrue(npidx == (2, 4))
 
     def test_transfer_npidx_to_coord_polygon(self):
-        cols, rows, bancds, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bancds, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
         npidx = [0,2]
-        polygon = transfer_npidx_to_coord_polygon(npidx, geo_transform)
+        polygon = CRS.transfer_npidx_to_coord_polygon(npidx, geo_transform)
         # df_lands_boundry = gpd.GeoDataFrame([{'geometry':polygon}], geometry='geometry', crs={'init' :'epsg:3826'})
         # dst_shp_path = os.path.join(self.output_dir, 'df_lands_boundry.shp')
         # df_lands_boundry.to_file(dst_shp_path)
@@ -147,22 +142,22 @@ class TestCRS(unittest.TestCase):
 
     def test_get_wkt_from_epsg(self):
         WKT4326 = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]'
-        target_WKT = get_wkt_from_epsg(4326)
+        target_WKT = CRS.get_wkt_from_epsg(4326)
         self.assertTrue(WKT4326 == target_WKT)
 
     def test_transfer_group_coord_to_npidx(self):
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
         coords = np.array([(328560.0+9, 2750780.0-9)]) # resolution is 10 meter, add 9 will be in the same cell
-        npidx = transfer_group_coord_to_npidx(coords, geo_transform)
+        npidx = CRS.transfer_group_coord_to_npidx(coords, geo_transform)
         self.assertTrue(np.sum(npidx == np.array([(1, 3)])) == 2)
         coords = np.array([(328560.0+11, 2750780.0-11)]) # resolution is 10 meter, add 11 will be in the next cell
-        npidx = transfer_group_coord_to_npidx(coords, geo_transform)
+        npidx = CRS.transfer_group_coord_to_npidx(coords, geo_transform)
         self.assertTrue(np.sum(npidx == np.array([(2, 4)])) == 2)
 
     def test_transfer_group_npidx_to_coord(self):
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
         npidxs = [(1,3)]
-        coords = transfer_group_npidx_to_coord(npidxs, geo_transform)
+        coords = CRS.transfer_group_npidx_to_coord(npidxs, geo_transform)
         self.assertTrue(np.sum(coords == np.array([(328560.0, 2750780.0)])) == 2)
 
 class TestGisIO(unittest.TestCase):
@@ -178,14 +173,14 @@ class TestGisIO(unittest.TestCase):
 
     def test_get_nparray(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
-        clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
-        clip_image_arr = get_nparray(dst_image_path, fill_na=True)
+        GisIO.clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
+        clip_image_arr = GisIO.get_nparray(dst_image_path, fill_na=True)
         self.assertTrue(np.sum(np.isnan(clip_image_arr)) == 42144)
 
     def test_clip_tif_by_shp(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
-        clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
-        clip_image_arr = get_nparray(dst_image_path)
+        GisIO.clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
+        clip_image_arr = GisIO.get_nparray(dst_image_path)
         if show_image:
             plt.imshow(clip_image_arr)
             plt.title("TestSatelliteIO" + ": " + "test_clip_tif_by_shp")
@@ -197,7 +192,7 @@ class TestGisIO(unittest.TestCase):
         src_shp_path = poly_to_be_clipped_path
         clipper_shp_path = shp_clipper_path
         dst_shp_path = os.path.join(self.output_dir, 'clipped_poly.shp')
-        clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
+        GisIO.clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
         gdf_clipped_poly = gpd.read_file(dst_shp_path)
         self.assertTrue(gdf_clipped_poly['geometry'].apply(lambda x:x.area).sum() == 3)
 
@@ -205,7 +200,7 @@ class TestGisIO(unittest.TestCase):
         src_shp_path = point_to_be_clipped_path
         clipper_shp_path = shp_clipper_path
         dst_shp_path = os.path.join(self.output_dir, 'clipped_point.shp')
-        clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
+        GisIO.clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
         gdf_clipped_point = gpd.read_file(dst_shp_path)
         self.assertTrue(gdf_clipped_point['geometry'].iloc[0].coords[0] == (3,3))
 
@@ -213,7 +208,7 @@ class TestGisIO(unittest.TestCase):
         src_shp_path = line_to_be_clipped_path
         clipper_shp_path = shp_clipper_path
         dst_shp_path = os.path.join(self.output_dir, 'clipped_line.shp')
-        clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
+        GisIO.clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
         gdf_clipped_line = gpd.read_file(dst_shp_path)
         self.assertTrue(np.sum([line.length for line in gdf_clipped_line['geometry'] if line != None]) == 4)
 
@@ -221,7 +216,7 @@ class TestGisIO(unittest.TestCase):
         src_shp_path = multiline_to_be_clipped_path
         clipper_shp_path = shp_clipper_path
         dst_shp_path = os.path.join(self.output_dir, 'clipped_multiline.shp')
-        clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
+        GisIO.clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path)
         gdf_clipped_multiline = gpd.read_file(dst_shp_path)
         self.assertTrue(np.sum([line.length for line in gdf_clipped_line['geometry'] if line != None]) == 4)
 
@@ -229,9 +224,9 @@ class TestGisIO(unittest.TestCase):
         crs_tif_image = satellite_tif_path
         src_tif_paths = [satellite_tif_path, satellite_tif_kmeans_path]
         dst_tif_path = os.path.join(self.output_dir, 'composited_image.tif')
-        tif_composition(crs_tif_image, src_tif_paths, dst_tif_path)
+        GisIO.tif_composition(crs_tif_image, src_tif_paths, dst_tif_path)
 
-        composited_image_arr = get_nparray(dst_tif_path)
+        composited_image_arr = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(composited_image_arr[:, :, 4], cmap='gray')
             plt.title("TestSatelliteIO" + ": " + "test_tif_composition")
@@ -243,9 +238,9 @@ class TestGisIO(unittest.TestCase):
         src_tif_path = satellite_tif_path
         dst_tif_path = os.path.join(self.output_dir, 'resolution_refined_image.tif')
         dst_resolution = 5
-        refine_resolution(src_tif_path, dst_tif_path, dst_resolution, 'bilinear')
+        GisIO.refine_resolution(src_tif_path, dst_tif_path, dst_resolution, 'bilinear')
 
-        resolution_refined_image_arr = get_nparray(dst_tif_path)
+        resolution_refined_image_arr = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(resolution_refined_image_arr)
             plt.title("TestSatelliteIO" + ": " + "test_refine_resolution")
@@ -255,26 +250,26 @@ class TestGisIO(unittest.TestCase):
     def test_update_geo_info(self):
         dst_tif_path = os.path.join(self.output_dir, 'X_geo_info_updated.tif')
         shutil.copyfile(satellite_tif_path, dst_tif_path)
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_tif_path)
-        projection = get_wkt_from_epsg(3826)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(dst_tif_path)
+        projection = CRS.get_wkt_from_epsg(3826)
         geo_transform = list(geo_transform)
         geo_transform[0] += 10
         geo_transform[3] -= 10
-        update_geo_info(dst_tif_path, projection=projection, geo_transform=geo_transform)
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_tif_path)
+        GisIO.update_geo_info(dst_tif_path, projection=projection, geo_transform=geo_transform)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(dst_tif_path)
         self.assertTrue(geo_transform == (328540.0, 10.0, 0.0, 2750780.0, 0.0, -10.0))
         self.assertTrue(projection == 'PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],AUTHORITY["EPSG","3826"]]')
 
     def test_write_output_tif(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
-        clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
+        GisIO.clip_tif_by_shp(satellite_tif_path, satellite_tif_clipper_path, dst_image_path)
 
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_image_path)
-        clip_image_arr = get_nparray(dst_image_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(dst_image_path)
+        clip_image_arr = GisIO.get_nparray(dst_image_path)
         padded_image_arr = np.pad(clip_image_arr, ((0,62), (0,75), (0,0)), mode='constant', constant_values=0)
         dst_tif_path = os.path.join(self.output_dir, 'padded_image.tif')
-        write_output_tif(padded_image_arr,dst_tif_path,4,300,200,geo_transform, projection)
-        padded_image_arr = get_nparray(dst_tif_path)
+        GisIO.write_output_tif(padded_image_arr,dst_tif_path,4,300,200,geo_transform, projection)
+        padded_image_arr = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(padded_image_arr)
             plt.title("TestSatelliteIO" + ": " + "test_write_output_tif")
@@ -284,24 +279,24 @@ class TestGisIO(unittest.TestCase):
         # test write output without projection & geotransform
         X = np.random.rand(10000).reshape(100,100)
         dst_tif_path = os.path.join(self.output_dir, "test_output.tif")
-        write_output_tif(X, dst_tif_path, 1, 100, 100, gdaldtype=gdal.GDT_Float32)
-        test_output = get_nparray(dst_tif_path)
+        GisIO.write_output_tif(X, dst_tif_path, 1, 100, 100, gdaldtype=gdal.GDT_Float32)
+        test_output = GisIO.get_nparray(dst_tif_path)
         self.assertTrue(test_output.shape == (100, 100, 1))
 
     def test_rasterize_layer(self):
         src_shp_path = satellite_tif_clipper_path
         dst_tif_path = os.path.join(self.output_dir, 'rasterized_image.tif')
         ref_tif_path = satellite_tif_path
-        rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path)
-        rasterized_image = get_nparray(dst_tif_path)
+        GisIO.rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path)
+        rasterized_image = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(rasterized_image[:,:,0], cmap='gray')
             plt.title("TestSatelliteIO" + ": " + "test_rasterize_layer")
             plt.show()
         self.assertTrue(np.sum(rasterized_image==1) == 20512)
 
-        rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, all_touched=True)
-        rasterized_image = get_nparray(dst_tif_path)
+        GisIO.rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, all_touched=True)
+        rasterized_image = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(rasterized_image[:,:,0], cmap='gray')
             plt.title("TestSatelliteIO" + ": " + "test_rasterize_layer")
@@ -311,7 +306,7 @@ class TestGisIO(unittest.TestCase):
     def test_polygonize_layer(self):
         src_tif_path = rasterized_image_path
         dst_shp_path = os.path.join(self.output_dir, 'polygonized_layer.shp')
-        polygonize_layer(src_tif_path, dst_shp_path)
+        GisIO.polygonize_layer(src_tif_path, dst_shp_path)
         df_shp = gpd.read_file(dst_shp_path)
         if show_image:
             df_shp.plot()
@@ -319,7 +314,7 @@ class TestGisIO(unittest.TestCase):
         self.assertTrue(df_shp.loc[0, 'geometry'].area == 2051200)
 
         src_tif_path = rasterized_image_1_path
-        polygonize_layer(src_tif_path, dst_shp_path, remove_boundry=False, multipolygon=True)
+        GisIO.polygonize_layer(src_tif_path, dst_shp_path, remove_boundry=False, multipolygon=True)
         df_shp = gpd.read_file(dst_shp_path)
         if show_image:
             df_shp.plot()
@@ -329,52 +324,52 @@ class TestGisIO(unittest.TestCase):
     def test_raster_pixel_to_polygon(self):
         src_tif_path = satellite_tif_path
         dst_shp_path = os.path.join(self.output_dir, 'raster_pixel_to_polygon.shp')
-        raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=True, crs={'init' :'epsg:3826'})
+        GisIO.raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=True, crs={'init' :'epsg:3826'})
 
     def test_reproject(self):
         src_tif_path = satellite_tif_path
         dst_tif_path = os.path.join(self.output_dir, "X_reprojected.tif")
-        reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:3826')
+        GisIO.reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:3826')
         WKT3826 = 'PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],AUTHORITY["EPSG","3826"]]'
-        self.assertTrue(get_geo_info(dst_tif_path)[4] == WKT3826)
+        self.assertTrue(GisIO.get_geo_info(dst_tif_path)[4] == WKT3826)
 
-        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = get_geo_info(dst_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(dst_tif_path)
         tif_without_projection_path = os.path.join(self.output_dir, "X_without_projection.tif")
-        write_output_tif(get_nparray(dst_tif_path), tif_without_projection_path, geo_transform=geo_transform, gdaldtype=gdaldtype)
+        GisIO.write_output_tif(GisIO.get_nparray(dst_tif_path), tif_without_projection_path, geo_transform=geo_transform, gdaldtype=gdaldtype)
 
         src_tif_path = tif_without_projection_path
         dst_tif_path = os.path.join(self.output_dir, "X_reprojected_2.tif")
-        reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:4326', src_crs='EPSG:3826')
+        GisIO.reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:4326', src_crs='EPSG:3826')
         WKT4326 = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]]'
-        self.assertTrue(get_geo_info(dst_tif_path)[4] == WKT4326)
+        self.assertTrue(GisIO.get_geo_info(dst_tif_path)[4] == WKT4326)
     
     def test_remap_tif(self):
-        src_tif_path = get_testing_fp('remap_ndvi_path')
-        ref_tif_path = get_testing_fp('remap_rgb_clipper_path')
+        src_tif_path = GisIO.get_testing_fp('remap_ndvi_path')
+        ref_tif_path = GisIO.get_testing_fp('remap_rgb_clipper_path')
         dst_tif_path = os.path.join(self.output_dir, 'X_remapped.tif')
-        remap_tif(src_tif_path, dst_tif_path, ref_tif_path)
+        GisIO.remap_tif(src_tif_path, dst_tif_path, ref_tif_path)
 
-        ref_cols, ref_rows, ref_bands, ref_geo_transform, ref_projection, ref_gdaldtype, ref_no_data_value = get_geo_info(ref_tif_path)
-        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
+        ref_cols, ref_rows, ref_bands, ref_geo_transform, ref_projection, ref_gdaldtype, ref_no_data_value = GisIO.get_geo_info(ref_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = GisIO.get_geo_info(dst_tif_path)
         self.assertTrue((ref_cols, ref_rows) == (dst_cols, dst_rows))
         self.assertTrue(ref_geo_transform == dst_geo_transform)
         self.assertTrue(ref_projection == dst_projection)
 
     def test_get_testing_fp(self):
         fn = 'satellite_tif'
-        fp = get_testing_fp(fn)
+        fp = GisIO.get_testing_fp(fn)
         self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif\\satellite_tif.tif')
         
         fn = 'satellite_tif_clipper'
-        fp = get_testing_fp(fn)
+        fp = GisIO.get_testing_fp(fn)
         self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif_clipper\\satellite_tif_clipper.shp')
 
         fn = 'satellite_tif_kmeans'
-        fp = get_testing_fp(fn)
+        fp = GisIO.get_testing_fp(fn)
         self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif_kmeans\\satellite_tif_kmeans.tif')
 
         fn = 'rasterized_image'
-        fp = get_testing_fp(fn)
+        fp = GisIO.get_testing_fp(fn)
         self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\rasterized_image\\rasterized_image.tif')
 
 class TestNormalizer(unittest.TestCase):
@@ -383,8 +378,8 @@ class TestNormalizer(unittest.TestCase):
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
-        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value = get_geo_info(satellite_tif_path)
-        self.X = get_nparray(satellite_tif_path)
+        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value = GisIO.get_geo_info(satellite_tif_path)
+        self.X = GisIO.get_nparray(satellite_tif_path)
 
     def tearDown(self):
         shutil.rmtree(self.output_dir)
@@ -409,20 +404,20 @@ class TestAlgorithm(unittest.TestCase):
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
-        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value = get_geo_info(satellite_tif_path)
-        self.X = get_nparray(satellite_tif_path)
+        self.cols, self.rows, self.bands, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value = GisIO.get_geo_info(satellite_tif_path)
+        self.X = GisIO.get_nparray(satellite_tif_path)
 
     def tearDown(self):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
 
     def test_kmeans(self):
-        X_kmeans = kmeans(self.X, n_clusters=5, no_data_value=0)
+        X_kmeans = Algorithm.kmeans(self.X, n_clusters=5, no_data_value=0)
         dst_tif_path = os.path.join(self.output_dir, "X_kmeans.tif")
         bands = 1
-        write_output_tif(X_kmeans, dst_tif_path, bands, self.cols, self.rows, self.geo_transform, self.projection)
+        GisIO.write_output_tif(X_kmeans, dst_tif_path, bands, self.cols, self.rows, self.geo_transform, self.projection)
 
-        kmeans_image_arr = get_nparray(dst_tif_path)
+        kmeans_image_arr = GisIO.get_nparray(dst_tif_path)
         if show_image:
             plt.imshow(kmeans_image_arr[:, :, 0], cmap='gray')
             plt.title("TestAlgorithm" + ": " + "test_kmeans")
@@ -441,18 +436,18 @@ class TestTypeCast(unittest.TestCase):
         time.sleep(1)
 
     def test_get_gdaldtype_name_by_idx(self):
-        self.assertTrue(get_gdaldtype_name_by_idx(5) == 'GDT_Int32')
+        self.assertTrue(TypeCast.get_gdaldtype_name_by_idx(5) == 'GDT_Int32')
 
     def test_convert_gdaldtype_to_npdtype(self):
-        self.assertTrue(convert_gdaldtype_to_npdtype(5) == np.int32)
+        self.assertTrue(TypeCast.convert_gdaldtype_to_npdtype(5) == np.int32)
 
     def test_convert_npdtype_to_gdaldtype(self):
-        self.assertTrue(convert_npdtype_to_gdaldtype(np.int32) == 5)
+        self.assertTrue(TypeCast.convert_npdtype_to_gdaldtype(np.int32) == 5)
 
 class TestInterpolation(unittest.TestCase):
     def setUp(self):
         time.sleep(1)
-        X = get_nparray(satellite_tif_path).astype(np.float)
+        X = GisIO.get_nparray(satellite_tif_path).astype(np.float)
         raw_shape = X.shape
         X = X.flatten()
         rand_idx = np.random.randint(0, len(X), int(len(X)*0.3))
@@ -468,9 +463,9 @@ class TestInterpolation(unittest.TestCase):
 
     def test_img_interpolation(self):
         X_band0 = self.X[:, :, 0]
-        X_band0_interp_nearest = img_interpolation(X_band0, method='nearest')
-        X_band0_interp_linear = img_interpolation(X_band0, method='linear')
-        X_band0_interp_cubic = img_interpolation(X_band0, method='cubic')
+        X_band0_interp_nearest = Interpolation.img_interpolation(X_band0, method='nearest')
+        X_band0_interp_linear = Interpolation.img_interpolation(X_band0, method='linear')
+        X_band0_interp_cubic = Interpolation.img_interpolation(X_band0, method='cubic')
         if show_image:
             fig, axes = plt.subplots(1, 4, figsize=(20, 5))
             axes[0].imshow(X_band0, cmap='gray')
@@ -485,7 +480,7 @@ class TestInterpolation(unittest.TestCase):
 class TestDEMProcessor(unittest.TestCase):
     def setUp(self):
         time.sleep(1)
-        self.dem_cols, self.dem_rows, self.dem_bands, self.dem_geo_transform, self.dem_projection, self.dem_gdaldtype, self.dem_no_data_value = get_geo_info(dem_process_path)
+        self.dem_cols, self.dem_rows, self.dem_bands, self.dem_geo_transform, self.dem_projection, self.dem_gdaldtype, self.dem_no_data_value = GisIO.get_geo_info(dem_process_path)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
@@ -496,9 +491,9 @@ class TestDEMProcessor(unittest.TestCase):
 
     def test_dem_to_hillshade(self):
         dst_tif_path = os.path.join(self.output_dir, 'hillshade.tif')
-        dem_to_hillshade(dem_process_path, dst_tif_path, azimuth=0, altitude=30)
-        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
-        dst_array = get_nparray(dst_tif_path)
+        DEMProcessor.dem_to_hillshade(dem_process_path, dst_tif_path, azimuth=0, altitude=30)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = GisIO.get_geo_info(dst_tif_path)
+        dst_array = GisIO.get_nparray(dst_tif_path)
 
         self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
         self.assertTrue(self.dem_geo_transform == dst_geo_transform)
@@ -508,9 +503,9 @@ class TestDEMProcessor(unittest.TestCase):
 
     def test_dem_to_slope(self):
         dst_tif_path = os.path.join(self.output_dir, 'slope.tif')
-        dem_to_slope(dem_process_path, dst_tif_path, slope_format='degree')
-        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
-        dst_array = get_nparray(dst_tif_path)
+        DEMProcessor.dem_to_slope(dem_process_path, dst_tif_path, slope_format='degree')
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = GisIO.get_geo_info(dst_tif_path)
+        dst_array = GisIO.get_nparray(dst_tif_path)
 
         self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
         self.assertTrue(self.dem_geo_transform == dst_geo_transform)
@@ -520,9 +515,9 @@ class TestDEMProcessor(unittest.TestCase):
     
     def test_dem_to_aspect(self):
         dst_tif_path = os.path.join(self.output_dir, 'aspect.tif')
-        dem_to_aspect(dem_process_path, dst_tif_path)
-        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
-        dst_array = get_nparray(dst_tif_path)
+        DEMProcessor.dem_to_aspect(dem_process_path, dst_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = GisIO.get_geo_info(dst_tif_path)
+        dst_array = GisIO.get_nparray(dst_tif_path)
 
         self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
         self.assertTrue(self.dem_geo_transform == dst_geo_transform)
@@ -532,9 +527,9 @@ class TestDEMProcessor(unittest.TestCase):
     
     def test_dem_to_TRI(self):
         dst_tif_path = os.path.join(self.output_dir, 'tri.tif')
-        dem_to_TRI(dem_process_path, dst_tif_path)
-        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
-        dst_array = get_nparray(dst_tif_path)
+        DEMProcessor.dem_to_TRI(dem_process_path, dst_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = GisIO.get_geo_info(dst_tif_path)
+        dst_array = GisIO.get_nparray(dst_tif_path)
 
         self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
         self.assertTrue(self.dem_geo_transform == dst_geo_transform)
@@ -543,9 +538,9 @@ class TestDEMProcessor(unittest.TestCase):
 
     def test_dem_to_TPI(self):
         dst_tif_path = os.path.join(self.output_dir, 'tpi.tif')
-        dem_to_TRI(dem_process_path, dst_tif_path)
-        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
-        dst_array = get_nparray(dst_tif_path)
+        DEMProcessor.dem_to_TPI(dem_process_path, dst_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = GisIO.get_geo_info(dst_tif_path)
+        dst_array = GisIO.get_nparray(dst_tif_path)
 
         self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
         self.assertTrue(self.dem_geo_transform == dst_geo_transform)
@@ -553,14 +548,60 @@ class TestDEMProcessor(unittest.TestCase):
     
     def test_dem_to_roughness(self):
         dst_tif_path = os.path.join(self.output_dir, 'roughness.tif')
-        dem_to_TRI(dem_process_path, dst_tif_path)
-        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = get_geo_info(dst_tif_path)
-        dst_array = get_nparray(dst_tif_path)
+        DEMProcessor.dem_to_roughness(dem_process_path, dst_tif_path)
+        dst_cols, dst_rows, dst_bands, dst_geo_transform, dst_projection, dst_gdaldtype, dst_no_data_value = GisIO.get_geo_info(dst_tif_path)
+        dst_array = GisIO.get_nparray(dst_tif_path)
 
         self.assertTrue((self.dem_cols, self.dem_rows) == (dst_cols, dst_rows))
         self.assertTrue(self.dem_geo_transform == dst_geo_transform)
         self.assertTrue(self.dem_no_data_value == dst_no_data_value)
         self.assertGreaterEqual(np.nanmin(dst_array), 0)
+
+class TestShapeGrid(unittest.TestCase):
+    def setUp(self):
+        time.sleep(1)
+        self.output_dir = os.path.join('test_output')
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
+        time.sleep(1)
+
+    def test_clip_tif_by_shp(self):
+        X = GisIO.get_nparray(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
+        clip_image_arr = ShapeGrid.clip_tif_by_shp(X, satellite_tif_clipper_path, geo_transform, projection)
+        if show_image:
+            plt.imshow(clip_image_arr)
+            plt.title("TestShapeGrid" + ": " + "test_clip_tif_by_shp")
+            plt.show()
+        self.assertTrue(clip_image_arr.shape == (138, 225, 4))
+
+    def test_clip_tif_by_bounds(self):
+        X = GisIO.get_nparray(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
+        gdf = gpd.read_file(satellite_tif_clipper_path)
+        bounds = gdf.total_bounds
+        X_clipped = ShapeGrid.clip_tif_by_bounds(X, bounds, geo_transform, projection)
+        if show_image:
+            fig, (ax1 ,ax2) = plt.subplots(1, 2, figsize=(10, 5))
+            ax1.imshow(X)
+            ax2.imshow(X_clipped)
+            plt.title("TestShapeGrid" + ": " + "test_clip_tif_by_bounds")
+            plt.show()
+        self.assertTrue(X_clipped.shape == (138, 226, 4))
+
+    def test_refine_resolution(self):
+        X = GisIO.get_nparray(satellite_tif_path)
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
+        X_refined = ShapeGrid.refine_resolution(X, geo_transform, projection, dst_resolution=5, resample_alg='bilinear')
+        if show_image:
+            plt.imshow(X_refined)
+            plt.title("TestShapeGrid" + ": " + "test_refine_resolution")
+            plt.show()
+        self.assertTrue(X_refined.shape == (1024, 1024, 4))
+
 
 if __name__ == "__main__":
     unittest.main()

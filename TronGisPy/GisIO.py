@@ -5,8 +5,7 @@ import gdal
 import geopandas as gpd
 from collections import Counter
 from shapely.geometry import Point, MultiPolygon, LineString, MultiLineString
-from TronGisPy.TypeCast import convert_npdtype_to_gdaldtype
-from TronGisPy.CRS import transfer_npidx_to_coord_polygon, transfer_npidx_to_coord, get_epsg_from_wkt
+from TronGisPy import TypeCast, CRS, ShapeGrid
 
 # bands compositions
 def get_geo_info(fp):
@@ -76,7 +75,7 @@ def write_output_tif(X, dst_tif_path, bands=None, cols=None, rows=None, geo_tran
     """X should be in (n_rows, n_cols, n_bands) shape"""
     if len(X.shape) == 2:
         X = np.expand_dims(X, axis=2)
-    gdaldtype = convert_npdtype_to_gdaldtype(X.dtype) if gdaldtype is None else gdaldtype
+    gdaldtype = TypeCast.convert_npdtype_to_gdaldtype(X.dtype) if gdaldtype is None else gdaldtype
     bands = X.shape[2] if bands is None else bands
     cols = X.shape[1] if cols is None else cols
     rows = X.shape[0] if rows is None else rows
@@ -212,13 +211,41 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     use_attribute: use thich attribute of the shp as raster value.
     """
     # Open your shapefile
+    gdf_shp = gpd.read_file(src_shp_path)
+    if not use_attribute:
+        use_attribute = 'positive'
+        gdf_shp[use_attribute] = 1
+
+
+    # Create the destination raster data source
+    # pixelWidth = pixelHeight = 2 # depending how fine you want your raster
+    # x_min, x_max, y_min, y_max = source_layer.GetExtent()
+    # cols = int((x_max - x_min) / pixelHeight)
+    # rows = int((y_max - y_min) / pixelWidth)
+    # geoTransform = (x_min, pixelWidth, 0, y_min, 0, pixelHeight)
+    ref_tif_ds = gdal.Open(ref_tif_path)
+    ref_tif_cols, ref_tif_rows = ref_tif_ds.RasterXSize, ref_tif_ds.RasterYSize
+    ref_tif_geo_transofrm = ref_tif_ds.GetGeoTransform()
+    ref_tif_projection = ref_tif_ds.GetProjection()
+
+    rasterize_arr = ShapeGrid.rasterize_layer(gdf_shp, ref_tif_rows, ref_tif_cols, ref_tif_geo_transofrm, use_attribute, all_touched)
+    write_output_tif(rasterize_arr, dst_tif_path, geo_transform=ref_tif_geo_transofrm, projection=ref_tif_projection, gdaldtype=gdaldtype, no_data_value=no_data_value)
+
+def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None, all_touched=False, gdaldtype=None, no_data_value=None):
+    """
+    src_shp_path: rasterize which shp.
+    dst_tif_path: rasterize output, should be in tiff type.
+    ref_tif_path: the geo information reference raster.
+    use_attribute: use thich attribute of the shp as raster value.
+    """
+    # Open your shapefile
     df_shp = gpd.read_file(src_shp_path)
     if not use_attribute:
         use_attribute = 'positive'
         df_shp[use_attribute] = 1
     else:
         assert use_attribute in df_shp.columns, "attribute not exists!"
-    gdaldtype = convert_npdtype_to_gdaldtype(df_shp[use_attribute].dtype) if gdaldtype is None else gdaldtype
+    gdaldtype = TypeCast.convert_npdtype_to_gdaldtype(df_shp[use_attribute].dtype) if gdaldtype is None else gdaldtype
     src_shp_ds = ogr.Open(df_shp.to_json())
     src_shp_layer = src_shp_ds.GetLayer()
 
@@ -253,6 +280,9 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
 
     ref_tif_ds = None
     dst_ds = None
+
+    out_arr = dst_tif_ds.GetRasterBand(1).ReadAsArray()
+    return out_arr
 
 
 def polygonize_layer(src_tif_path, dst_shp_path, field_name='value', band_num=1, remove_boundry=False, multipolygon=False):
@@ -299,7 +329,7 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
     for row_idx, col_idx in zip(*idxs):
         row = {}
         npidx = (row_idx, col_idx)
-        row['geometry'] = transfer_npidx_to_coord_polygon(npidx, geo_transform)
+        row['geometry'] = CRS.transfer_npidx_to_coord_polygon(npidx, geo_transform)
         if all_bands_as_feature:
             for i in range(X.shape[2]):
                 row['band'+str(i+1)] = X[row_idx, col_idx, i]
@@ -328,8 +358,8 @@ def remap_tif(src_tif_path, dst_tif_path, ref_tif_path):
     output_bounds = minX, minY, maxX, maxY = np.min(extend_poly[:,0]), np.min(extend_poly[:,1]), np.max(extend_poly[:,0]), np.max(extend_poly[:,1])
     x_res, y_res = ref_geo_transform[1], ref_geo_transform[5]
     output_type = src_gdaldtype
-    src_srs = "EPSG:" + str(get_epsg_from_wkt(src_projection))
-    dst_srs = "EPSG:" + str(get_epsg_from_wkt(ref_projection))
+    src_srs = "EPSG:" + str(CRS.get_epsg_from_wkt(src_projection))
+    dst_srs = "EPSG:" + str(CRS.get_epsg_from_wkt(ref_projection))
     gdal.Warp(dst_tif_path, src_tif_path, 
             outputBounds=output_bounds,
             xRes=x_res,
@@ -349,7 +379,7 @@ def remap_tif(src_tif_path, dst_tif_path, ref_tif_path):
 #     X = get_nparray(src_tif_path)
 #     cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = get_geo_info(src_tif_path)
 #     npidxs = list(zip(*np.where(np.ones_like(X))))
-#     coords = [Point(transfer_npidx_to_coord(npidx, geo_transform)) for npidx in npidxs]
+#     coords = [Point(CRS.transfer_npidx_to_coord(npidx, geo_transform)) for npidx in npidxs]
 #     gdf_raster = gpd.GeoDataFrame(geometry=coords, crs=df_shp.crs)
 #     gdf_raster['np_idx'] = npidxs
 #     gdf_raster['order_idx'] = list(range(len(gdf_raster)))
