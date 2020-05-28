@@ -601,7 +601,7 @@ class TestShapeGrid(unittest.TestCase):
     def test_refine_resolution(self):
         X = GisIO.get_nparray(satellite_tif_path)
         cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
-        X_refined = ShapeGrid.refine_resolution(X, geo_transform, projection, dst_resolution=5, resample_alg='bilinear')
+        X_refined = ShapeGrid.refine_resolution(X, geo_transform, dst_resolution=5, resample_alg='bilinear')
         if show_image:
             plt.imshow(X_refined)
             plt.title("TestShapeGrid" + ": " + "test_refine_resolution")

@@ -102,7 +102,7 @@ def clip_tif_by_extent(X, geo_transform, extent):
     return X_dst, geo_transform_dst
 
 
-def refine_resolution(X, geo_transform, projection, dst_resolution, resample_alg='near'):
+def refine_resolution(X, geo_transform, dst_resolution, resample_alg='near'):
     """
     near: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
     bilinear: bilinear resampling.
@@ -112,7 +112,7 @@ def refine_resolution(X, geo_transform, projection, dst_resolution, resample_alg
     average: average resampling, computes the weighted average of all non-NODATA contributing pixels.
     mode: mode resampling, selects the value which appears most often of all the sampled points.
     """
-    src_ds = build_gdal_ds(X, geo_transform=geo_transform, projection=projection)
+    src_ds = build_gdal_ds(X, geo_transform=geo_transform)
     dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, format='MEM', resampleAlg=resample_alg)
     arr = read_gdal_ds(dst_ds)
     return arr
