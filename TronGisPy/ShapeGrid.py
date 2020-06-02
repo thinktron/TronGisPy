@@ -40,22 +40,27 @@ def build_gdal_ds(X=None, bands=None, cols=None, rows=None, geo_transform=None, 
     if projection is not None:
         ds.SetProjection(projection)
 
+    if no_data_value is not None:
+        for b in range(bands):
+            band = ds.GetRasterBand(b+1)
+            band.SetNoDataValue(no_data_value)
+            band.WriteArray(np.full((rows, cols), no_data_value), 0, 0)
+            band.FlushCache()
+
     if X is not None:
         for b in range(X.shape[2]):
             band = ds.GetRasterBand(b+1)
             band.WriteArray(X[:, :, b], 0, 0)
-            if no_data_value:
-                band.SetNoDataValue(no_data_value)
             band.FlushCache()
-
     return ds
 
-def rasterize_layer(gdf_shp, rows, cols, geo_ransform, use_attribute, all_touched=False):
+def rasterize_layer(gdf_shp, rows, cols, geo_ransform, use_attribute, all_touched=False, no_data_value=0):
     """
     gdf_shp: should be GeoDataFrame type
     rows, cols, geo_ransform: output raster geo_info
     use_attribute: use this attribute of the shp as raster value.
     all_touched: pixels that touch (not overlap over 50%) the poly will be the value of the poly.
+    return rasterized_image
     """
     # Open your shapefile
     assert type(gdf_shp) is gpd.GeoDataFrame, "gdf_shp should be GeoDataFrame type."
@@ -65,7 +70,7 @@ def rasterize_layer(gdf_shp, rows, cols, geo_ransform, use_attribute, all_touche
     src_shp_layer = src_shp_ds.GetLayer()
 
     # Create the destination raster data source
-    dst_ds = build_gdal_ds(bands=1, cols=cols, rows=rows, geo_transform=geo_ransform, gdaldtype=gdaldtype)
+    dst_ds = build_gdal_ds(bands=1, cols=cols, rows=rows, geo_transform=geo_ransform, gdaldtype=gdaldtype, no_data_value=no_data_value)
 
     # set it to the attribute that contains the relevant unique
     options = ["ATTRIBUTE="+use_attribute]

@@ -425,6 +425,10 @@ def get_testing_fp(fn):
         fp = os.path.join(data_dir, 'remap', 'ndvi_32651.tif')
     elif fn == 'dem_process_path':
         fp = os.path.join(data_dir, 'dem_tif', 'crop_dem.tif')
+    elif fn == 'tif_forinterpolation':
+        fp = os.path.join(data_dir, 'interpolation', 'X_forinterpolation.tif')
+    elif fn == 'aero_triangulation_PXYZs':
+        fp = os.path.join(data_dir, 'aero_triangulation', 'P_XYZs.npy')
     else:
         assert False, "cannot find the file!!"
     return os.path.abspath(fp)

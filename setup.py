@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="0.5.5",
+    version="0.6.1",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -82,9 +82,15 @@ setuptools.setup(
 # 0.5.3 remove projection from refine_resolution params in ShapeGrid.py
 # 0.5.4 add geo_transform as return of refine_resolution function in ShapeGrid.py
 # 0.5.5 adjust extent input of refine_resolution function in ShapeGrid.py
+# 0.5.6 add AeroTriangulation.py and add fast majority interpolation in Interpolation.py
+# 0.5.7 add fast mean interpolation in Interpolation.py
+# 0.5.8 fast mean interpolation can be float type
+# 0.5.9 add no_data_value in ShapeGrid.rasterize_layer
+# 0.6.0 activate no_data_value in ShapeGrid.rasterize_layer
+# 0.6.1 add loop_limir param in majority_interpolation & mean_interpolation functions 
 
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.5.5-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.5-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.5.5-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.5.5-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.6.1-py3-none-any.whl  thinktron@192.168.0.167:/home/thinktron/pypi/TronGisPy-0.6.1-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.6.1-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.6.1-py3-none-any.whl
 

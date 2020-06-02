@@ -20,7 +20,7 @@ import gdal
 # main
 from TronGisPy.SplittedImage import SplittedImage
 from TronGisPy.Normalizer import Normalizer
-from TronGisPy import GisIO, Algorithm, CRS, TypeCast, Interpolation, DEMProcessor, ShapeGrid
+from TronGisPy import GisIO, Algorithm, CRS, TypeCast, Interpolation, DEMProcessor, ShapeGrid, AeroTriangulation
 
 data_dir = os.path.join('TronGisPy', 'data')
 satellite_tif_path = GisIO.get_testing_fp('satellite_tif')
@@ -34,6 +34,8 @@ line_to_be_clipped_path = GisIO.get_testing_fp('line_to_be_clipped')
 multiline_to_be_clipped_path = GisIO.get_testing_fp('multiline_to_be_clipped')
 remap_rgb_clipper_path = GisIO.get_testing_fp('remap_rgb_clipper_path')
 remap_ndvi_path = GisIO.get_testing_fp('remap_ndvi_path')
+tif_forinterpolation_path = GisIO.get_testing_fp('tif_forinterpolation')
+aero_triangulation_PXYZs_path = GisIO.get_testing_fp('aero_triangulation_PXYZs')
 
 shp_clipper_path = GisIO.get_testing_fp('shp_clipper')
 dem_process_path = GisIO.get_testing_fp('dem_process_path')
@@ -482,6 +484,29 @@ class TestInterpolation(unittest.TestCase):
         self.assertTrue(np.sum(np.isnan(X_band0_interp_linear)) < np.product(X_band0_interp_nearest.shape) * 0.05)
         self.assertTrue(np.sum(np.isnan(X_band0_interp_cubic)) < np.product(X_band0_interp_nearest.shape) * 0.05)
     
+    def test_majority_interpolation(self):
+        X = GisIO.get_nparray(tif_forinterpolation_path)[:, :, 0]
+        X[np.isnan(X)] = 999
+        X_interp = Interpolation.majority_interpolation(X.astype(np.int), no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=1)
+        self.assertTrue(np.sum(X_interp == 999) == 0)
+        if show_image:
+            fig, axes = plt.subplots(1, 2, figsize=(20, 5))
+            axes[0].imshow(X, cmap='gray')
+            axes[1].imshow(X_interp, cmap='gray')
+            plt.show()
+
+    def test_mean_interpolation(self):
+        X = GisIO.get_nparray(tif_forinterpolation_path)[:, :, 0].astype(np.float)
+        X[np.isnan(X)] = 999
+        X_interp = Interpolation.mean_interpolation(X.astype(np.int), no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=1)
+        self.assertTrue(np.sum(X_interp == 999) == 0)
+        if show_image:
+            fig, axes = plt.subplots(1, 2, figsize=(20, 5))
+            axes[0].imshow(X, cmap='gray')
+            axes[1].imshow(X_interp, cmap='gray')
+            plt.show()
+
+
 class TestDEMProcessor(unittest.TestCase):
     def setUp(self):
         time.sleep(1)
@@ -613,6 +638,56 @@ class TestShapeGrid(unittest.TestCase):
         cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
         extent = ShapeGrid.get_extent(rows, cols, geo_transform, False)
         self.assertTrue(extent == (328530.0, 333650.0, 2745670.0, 2750790.0))
+
+    def test_rasterize_layer(self):
+        gdf_shp = gpd.read_file(satellite_tif_clipper_path)
+        gdf_shp['FEATURE'] = 1
+        cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
+        rasterized_image = ShapeGrid.rasterize_layer(gdf_shp, rows, cols, geo_transform, use_attribute='FEATURE', no_data_value=-99)
+        self.assertTrue(np.sum(rasterized_image==1) == 20512)
+        if show_image:
+            plt.imshow(rasterized_image[:,:,0], cmap='gray')
+            plt.title("TestGisIO" + ": " + "test_rasterize_layer")
+            plt.show()
+
+        rasterized_image = ShapeGrid.rasterize_layer(gdf_shp, rows, cols, geo_transform, use_attribute='FEATURE', no_data_value=-99, all_touched=True)
+        self.assertTrue(np.sum(rasterized_image==1) == 20876)
+        if show_image:
+            plt.imshow(rasterized_image[:,:,0], cmap='gray')
+            plt.title("TestGisIO" + ": " + "test_rasterize_layer")
+            plt.show()
+
+class TestAeroTriangulation(unittest.TestCase):
+    def setUp(self):
+        time.sleep(1)
+        self.output_dir = os.path.join('test_output')
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.output_dir)
+        time.sleep(1)
+
+    def test_project_npidxs_to_XYZs(self):
+        aerotri_params = [np.array([0.00759914610989079, -0.002376824281950918, 1.561874186205409]),
+                            np.array([ 249557.729, 2607778.809,    5826.51 ]),
+                            13824, 7680, 120, 0.012]
+        gt_aerial = (247240.9472615, 0.0042, 0.332961, 2606525.0328175, 0.332961, -0.0042)
+        P_XYZs = np.load(aero_triangulation_PXYZs_path)
+        P_npidxs = AeroTriangulation.project_XYZs_to_npidxs(P_XYZs, aerotri_params)
+        P_XYZs = AeroTriangulation.project_npidxs_to_XYZs(P_npidxs, P_XYZs[:, 2], aerotri_params)
+        self.assertTrue(Polygon(P_XYZs).area == 2537.83444559387)
+
+    def test_project_XYZs_to_npidxs(self):
+        aerotri_params = [np.array([0.00759914610989079, -0.002376824281950918, 1.561874186205409]),
+                            np.array([ 249557.729, 2607778.809,    5826.51 ]),
+                            13824, 7680, 120, 0.012]
+        gt_aerial = (247240.9472615, 0.0042, 0.332961, 2606525.0328175, 0.332961, -0.0042)
+        P_XYZs = np.load(aero_triangulation_PXYZs_path)
+        P_npidxs = AeroTriangulation.project_XYZs_to_npidxs(P_XYZs, aerotri_params)
+        P_npidxs_coords = CRS.transfer_group_npidx_to_coord(P_npidxs, gt_aerial)
+        self.assertTrue(Polygon(P_npidxs_coords).area == 974.8584352214892)
+
 
 if __name__ == "__main__":
     unittest.main()
