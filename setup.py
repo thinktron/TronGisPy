@@ -87,10 +87,10 @@ setuptools.setup(
 # 0.5.8 fast mean interpolation can be float type
 # 0.5.9 add no_data_value in ShapeGrid.rasterize_layer
 # 0.6.0 activate no_data_value in ShapeGrid.rasterize_layer
-# 0.6.1 add loop_limir param in majority_interpolation & mean_interpolation functions 
+# 0.6.1 add loop_limit param in majority_interpolation & mean_interpolation functions 
 
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.6.1-py3-none-any.whl  thinktron@192.168.0.167:/home/thinktron/pypi/TronGisPy-0.6.1-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.6.1-py3-none-any.whl thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.6.1-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.6.1-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-0.6.1-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.6.1-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-0.6.1-py3-none-any.whl
 

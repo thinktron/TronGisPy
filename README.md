@@ -51,12 +51,12 @@ pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-hos
 ```
 
 # Usage
-Please see [Tutorial.ipynb](http://rd.thinktronltd.com:21111/jeremywang/TronGisPyTutorial/blob/master/Tutorial.ipynb) & [the Tutorial repo](http://rd.thinktronltd.com:21111/jeremywang/TronGisPyTutorial/)
+Please see [Tutorial.ipynb](http://rd.thinktronltd.com/jeremywang/TronGisPyTutorial/blob/master/Tutorial.ipynb) & [the Tutorial repo](http://rd.thinktronltd.com/jeremywang/TronGisPyTutorial/)
 
 # Build & deployee
 ```bash
 python setup.py sdist bdist_wheel
-scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.2.0-py3-none-any.whl  thinktron@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-0.2.0-py3-none-any.whl
+scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-x.x.x-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/thinktron/pypi/TronGisPy-x.x.x-py3-none-any.whl
 ```
 
 
