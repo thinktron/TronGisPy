@@ -113,12 +113,11 @@ class SplittedImage():
             right_top_coord = transfer_npidx_to_coord((h_stop_inner, w_start_inner), self.geo_transform)
 
             x_min, y_max = left_top_coord
-            pixel_size = self.geo_transform[1]
             row = {
                 "idx":i,
                 "idx_h":idx_h,
                 "idx_w":idx_w,
-                "geo_transform":(x_min, pixel_size, 0, y_max, 0, -pixel_size),
+                "geo_transform":(x_min, self.geo_transform[1], self.geo_transform[2], y_max, self.geo_transform[4], self.geo_transform[5]),
                 "geometry": Polygon([left_top_coord, 
                                     left_buttom_coord, 
                                     right_buttom_coord, 
@@ -139,7 +138,8 @@ class SplittedImage():
 
     def write_splitted_images(self, target_dir, filename, projection=None, gdaldtype=None, no_data_value=None, filter_fun=lambda x:True):
         """
-        target_dir: where you want to store all aplitted images; filename: index number will be followed by the output filename you defined, e.g. <filename>_idx_idxh_idxw;
+        target_dir: where you want to store all aplitted images; 
+        filename: index number will be followed by the output filename you defined, e.g. <filename>_idx_idxh_idxw;
         filter_fun(x_splitted): if return True, the image will be stored.
         """
         df_attribute = self.get_geo_attribute(return_geo_transform=True)

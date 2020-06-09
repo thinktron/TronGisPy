@@ -643,8 +643,10 @@ class TestShapeGrid(unittest.TestCase):
         gdf_shp = gpd.read_file(satellite_tif_clipper_path)
         gdf_shp['FEATURE'] = 1
         cols, rows, bands, geo_transform, projection, gdaldtype, no_data_value = GisIO.get_geo_info(satellite_tif_path)
-        rasterized_image = ShapeGrid.rasterize_layer(gdf_shp, rows, cols, geo_transform, use_attribute='FEATURE', no_data_value=-99)
+        print(gdf_shp['FEATURE'].dtype)
+        rasterized_image = ShapeGrid.rasterize_layer(gdf_shp, rows, cols, geo_transform, use_attribute='FEATURE', no_data_value=99)
         self.assertTrue(np.sum(rasterized_image==1) == 20512)
+        print(np.sum(rasterized_image==99))
         if show_image:
             plt.imshow(rasterized_image[:,:,0], cmap='gray')
             plt.title("TestGisIO" + ": " + "test_rasterize_layer")
