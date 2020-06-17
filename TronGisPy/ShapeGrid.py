@@ -1,113 +1,98 @@
+import os
 import ogr
 import gdal
+import pyproj
+import shapely
 import numpy as np
 import geopandas as gpd
-from TronGisPy import TypeCast
+import TronGisPy as tgp
 
-def read_gdal_ds(ds, numpy_shape=True, fill_na=False):
-    """if numpy_shape the shape will be (cols, rows, bnads), else (bnads, cols, rows)"""
-    X = ds.ReadAsArray()
-    ds = None 
-    if fill_na:
-        X = X.astype(np.float)
-        no_data_value = get_geo_info(fp)[6]
-        assert no_data_value is not None, "no_data_value is None which cannot be filled!"
-        X[X == no_data_value] = np.nan
-
-    if not numpy_shape:
-        return X
-    else:
-        if len(X.shape) == 2:
-            X = X.reshape(-1, *X.shape)
-        return np.transpose(X, axes=[1,2,0])
-
-def build_gdal_ds(X=None, bands=None, cols=None, rows=None, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None):
-    """X should be in (n_rows, n_cols, n_bands) shape"""
-    if X is None:
-        assert (bands is not None) and (cols is not None) and (rows is not None), "bands, cols, rows should not be None"
-        assert (gdaldtype is not None), "gdaldtype should not be None"
-    else:    
-        if len(X.shape) == 2:
-            X = np.expand_dims(X, axis=2)
-        bands = X.shape[2] if bands is None else bands
-        cols = X.shape[1] if cols is None else cols
-        rows = X.shape[0] if rows is None else rows
-        gdaldtype = TypeCast.convert_npdtype_to_gdaldtype(X.dtype) if gdaldtype is None else gdaldtype
-
-    ds = gdal.GetDriverByName('MEM').Create('', cols, rows, bands, gdaldtype) # dst_filename, xsize=512, ysize=512, bands=1, eType=gdal.GDT_Byte
-    if geo_transform is not None:
-        ds.SetGeoTransform(geo_transform)
-    if projection is not None:
-        ds.SetProjection(projection)
-
-    if no_data_value is not None:
-        for b in range(bands):
-            band = ds.GetRasterBand(b+1)
-            band.SetNoDataValue(no_data_value)
-            band.WriteArray(np.full((rows, cols), no_data_value), 0, 0)
-            band.FlushCache()
-
-    if X is not None:
-        for b in range(X.shape[2]):
-            band = ds.GetRasterBand(b+1)
-            band.WriteArray(X[:, :, b], 0, 0)
-            band.FlushCache()
-    return ds
-
-def rasterize_layer(gdf_shp, rows, cols, geo_transform, use_attribute, all_touched=False, no_data_value=0):
+def rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute, all_touched=False, no_data_value=0):
     """
-    gdf_shp: should be GeoDataFrame type
+    src_vector: should be GeoDataFrame type
     rows, cols, geo_transform: output raster geo_info
     use_attribute: use this attribute of the shp as raster value.
     all_touched: pixels that touch (not overlap over 50%) the poly will be the value of the poly.
-    return rasterized_image
+    return Raster
     """
     # Open your shapefile
-    assert type(gdf_shp) is gpd.GeoDataFrame, "gdf_shp should be GeoDataFrame type."
-    assert use_attribute in gdf_shp.columns, "attribute not exists in gdf_shp."
-    gdaldtype = TypeCast.convert_npdtype_to_gdaldtype(gdf_shp[use_attribute].dtype)
-    src_shp_ds = ogr.Open(gdf_shp.to_json())
+    assert type(src_vector) is gpd.GeoDataFrame, "src_vector should be GeoDataFrame type."
+    assert use_attribute in src_vector.columns, "attribute not exists in src_vector."
+    gdaldtype = tgp.npdtype_to_gdaldtype(src_vector[use_attribute].dtype)
+    # projection = src_vector.crs.to_wkt() if src_vector.crs is not None else None
+    projection = pyproj.CRS(src_vector.crs).to_wkt() if src_vector.crs is not None else None
+    src_shp_ds = ogr.Open(src_vector.to_json())
     src_shp_layer = src_shp_ds.GetLayer()
 
     # Create the destination raster data source
-    dst_ds = build_gdal_ds(bands=1, cols=cols, rows=rows, geo_transform=geo_transform, gdaldtype=gdaldtype, no_data_value=no_data_value)
+    ds = tgp.write_gdal_ds(bands=1, cols=cols, rows=rows, geo_transform=geo_transform, gdaldtype=gdaldtype, no_data_value=no_data_value)
 
     # set it to the attribute that contains the relevant unique
     options = ["ATTRIBUTE="+use_attribute]
     if all_touched:
         options.append('ALL_TOUCHED=TRUE')
-    gdal.RasterizeLayer(dst_ds, [1], src_shp_layer, options=options) # target_ds, band_list, source_layer, options = options
+    gdal.RasterizeLayer(ds, [1], src_shp_layer, options=options) # target_ds, band_list, source_layer, options = options
 
-    out_arr = dst_ds.GetRasterBand(1).ReadAsArray()
-    return out_arr
+    data = ds.GetRasterBand(1).ReadAsArray()
+    raster = tgp.Raster(data, geo_transform, projection, gdaldtype, no_data_value)
+    return raster
 
-def clip_tif_by_shp(X, geo_transform, projection, src_shp_path):
-    src_ds = build_gdal_ds(X, geo_transform=geo_transform, projection=projection)
-    dst_ds = gdal.Warp('',
-                       src_ds,
-                       format= 'MEM',
-                       cutlineDSName=src_shp_path,
-                       cropToCutline=True)
-    X_dst = read_gdal_ds(dst_ds)
-    geo_transform_dst = dst_ds.GetGeoTransform()
-    return X_dst, geo_transform_dst
+def vectorize_layer(src_raster, field_name='value', band_num=1, multipolygon=False):
+    """band_num start from 1"""
+    src_ds = src_raster.to_gdal_ds()
+    src_band = src_ds.GetRasterBand(band_num)
 
-def clip_tif_by_extent(X, geo_transform, extent):
+    drv = ogr.GetDriverByName("MEMORY")
+    dst_ds = drv.CreateDataSource('memData')
+    dst_layer = dst_ds.CreateLayer('vectorize_layer')
+    dst_layer.CreateField(ogr.FieldDefn(field_name, ogr.OFTInteger))
+    dst_field = dst_layer.GetLayerDefn().GetFieldIndex(field_name)
+    gdal.Polygonize(src_band, None, dst_layer, dst_field, [], callback=None)
+
+    df_vectorized_rows = []
+    for feature in dst_layer:
+        field_value = feature.GetField(field_name)
+        geometry = shapely.wkt.loads(feature.GetGeometryRef().ExportToWkt())
+        df_vectorized_rows.append([field_value, geometry])
+    df_vectorized = gpd.GeoDataFrame(df_vectorized_rows, columns=[field_name, 'geometry'], geometry='geometry', crs=src_raster.projection)
+    src_ds = None
+    dst_ds = None
+
+    if multipolygon:
+        from shapely.geometry import MultiPolygon
+        multi_polygons = df_vectorized.groupby(field_name)['geometry'].apply(list).apply(MultiPolygon)
+        values = df_vectorized.groupby(field_name)[field_name].first()
+        df_vectorized = gpd.GeoDataFrame(geometry=multi_polygons)
+        df_vectorized[field_name] = values
+
+    return df_vectorized
+
+
+def clip_raster_with_polygon(src_raster, src_shp):
+    """
+    src_shp: should be GeoDataFrame type
+    """
+    assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
+    src_ds = src_raster.to_gdal_ds()
+    temp_dir = tgp.create_temp_dir()
+    src_shp_fp = os.path.join(temp_dir, 'src_shp.shp')
+    src_shp.to_file(src_shp_fp)
+    dst_ds = gdal.Warp('', src_ds, format= 'MEM', cutlineDSName=src_shp_fp, cropToCutline=True)
+    dst_raster = tgp.read_gdal_ds(dst_ds)
+    tgp.remove_temp_dir()
+    return dst_raster
+
+def clip_raster_with_extent(src_raster, extent):
     """
     extent --- output bounds as (minX, minY, maxX, maxY) in target SRS
     """
-    src_ds = build_gdal_ds(X, geo_transform=geo_transform)
-    dst_ds = gdal.Warp('',
-                       src_ds,
-                       format= 'MEM',
-                       outputBounds=extent,
-                       cropToCutline=True)
-    X_dst = read_gdal_ds(dst_ds)
-    geo_transform_dst = dst_ds.GetGeoTransform()
-    return X_dst, geo_transform_dst
+    assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
+    src_ds = src_raster.to_gdal_ds()
+    dst_ds = gdal.Warp('', src_ds, format= 'MEM', outputBounds=extent, cropToCutline=True)
+    dst_raster = tgp.read_gdal_ds(dst_ds)
+    return dst_raster
 
-
-def refine_resolution(X, geo_transform, dst_resolution, resample_alg='near', extent=None):
+def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=None):
     """
     near: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
     bilinear: bilinear resampling.
@@ -117,30 +102,7 @@ def refine_resolution(X, geo_transform, dst_resolution, resample_alg='near', ext
     average: average resampling, computes the weighted average of all non-NODATA contributing pixels.
     mode: mode resampling, selects the value which appears most often of all the sampled points.
     """
-    src_ds = build_gdal_ds(X, geo_transform=geo_transform)
-    if extent:
-        dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, outputBounds=extent, format='MEM', resampleAlg=resample_alg)
-    else:
-        dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, format='MEM', resampleAlg=resample_alg)
-    X_dst = read_gdal_ds(dst_ds)
-    geo_transform_dst = dst_ds.GetGeoTransform()
-    return X_dst, geo_transform_dst
-
-def get_extent(rows, cols, geo_transform, return_poly=True):
-    """get the extent(boundry) coordnate"""
-    gt = geo_transform
-    extent=[]
-    xarr=[0,cols]
-    yarr=[0,rows]
-    for px in xarr:
-        for py in yarr:
-            x=gt[0]+(px*gt[1])+(py*gt[2])
-            y=gt[3]+(px*gt[4])+(py*gt[5])
-            extent.append([x,y])
-        yarr.reverse()
-    ds = None 
-    poly = np.array(extent)
-    if return_poly:
-        return poly
-    else:
-        return (np.min(poly[:, 0]), np.max(poly[:, 0]), np.min(poly[:, 1]), np.max(poly[:, 1]))
+    src_ds = src_raster.to_gdal_ds()
+    dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, outputBounds=extent, format='MEM', resampleAlg=resample_alg)
+    dst_raster = tgp.read_gdal_ds(dst_ds)
+    return dst_raster

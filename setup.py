@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="0.6.2",
+    version="1.0.0",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -26,7 +26,10 @@ setuptools.setup(
           'affine',
           'scikit-learn',
           'descartes',
-          'matplotlib'
+          'matplotlib',
+          'Rtree==0.9.4',
+          'Shapely==1.6.4.post2',
+          'geopandas==0.7.0'
       ]
 )
 
@@ -91,7 +94,9 @@ setuptools.setup(
 # 0.6.2 modify geotransform setting in get_geo_attribute function in SplittedImage
 
 
-# python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-0.6.2-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-0.6.2-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-0.6.2-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-0.6.2-py3-none-any.whl
+# 1.0.0 Raster class for saving raster data in memory
 
+
+# python setup.py sdist bdist_wheel
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.0.0-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.0-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.0.0-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.0-py3-none-any.whl

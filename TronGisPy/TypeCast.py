@@ -19,16 +19,15 @@ df_gdal_dtype = [
 ]
 df_gdal_dtype = pd.DataFrame(df_gdal_dtype, columns=['gdaldtype_idx', 'gdaldtype_name', 'npdtype'])
 
-def get_gdaldtype_name_by_idx(gdaldtype_idx):
+def get_gdaldtype_name(gdaldtype_idx):
     gdaldtype_name = df_gdal_dtype.loc[df_gdal_dtype['gdaldtype_idx']==gdaldtype_idx, 'gdaldtype_name'].iloc[0]
     return gdaldtype_name
 
-def convert_gdaldtype_to_npdtype(gdaldtype_idx):
+def gdaldtype_to_npdtype(gdaldtype_idx):
     npdtype = df_gdal_dtype.loc[df_gdal_dtype['gdaldtype_idx']==gdaldtype_idx, 'npdtype'].iloc[0]
     return npdtype
 
-#TODO: cast all types in numpy explicitly
-def convert_npdtype_to_gdaldtype(npdtype): 
+def npdtype_to_gdaldtype(npdtype): 
     if npdtype in df_gdal_dtype['npdtype'].tolist():
         return int(df_gdal_dtype.loc[df_gdal_dtype['npdtype']==npdtype, 'gdaldtype_idx'].iloc[0])
     elif np.issubdtype(npdtype, np.signedinteger):

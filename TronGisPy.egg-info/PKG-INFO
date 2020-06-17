@@ -1,32 +1,72 @@
 Metadata-Version: 2.1
 Name: TronGisPy
-Version: 0.6.2
+Version: 1.0.0
 Summary: Gis image Processing tool
 Home-page: http://rd.thinktronltd.com/jeremywang/TronGisPy
 Author: GoatWang
 Author-email: jeremywang@thinktronltd.com
 License: UNKNOWN
 Description: # Introduction
-        This Repository helps to preprocess images before AI trainging. Some functions are basically copy gis functions into python interface. Some functions are special for AI training processing.
-        1. GisIO: any file-based function, including `get_geo_info`, `get_nparray`, `get_exten`d, `write_output_tif`, `clip_tif_by_shp`, `tif_composition`, `refine_resolution`, `rasterize_layer`, `polygonize_layer`, `raster_pixel_to_polygon` functions.
-        2. SplittedImage: help to split image into tiny images for model training. support indexing, saving, combining functions, including `get_inner_idx`, `get_padded_image`,  `convert_location_to_order_index`, `convert_order_to_location_index`, `apply`, `get_splitted_images`, `get_geo_attribute`, `write_splitted_images`, `write_combined_tif` functions.
-        3. CRS: help to convert npidx into coordinate and convert coordinate into npidx including, `transfer_npidx_to_coord`, `transfer_coord_to_npidx`, `transfer_npidx_to_coord_polygon` functions.
+        The repo aims to build a geographic information system (GIS) library for Python interface. The library includes the following modules.
         
-        # Preinstlall
-        ## Windows 
-        ### Install from thinktron pypi server
-        ```
-        pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com Fiona GDAL Rtree Shapely pyproj geopandas
+        ## TronGisPy Main Modules
+        1. Raster: This module is Main class in this library. A Raster object contains all required information for a gis raster file such as `.tif` file including digital number for each pixel, number of rows, number of cols, number of bands, geo_transform, projection, no_data_value and metadata. 
+        
+        2. CRS: Converion the indexing system e.g. coordinate & numpy index and wkt & epsg. 
+        
+        3. TypeCast: Mapping the nearest data type betyween gdal and numpy, and convert the gdal data type from integer to readable string. 
+        
+        4. ShapeGrid: Converion between raster and vector data. 
+        
+        5. Normalizer: Normalize the Image data for model training or plotting.
+        
+        6. AeroTriangulation: Do the aero-triangulation calculation.
+        
+        7. Interpolation: Interpolation for raster data on specific cells which is usually nan cells.
+        
+        8. SplittedImage: Split remote sensing images for machine learning model training.
+        
+        9. DEMProcessor: General dem processing functions e.g. shadow, slope, TRI, TPI and roughness.
+        
+        10. GisIO: Some file-based gis functions.
+        
+        # Quick Start
+        ```python
+        import TronGisPy as tgp
+        raster = tgp.read_raster(tgp.get_testing_fp('satellite_tif'))
+        print("raster.data.shape:", raster.data.shape)
+        print("raster.geo_transform:", raster.geo_transform)
+        print("raster.projection:", raster.projection)
+        print("raster.no_data_value:", raster.no_data_value)
+        raster.plot()
         ```
         
-        ### Install from wheel
-        1. [gdal](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)
-        1. [shapely](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely)
-        1. [fiona](https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona)
-        1. [Rtree](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rtree)
-        1. [geopandas](https://www.lfd.uci.edu/~gohlke/pythonlibs/#geopandas)
+        # Instlall
+        ## Windows
+        1. Install preinstall thinktron pypi server
+        ```
+        pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com Fiona==1.8.13 GDAL==3.0.4
+        ```
+        
+        2. Install TronGisPy from thinktron pypi server (Windows)
+        ```
+        pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
+        ```
         
         ## Linux
+        1. Build GDAL==3.0.4 by yourself
+        2. install preinstall from public pypi server
+        ```
+        pip install GDAL==3.0.4 Fiona==1.8.13
+        ```
+        
+        3. Install TronGisPy from thinktron pypi server (Windows)
+        ```
+        pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
+        ```
+        
+        
+        <!-- ## Linux
         1. install gdal 2.3.1 on the linux system (recommend get from the [url](http://download.osgeo.org/gdal/2.3.1/gdal-2.3.1.tar.gz))
             ```
             cd ~/Downloads
@@ -51,12 +91,9 @@ Description: # Introduction
         3. install shapely & fiona & Rtree & geopandas
             ```
             pip install shapely fiona Rtree geopandas
-            ```
+            ``` -->
         
-        # Install from pip server
-        ```
-        pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
-        ```
+        
         
         # Usage
         Please see [Tutorial.ipynb](http://rd.thinktronltd.com/jeremywang/TronGisPyTutorial/blob/master/Tutorial.ipynb) & [the Tutorial repo](http://rd.thinktronltd.com/jeremywang/TronGisPyTutorial/)

@@ -2,6 +2,7 @@ import osr
 import gdal
 import numba
 import affine
+import pyproj
 import numpy as np
 from shapely.geometry import Polygon
 
@@ -26,15 +27,6 @@ def invert_geo_transform( a, b, c, d, e, f):
          rd, re, -sc * rd - sf * re,
          0.0, 0.0, 1.0]
 
-
-# @numba.jit(nopython=True)
-# def numba_transfer_coord_to_npidx(coord, geo_transform):
-#     x, y = coord[0], coord[1]
-#     x, y = __numba_transfer_coord_to_xy(x, y, *geo_transform)
-#     npidx = [y, x]
-#     return npidx
-
-
 @numba.jit(nopython=True)
 def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
     coord_x, coord_y = x, y
@@ -48,7 +40,7 @@ def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
     return x, y
 
 @numba.jit(nopython=True)
-def transfer_group_coord_to_npidx(coords, geo_transform):
+def coords_to_npidxs(coords, geo_transform):
     """
     input numpy idxs, return the coords of left-top points of the cells, using the function
     | x' |   | a  b  c | | x |
@@ -64,8 +56,7 @@ def transfer_group_coord_to_npidx(coords, geo_transform):
         group_npidx.append((y, x))
     return np.array(group_npidx, np.int64)
 
-
-def transfer_group_npidx_to_coord(npidxs, geo_transform):
+def npidxs_to_coords(npidxs, geo_transform): # TODO: reproduce to numba
     """
     input coord idxs, return the npidxs of the cells.
     coords: should be np.array() type, [(lng, lat), ......].
@@ -86,46 +77,30 @@ def transfer_group_npidx_to_coord(npidxs, geo_transform):
     coords = np.matmul(M, npidxs_maxtrix).T[:, :2] # (3, 3) ‧ (3, -1) => (3, -1) => (-1, 3)
     return coords
 
-def transfer_npidx_to_coord(npidx, geo_transform):
-    """
-    input numpy idx, return the coord of the left-top point of the cell.
-    npidx: (row_idx, col_idx)
-    coord: (lng, lat)
-    """
-    npidx_reverse = (npidx[1], npidx[0])
-    forward_transform =  affine.Affine.from_gdal(*geo_transform)
-    coord = forward_transform * npidx_reverse
-    return coord
-
-def transfer_coord_to_npidx(coord, geo_transform, convert_to_int=True):
-    """
-    input coord idx, return the npidx of the cell.
-    npidx: (row_idx, col_idx)
-    coord: (lng, lat)
-    """
-    reverse_transform = ~affine.Affine.from_gdal(*geo_transform)
-    col_idx, row_idx = reverse_transform * tuple(coord)
-    if convert_to_int: col_idx, row_idx = int(col_idx), int(row_idx)
-    npidx = (row_idx, col_idx)
-    return npidx
-
-def transfer_npidx_to_coord_polygon(npidx, geo_transform):
+def npidx_to_coord_polygon(npidx, geo_transform): # TODO: reproduce to parallel
     """return shapely.geometry.Polygon"""
     poly_points = [ [npidx[0]+0, npidx[1]+0],  # ul
                     [npidx[0]+0, npidx[1]+1],  # ur
                     [npidx[0]+1, npidx[1]+1],  # lr
                     [npidx[0]+1, npidx[1]+0],] # ll
-    poly_points = transfer_group_npidx_to_coord(poly_points, geo_transform)
+    poly_points = npidxs_to_coords(poly_points, geo_transform)
     return Polygon(poly_points)
 
-def get_wkt_from_epsg(epsg=4326):
-    srs = osr.SpatialReference()
-    srs.ImportFromEPSG(epsg)
-    return srs.ExportToWkt()
+def get_extent(rows, cols, geo_transform, return_poly=True):
+    """get the extent(boundry) coordnate"""
+    points = [[0,0], [0,cols], [rows,cols], [rows,0]]
+    poly = npidxs_to_coords(points, geo_transform)
+    if return_poly:
+        return poly
+    else:
+        return (np.min(poly[:, 0]), np.max(poly[:, 0]), np.min(poly[:, 1]), np.max(poly[:, 1]))
 
-def get_epsg_from_wkt(wkt):
-    srs = osr.SpatialReference(wkt=wkt)
-    epsg = srs.GetAuthorityCode(None)
-    return int(epsg)
-    
+def epsg_to_wkt(epsg=4326):
+    return pyproj.CRS.from_epsg(epsg).to_wkt()
 
+def wkt_to_epsg(wkt):
+    epsg = pyproj.CRS(wkt).to_epsg()
+    if epsg is not None:
+        return epsg
+    else:
+        assert False, "the wkt connot be converted."
