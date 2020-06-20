@@ -9,8 +9,30 @@ from TronGisPy import ShapeGrid
 # operation on raster files
 # ===========================
 def get_raster_info(fp, attributes=["rows", "cols", "bands", "geo_transform", "projection", "gdaldtype", "no_data_value", "metadata"]):
-    """
-    rows, cols, bands, geo_transform, projection, gdaldtype, no_data_value, metadata = get_raster_info(fp)
+    """Get the geo-information of the raster file including rows, cols, bands, geo_transform, 
+    projection, gdaldtype, no_data_value, metadata attributes.
+
+    Parameters
+    ----------
+    fp: string. file path of the raster file.
+
+    attributes: list or string. which attributes to get.
+
+    Returns
+    -------
+    geo_info : list or attribute. Attributes of the raster.
+
+    Examples
+    --------
+    >>> import TronGisPy as tgp
+    >>> raster_fp = tgp.get_testing_fp()
+    >>> rows, cols, bands, geo_transform, projection, gdaldtype, no_data_value, metadata = tgp.get_raster_info(raster_fp)
+    >>> rows, cols, bands
+    (677, 674, 3)
+    >>> tgp.get_raster_info(raster_fp, 'projection')
+    'PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","3826"]]'
+    >>> tgp.get_raster_info(raster_fp, ['rows', 'cols'])
+    [677, 674]
     """
     ds = gdal.Open(fp)
     rows, cols, bands = ds.RasterYSize, ds.RasterXSize, ds.RasterCount
@@ -29,7 +51,27 @@ def get_raster_info(fp, attributes=["rows", "cols", "bands", "geo_transform", "p
         return geo_info[attributes_idx]
 
 def get_raster_data(fp):
-    """output shape will be (rows, cols, bnads)rows"""
+    """Get the digital number of the raster file.
+
+    Parameters
+    ----------
+    fp: string. file path of the raster file.
+
+    Returns
+    -------
+    data : numpy.array. digital number of the raster file whose shape will be
+    (rows, cols, bnads).
+
+    Examples
+    --------
+    >>> import TronGisPy as tgp 
+    >>> raster_fp = tgp.get_testing_fp()
+    >>> data = tgp.get_raster_data(raster_fp)
+    >>> type(data) 
+    <class 'numpy.ndarray'>
+    >>> data.shape 
+    (677, 674, 3)
+    """
     ds = gdal.Open(fp)
     data = ds.ReadAsArray()
     ds = None 
@@ -38,11 +80,56 @@ def get_raster_data(fp):
     return np.transpose(data, axes=[1,2,0])
 
 def get_raster_extent(fp, return_poly=True):
-    """get the extent(boundry) coordnate"""
+    """Get the boundary of the raster file.
+
+    Parameters
+    ----------
+    fp: string. file path of the raster file.
+
+    return_poly: bool. If True, return four corner coordinates, else return
+    (xmin, xmax, ymin, ymax)
+
+    Returns
+    -------
+    extent: numpy.array ot tuple. If return_poly==True, return four corner coordinates, else return
+    (xmin, xmax, ymin, ymax)
+
+    Examples
+    --------
+    >>> import TronGisPy as tgp 
+    >>> from shapely.geometry import Polygon
+    >>> raster_fp = tgp.get_testing_fp() 
+    >>> extent = tgp.get_raster_extent(raster_fp) 
+    >>> Polygon(extent).area
+    570976.9697303267
+    """
     rows, cols, geo_transform = get_raster_info(fp, ['rows', 'cols', 'geo_transform'])
     return tgp.get_extent(rows, cols, geo_transform, return_poly)
 
 def update_raster_info(fp, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
+    """Update the geo-information of the raster file including geo_transform, projection, gdaldtype, 
+    no_data_value, metadata attributes.
+
+    Parameters
+    ----------
+    fp: string. file path of the raster file.
+
+    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
+    = geo_transform). 
+
+    projection: string. The well known text (WKT) of the raster which can be
+    generate from `TronGisPy.epsg_to_wkt(<epsg_code>)`
+
+    gdaldtype: int. The type of the cell defined in gdal which will affect the
+    information to be stored when saving the file. This can be generate from
+    `gdal.GDT_XXX` such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32`
+    equals 6.
+
+    no_data_value: int or float. Define which value to replace nan in numpy
+    array when saving a raster file.
+
+    metadata: dict. Define the metadata of the raster file.
+    """
     all_none = geo_transform is None and projection is None and gdaldtype is None and no_data_value is None and metadata is None
     assert not all_none, "at least one of geo_transform and projection params should not be None!"
     ds = gdal.Open(fp, gdal.GA_Update)
@@ -63,13 +150,57 @@ def update_raster_info(fp, geo_transform=None, projection=None, gdaldtype=None, 
 # operation on Raster class
 # ===========================
 def read_raster(fp):
+    """Read raster file as `TronGisPy.Raster` object.
+
+    Parameters
+    ----------
+    fp: string. file path of the raster file.
+
+    Returns
+    -------
+    raster: `TronGisPy.Raster`.
+
+    Examples
+    --------
+    >>> import TronGisPy as tgp 
+    >>> from shapely.geometry import Polygon
+    >>> raster_fp = tgp.get_testing_fp() 
+    >>> raster = tgp.read_raster(raster_fp) 
+    >>> raster
+    shape: (677, 674, 3)
+    geo_transform: (271982.8783, 1.1186219584569888, 0.0, 2769973.0653, 0.0, -1.1186305760705852)
+    projection: PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","3826"]]
+    no_data_value: -32768.0
+    metadata: {'AREA_OR_POINT': 'Area'}
+    """
     data = get_raster_data(fp)
     rows, cols, bands, geo_transform, projection, gdaldtype, no_data_value, metadata = get_raster_info(fp)
     from TronGisPy import Raster
     return Raster(data, geo_transform, projection, gdaldtype, no_data_value, metadata)
 
 def write_raster(fp, data, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
-    """data should be in (n_rows, n_cols, n_bands) shape"""
+    """write raster file.
+
+    Parameters
+    ----------
+    fp: string. file path of the raster file.
+
+    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
+    = geo_transform). 
+
+    projection: string. The well known text (WKT) of the raster which can be
+    generate from `TronGisPy.epsg_to_wkt(<epsg_code>)`
+
+    gdaldtype: int. The type of the cell defined in gdal which will affect the
+    information to be stored when saving the file. This can be generate from
+    `gdal.GDT_XXX` such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32`
+    equals 6.
+
+    no_data_value: int or float. Define which value to replace nan in numpy
+    array when saving a raster file.
+
+    metadata: dict. Define the metadata of the raster file.
+    """
     if len(data.shape) == 2:
         data = np.expand_dims(data, axis=2)
     rows, cols, bands = data.shape
@@ -91,6 +222,16 @@ def write_raster(fp, data, geo_transform=None, projection=None, gdaldtype=None, 
     ds = None
 
 def read_gdal_ds(ds):
+    """Read gdal DataSource as `TronGisPy.Raster` object.
+
+    Parameters
+    ----------
+    ds: `gdal.DataSource`.
+
+    Returns
+    -------
+    raster: `TronGisPy.Raster`.
+    """
     rows, cols, bands = ds.RasterYSize, ds.RasterXSize, ds.RasterCount
     geo_transform, projection, metadata = ds.GetGeoTransform(), ds.GetProjection(), ds.GetMetadata()
     gdaldtype = ds.GetRasterBand(1).DataType
@@ -104,7 +245,53 @@ def read_gdal_ds(ds):
 
 
 def write_gdal_ds(data=None, bands=None, cols=None, rows=None, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
-    """data should be in (n_rows, n_cols, n_bands) shape"""
+    """Build the gdal DataSource from geo-information attributes.
+
+    Parameters
+    ----------
+    data: `numpy.array`. The digital number for each cell of the raster.  Data is in (n_rows, n_cols, n_bands) shape.
+
+    bands: int. Number of bands.
+
+    cols: int. Number of cols.
+
+    rows: int. Number of rows.
+
+    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
+    = geo_transform). 
+
+    projection: string. The well known text (WKT) of the raster which can be
+    generate from `TronGisPy.epsg_to_wkt(<epsg_code>)`
+
+    gdaldtype: int. The type of the cell defined in gdal which will affect the
+    information to be stored when saving the file. This can be generate from
+    `gdal.GDT_XXX` such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32`
+    equals 6.
+
+    no_data_value: int or float. Define which value to replace nan in numpy
+    array when saving a raster file.
+
+    metadata: dict. Define the metadata of the raster file.
+
+    Returns
+    -------
+    ds: `gdal.DataSource`.
+
+    Examples
+    --------
+    >>> import TronGisPy as tgp 
+    >>> raster_fp = tgp.get_testing_fp() 
+    >>> data = tgp.get_raster_data(raster_fp)
+    >>> geo_transform, projection, gdaldtype, no_data_value = tgp.get_raster_info(raster_fp, ["geo_transform", "projection", "gdaldtype", "no_data_value"])
+    >>> ds = tgp.write_gdal_ds(data, geo_transform=geo_transform, projection=projection, gdaldtype=gdaldtype, no_data_value=no_data_value)
+    >>> raster = tgp.read_gdal_ds(ds)
+    >>> raster
+    shape: (677, 674, 3)
+    geo_transform: (271982.8783, 1.1186219584569888, 0.0, 2769973.0653, 0.0, -1.1186305760705852)
+    projection: PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","3826"]]
+    no_data_value: -32768.0
+    metadata: {}
+    """
     if data is None:
         assert (bands is not None) and (cols is not None) and (rows is not None), "bands, cols, rows should not be None"
         assert (gdaldtype is not None), "gdaldtype should not be None"
@@ -139,22 +326,50 @@ def write_gdal_ds(data=None, bands=None, cols=None, rows=None, geo_transform=Non
     return ds
 
 def remove_shp(shp_fp):
+    """Remove shapefile and all its related files.
+
+    Parameters
+    ----------
+    shp_fp: string. file path of the shapefile.
+    """
     assert shp_fp.endswith('.shp'), 'shp_fp should be ends with ".shp"'
     dst_shp_fp = os.path.abspath(shp_fp)
     base_dir = os.path.split(dst_shp_fp)[0]
-    print(len(os.listdir(base_dir)))
     shp_fn = os.path.split(dst_shp_fp)[-1].split(".")[0]
     del_fps = [os.path.join(base_dir, f) for f in  os.listdir(base_dir) if shp_fn == f.split('.')[0]]
     for fp in del_fps:
         os.remove(fp)
-    print(len(os.listdir(base_dir)))
 
 # testing data
 # ===========================
-def get_testing_fp(fn):
+def get_testing_fp(fn=None):
+    """Get the testing file built-in TronGisPy.
+
+    Parameters
+    ----------
+    fn: string. Choice candidates includes satellite_tif, satellite_tif_clipper,
+    satellite_tif_kmeans, rasterized_image, rasterized_image_1,
+    poly_to_be_clipped, point_to_be_clipped, line_to_be_clipped,
+    multiline_to_be_clipped, shp_clipper, remap_rgb_clipper_path,
+    remap_ndvi_path, dem_process_path, tif_forinterpolation,
+    aero_triangulation_PXYZs
+
+    Returns
+    -------
+    fp: string. The path of testing file.
+
+    Examples
+    --------
+    >>> import TronGisPy as tgp 
+    >>> raster_fp = tgp.get_testing_fp() 
+    >>> raster = tgp.read_raster(raster_fp)
+    >>> raster.plot()
+    """
     base_dir = os.path.dirname(os.path.realpath(__file__))
     data_dir = os.path.join(base_dir, 'data')
-    if fn == 'satellite_tif':
+    if fn is None:
+        fp = os.path.join(data_dir, 'remap', 'rgb_3826_clipper.tif')
+    elif fn == 'satellite_tif':
         fp = os.path.join(data_dir, 'satellite_tif', 'satellite_tif.tif')
     elif fn == 'satellite_tif_clipper':
         fp = os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp')

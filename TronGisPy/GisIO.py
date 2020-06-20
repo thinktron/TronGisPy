@@ -6,7 +6,7 @@ import TronGisPy as tgp
 import geopandas as gpd
 from collections import Counter
 from TronGisPy import ShapeGrid
-from shapely.geometry import Point, MultiPolygon, LineString, MultiLineString
+from shapely.geometry import Point, MultiPolygon, LineString, MultiLineString, Polygon
 
 def clip_tif_by_shp(src_tif_path, src_shp_path, dst_tif_path):
     result = gdal.Warp(dst_tif_path,
@@ -181,7 +181,7 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
     for row_idx, col_idx in zip(*idxs):
         row = {}
         npidx = (row_idx, col_idx)
-        row['geometry'] = tgp.npidx_to_coord_polygon(npidx, geo_transform)
+        row['geometry'] = Polygon(tgp.npidxs_to_coord_polygons([npidx], geo_transform)[0])
         if all_bands_as_feature:
             for i in range(X.shape[2]):
                 row['band'+str(i+1)] = X[row_idx, col_idx, i]

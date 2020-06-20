@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.0.0",
+    version="1.0.1",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -28,8 +28,6 @@ setuptools.setup(
           'descartes',
           'matplotlib',
           'Rtree==0.9.4',
-          'Shapely==1.6.4.post2',
-          'geopandas==0.7.0'
       ]
 )
 
@@ -95,8 +93,9 @@ setuptools.setup(
 
 
 # 1.0.0 Raster class for saving raster data in memory
+# 1.0.1 update io, Raster, Interpolation, CRS, ShapeGrid documnetation
 
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.0.0-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.0-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.0.0-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.0-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.0.1-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.1-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.0.1-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.1-py3-none-any.whl

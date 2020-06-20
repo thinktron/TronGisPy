@@ -307,19 +307,19 @@ class TestCRS(unittest.TestCase):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
 
-    def test_npidx_to_coord_polygon(self):
+    def test_npidxs_to_coord_polygons(self):
         geo_transform = tgp.get_raster_info(satellite_tif_path, 'geo_transform')
-        npidx = [50, 50]
-        polygon = tgp.npidx_to_coord_polygon(npidx, geo_transform)
-        centroid = polygon.centroid.x, polygon.centroid.y
+        npidxs = [[50, 50], [100, 100]]
+        poly_points = tgp.npidxs_to_coord_polygons(npidxs, geo_transform)
+        polygons = [Polygon(poly) for poly in poly_points]
+        centroid = polygons[0].centroid.x, polygons[0].centroid.y
         self.assertTrue(centroid == (329035.0, 2750285.0))
+
         if show_image:
-            df_extent = gpd.GeoDataFrame([Point(p) for p in tgp.get_raster_extent(satellite_tif_path)], columns=['geometry'], geometry='geometry', crs='epsg:3826')
-            df_poly = gpd.GeoDataFrame([{'geometry':Point(centroid)}], geometry='geometry', crs='epsg:3826')
+            df_poly = gpd.GeoDataFrame([Polygon(poly) for poly in poly_points], columns=['geom'], geometry='geom')
             fig ,ax = plt.subplots(1, 1)
-            df_extent.plot(ax=ax)
             df_poly.plot(ax=ax)
-            plt.title("Testcrs" + ": " + "test_npidx_to_coord_polygon")
+            plt.title("Testcrs" + ": " + "test_npidxs_to_coords_polygon")
             plt.show()
 
     def test_wkt_to_epsg(self):
@@ -510,7 +510,7 @@ class TestInterpolation(unittest.TestCase):
     def test_mean_interpolation(self):
         X = tgp.get_raster_data(tif_forinterpolation_path)[:, :, 0].astype(np.float)
         X[np.isnan(X)] = 999
-        X_interp = Interpolation.mean_interpolation(X.astype(np.int), no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=1)
+        X_interp = Interpolation.mean_interpolation(X, no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=1)
         self.assertTrue(np.sum(X_interp == 999) == 0)
         if show_image:
             fig, axes = plt.subplots(1, 2, figsize=(20, 5))

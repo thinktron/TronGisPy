@@ -1,4 +1,5 @@
 README.md
+setup.cfg
 setup.py
 TronGisPy/AeroTriangulation.py
 TronGisPy/Algorithm.py

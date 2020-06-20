@@ -1,6 +1,30 @@
 # Introduction
 The repo aims to build a geographic information system (GIS) library for Python interface. The library includes the following modules.
 
+# Instlall
+## Windows
+1. Install preinstall thinktron pypi server
+```
+pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0
+```
+
+2. Install TronGisPy from thinktron pypi server (Windows)
+```
+pip install -U --extra-index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
+```
+
+## Linux
+1. Build GDAL==3.0.4 by yourself
+2. install preinstall from public pypi server
+```
+pip install GDAL==3.0.4 Fiona==1.8.13
+```
+
+3. Install TronGisPy from thinktron pypi server (Windows)
+```
+pip install -U TronGisPy
+```
+
 ## TronGisPy Main Modules
 1. Raster: This module is Main class in this library. A Raster object contains all required information for a gis raster file such as `.tif` file including digital number for each pixel, number of rows, number of cols, number of bands, geo_transform, projection, no_data_value and metadata. 
 
@@ -8,13 +32,13 @@ The repo aims to build a geographic information system (GIS) library for Python 
 
 3. TypeCast: Mapping the nearest data type betyween gdal and numpy, and convert the gdal data type from integer to readable string. 
 
-4. ShapeGrid: Converion between raster and vector data. 
+4. ShapeGrid: Interaction between raster and vector data. 
 
 5. Normalizer: Normalize the Image data for model training or plotting.
 
 6. AeroTriangulation: Do the aero-triangulation calculation.
 
-7. Interpolation: Interpolation for raster data on specific cells which is usually nan cells.
+7. Interpolation: Interpolation for raster data on specific cells which are usually nan cells.
 
 8. SplittedImage: Split remote sensing images for machine learning model training.
 
@@ -32,31 +56,6 @@ print("raster.projection:", raster.projection)
 print("raster.no_data_value:", raster.no_data_value)
 raster.plot()
 ```
-
-# Instlall
-## Windows
-1. Install preinstall thinktron pypi server
-```
-pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com GDAL==3.0.4 Fiona==1.8.13
-```
-
-2. Install TronGisPy from thinktron pypi server (Windows)
-```
-pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
-```
-
-## Linux
-1. Build GDAL==3.0.4 by yourself
-2. install preinstall from public pypi server
-```
-pip install GDAL==3.0.4 Fiona==1.8.13
-```
-
-3. Install TronGisPy from thinktron pypi server (Windows)
-```
-pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
-```
-
 
 <!-- ## Linux
 1. install gdal 2.3.1 on the linux system (recommend get from the [url](http://download.osgeo.org/gdal/2.3.1/gdal-2.3.1.tar.gz))

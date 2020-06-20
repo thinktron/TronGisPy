@@ -8,12 +8,51 @@ import geopandas as gpd
 import TronGisPy as tgp
 
 def rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute, all_touched=False, no_data_value=0):
-    """
-    src_vector: should be GeoDataFrame type
-    rows, cols, geo_transform: output raster geo_info
-    use_attribute: use this attribute of the shp as raster value.
-    all_touched: pixels that touch (not overlap over 50%) the poly will be the value of the poly.
-    return Raster
+    """Rasterize vector data. Get the cell value in defined grid (rows, cols, geo_transform)
+    from its overlapped polygon.
+
+    Parameters
+    ----------
+    src_vector: `Geopandas.GeoDataFrame`. Which vector data to be rasterize.
+
+    rows: int. Target rasterized image's rows.
+
+    cols: int. Target rasterized image's cols.
+    
+    geo_transform: tuple or list. Target rasterized image's geo_transform which is 
+    the affine parameter.
+
+    use_attribute: str. The column to use as rasterized image value.
+
+    all_touched: bool. Pixels that touch (not overlap over 50%) the polygon will be 
+    assign the use_attribute value of the polygon.
+
+    no_data_value: int or float. The pixels not covered by any polygon will be filled
+    no_data_value.
+
+    Returns
+    -------
+    raster: `TronGisPy.Raster`. Rasterized result.
+
+    Examples
+    -------- 
+    >>> import geopandas as gpd
+    >>> import TronGisPy as tgp 
+    >>> from TronGisPy import ShapeGrid
+    >>> from matplotlib import pyplot as plt
+    >>> ref_raster_fp = tgp.get_testing_fp('satellite_tif') # get the geoinfo from the raster
+    >>> src_vector_fp = tgp.get_testing_fp('satellite_tif_clipper') # read source shapefile as GeoDataFrame
+    >>> src_vector = gpd.read_file(src_vector_fp)
+    >>> src_vector['FEATURE'] = 1 # make the value to fill in the raster cell
+    >>> rows, cols, geo_transform = tgp.get_raster_info(ref_raster_fp, ['rows', 'cols', 'geo_transform'])
+    >>> raster = ShapeGrid.rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute='FEATURE', no_data_value=99)
+    >>> fig, (ax1, ax2) = plt.subplots(1,2) # plot the result
+    >>> tgp.read_raster(ref_raster_fp).plot(ax=ax1)
+    >>> src_vector.plot(ax=ax1)
+    >>> ax1.set_title('polygon with ref_raster')
+    >>> raster.plot(ax=ax2)
+    >>> ax2.set_title('rasterized image')
+    >>> plt.show()
     """
     # Open your shapefile
     assert type(src_vector) is gpd.GeoDataFrame, "src_vector should be GeoDataFrame type."
@@ -37,8 +76,37 @@ def rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute, all_to
     raster = tgp.Raster(data, geo_transform, projection, gdaldtype, no_data_value)
     return raster
 
-def vectorize_layer(src_raster, field_name='value', band_num=1, multipolygon=False):
-    """band_num start from 1"""
+def vectorize_layer(src_raster, band_num=1, field_name='value', multipolygon=False):
+    """Vectorize raster data to achieve an acceptable raster-to-vector conversion.
+
+    Parameters
+    ----------
+    src_raster: `TronGisPy.Raster`. Which raster data to be vectorize.
+    
+    band_num: int. Which band to be vectorized.
+
+    field_name: str. Field to be generated in output vector data.
+
+    multipolygon: bool. Combine the polygon with the same value to be a 
+    `shapely.geometry.MultiPolygon`.
+
+    Returns
+    -------
+    vector: `Geopandas.GeoDataFrame`. Vectorize result.
+
+    Examples
+    -------- 
+    >>> import TronGisPy as tgp
+    >>> from TronGisPy import ShapeGrid
+    >>> from matplotlib import pyplot as plt
+    >>> src_raster_fp = tgp.get_testing_fp('rasterized_image_1')
+    >>> src_raster = tgp.read_raster(src_raster_fp)
+    >>> df_shp = ShapeGrid.vectorize_layer(src_raster)
+    >>> fig, ax = plt.subplots(1, 1) # plot the result
+    >>> src_raster.plot(ax=ax)
+    >>> df_shp.boundary.plot(ax=ax, color='red', linewidth=5)
+    >>> plt.show()
+    """
     src_ds = src_raster.to_gdal_ds()
     src_band = src_ds.GetRasterBand(band_num)
 
@@ -68,21 +136,82 @@ def vectorize_layer(src_raster, field_name='value', band_num=1, multipolygon=Fal
     return df_vectorized
 
 
-def clip_raster_with_polygon(src_raster, src_shp):
-    """
-    src_shp: should be GeoDataFrame type
+def clip_raster_with_polygon(src_raster, src_poly):
+    """Clip raster with polygon.
+
+    Parameters
+    ----------
+    src_raster: `TronGisPy.Raster`. Which raster data to be clipped.
+    
+    src_poly: `Geopandas.GeoDataFrame`. The clipper(clipping boundary).
+
+    Returns
+    -------
+    dst_raster: `TronGisPy.Raster`. Clipped result.
+
+    Examples
+    -------- 
+    >>> import geopandas as gpd
+    >>> import TronGisPy as tgp
+    >>> from TronGisPy import ShapeGrid
+    >>> from matplotlib import pyplot as plt
+    >>> src_raster_fp = tgp.get_testing_fp('satellite_tif')
+    >>> src_poly_fp = tgp.get_testing_fp('satellite_tif_clipper')
+    >>> src_raster = tgp.read_raster(src_raster_fp)
+    >>> src_poly = gpd.read_file(src_poly_fp)
+    >>> dst_raster = ShapeGrid.clip_raster_with_polygon(src_raster, src_poly)
+    >>> fig, (ax1, ax2) = plt.subplots(1, 2) # plot the result
+    >>> src_raster.plot(ax=ax1)
+    >>> src_poly.boundary.plot(ax=ax1)
+    >>> ax1.set_title('original image and clipper')
+    >>> dst_raster.plot(ax=ax2)
+    >>> ax2.set_title('clipped image')
+    >>> plt.show()
     """
     assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
     src_ds = src_raster.to_gdal_ds()
     temp_dir = tgp.create_temp_dir()
-    src_shp_fp = os.path.join(temp_dir, 'src_shp.shp')
-    src_shp.to_file(src_shp_fp)
+    src_shp_fp = os.path.join(temp_dir, 'src_poly.shp')
+    src_poly.to_file(src_shp_fp)
     dst_ds = gdal.Warp('', src_ds, format= 'MEM', cutlineDSName=src_shp_fp, cropToCutline=True)
     dst_raster = tgp.read_gdal_ds(dst_ds)
     tgp.remove_temp_dir()
     return dst_raster
 
 def clip_raster_with_extent(src_raster, extent):
+    """Clip raster with extent.
+
+    Parameters
+    ----------
+    src_raster: `TronGisPy.Raster`. Which raster data to be clipped.
+    
+    extent: tuple or list. Output bounds as (xmin, ymin, xmax, ymax).
+
+    Returns
+    -------
+    dst_raster: `TronGisPy.Raster`. Clipped result.
+
+    Examples
+    -------- 
+    >>> import geopandas as gpd
+    >>> import TronGisPy as tgp
+    >>> from TronGisPy import ShapeGrid
+    >>> from matplotlib import pyplot as plt
+    >>> from shapely.geometry import Polygon
+    >>> src_raster_fp = tgp.get_testing_fp('satellite_tif')
+    >>> src_raster = tgp.read_raster(src_raster_fp)
+    >>> ext = xmin, ymin, xmax, ymax = [329454.39272725, 2746809.43272727, 331715.57090906, 2748190.90181818]
+    >>> dst_raster = ShapeGrid.clip_raster_with_extent(src_raster, ext)
+    >>> fig, (ax1, ax2) = plt.subplots(1, 2) # plot the result
+    >>> src_raster.plot(ax=ax1) 
+    >>> ext_poly = [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin)]
+    >>> df_ext_poly = gpd.GeoDataFrame([Polygon(ext_poly)], columns=['geom'], geometry='geom')
+    >>> df_ext_poly.boundary.plot(ax=ax1)
+    >>> ax1.set_title('original image and clipper')
+    >>> dst_raster.plot(ax=ax2)
+    >>> ax2.set_title('clipped image')
+    >>> plt.show()
+    """
     """
     extent --- output bounds as (minX, minY, maxX, maxY) in target SRS
     """
@@ -93,14 +222,46 @@ def clip_raster_with_extent(src_raster, extent):
     return dst_raster
 
 def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=None):
-    """
-    near: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
-    bilinear: bilinear resampling.
-    cubic: cubic resampling.
-    cubicspline: cubic spline resampling.
-    lanczos: Lanczos windowed sinc resampling.
-    average: average resampling, computes the weighted average of all non-NODATA contributing pixels.
-    mode: mode resampling, selects the value which appears most often of all the sampled points.
+    """Clip raster with polygon.
+
+    Parameters
+    ----------
+    src_raster: `TronGisPy.Raster` . Which raster data to be refined.
+    
+    dst_resolution: int. Target Resolution.
+
+    resample_alg: str. Should be in {'near', 'bilinear', 'cubic', 
+    'cubicspline', 'lanczos', 'average', 'mode'}.
+        ``near``: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
+        ``bilinear``: bilinear resampling.
+        ``cubic``: cubic resampling.
+        ``cubicspline``: cubic spline resampling.
+        ``lanczos``: Lanczos windowed sinc resampling.
+        ``average``: average resampling, computes the weighted average of all non-NODATA contributing pixels.
+        ``mode``: mode resampling, selects the value which appears most often of all the sampled points.
+
+    extent: extent to clip the data.
+
+    Returns
+    -------
+    dst_raster: `TronGisPy.Raster`. Refined result.
+
+    Examples
+    -------- 
+    >>> import numpy as np
+    >>> import TronGisPy as tgp
+    >>> from TronGisPy import ShapeGrid
+    >>> from matplotlib import pyplot as plt
+    >>> src_raster_fp = tgp.get_testing_fp('dem_process_path')
+    >>> src_raster = tgp.read_raster(src_raster_fp)
+    >>> src_raster.data[src_raster.data == -999] = np.nan
+    >>> dst_raster = ShapeGrid.refine_resolution(src_raster, dst_resolution=10, resample_alg='bilinear')
+    >>> fig, (ax1, ax2) = plt.subplots(1, 2) # plot the result
+    >>> src_raster.plot(ax=ax1)
+    >>> ax1.set_title('original dem ' + str(src_raster.shape))
+    >>> dst_raster.plot(ax=ax2)
+    >>> ax2.set_title('refined image ' + str(dst_raster.shape))
+    >>> plt.show()
     """
     src_ds = src_raster.to_gdal_ds()
     dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, outputBounds=extent, format='MEM', resampleAlg=resample_alg)
