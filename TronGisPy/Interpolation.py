@@ -1,6 +1,8 @@
 import os
+import gdal
 import numpy as np
 from numba import jit
+import TronGisPy as tgp
 from scipy.interpolate import griddata
 
 
@@ -229,4 +231,63 @@ def mean_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_all=
     elif loop_to_fill_all and (loop_limit == -1): # without loop_limit
         while np.sum(data_interp==no_data_value) > 0:
             data_interp = _mean_interpolation_single(data_interp, no_data_value=no_data_value, window_size=window_size)
+    return data_interp
+
+def gdal_fillnodata(raster, band=1, no_data_value=999, max_distance=100, smoothing_iterations=0):
+    """Interpolate values on specific cells (generally nan cell) using 
+    `gdal.FillNodata`. To be mentioned, this cannot accept zero in its data
+    except its no_data_value is zero.
+
+    Parameters
+    ----------
+    raster: `TronGisPy.Raster`. The Raster object you want to fill the no_data_value.
+
+    band: int. The band numnber of Raster object you want to fill the no_data_value 
+    which start from one (not zero).
+
+    no_data_value: int. The value to be filled with interpolated value. If 
+    no_data_value == None, use np.nan as no_data_value.
+
+    max_distance: int. The cells within the max distance from no_data_value location 
+    will be calculated to fill the no_data_value.
+
+    smoothing_iterations: bool. The maximum limitation on loop.
+
+    Returns
+    -------
+    data_interp: `numpy.array`. Interpolation result.
+
+    Examples
+    -------- 
+    >>> import numpy as np
+    >>> import TronGisPy as tgp 
+    >>> from TronGisPy import Interpolation
+    >>> from matplotlib import pyplot as plt
+    >>> raster_fp = tgp.get_testing_fp('tif_forinterpolation')
+    >>> raster = tgp.read_raster(raster_fp)
+    >>> raster.data[np.isnan(raster.data)] = 999
+    >>> raster_interp = Interpolation.gdal_fillnodata(raster)
+    >>> fig, (ax1, ax2) = plt.subplots(1,2)
+    >>> raster.plot(ax=ax1)
+    >>> raster_interp.plot(ax=ax2)
+    >>> plt.show()
+    """    
+    # make dst_band
+    ds_dst = raster.to_gdal_ds()
+    dstband = ds_dst.GetRasterBand(band)
+
+    # make maskband
+    raster_mask = raster.copy()
+    raster_mask.data[raster_mask.data==no_data_value] = 0
+    raster_mask.data[raster_mask.data!=0] = 1
+    raster_mask.astype(np.bool)
+    raster_mask.no_data_value = 0
+    ds_mask = raster_mask.to_gdal_ds()
+    maskband = ds_mask.GetRasterBand(1)
+
+    gdal.FillNodata(dstband, maskband, max_distance, smoothing_iterations)
+    data_interp = tgp.read_gdal_ds(ds_dst)
+
+    ds_dst = None
+    ds_mask = None
     return data_interp

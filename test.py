@@ -194,9 +194,24 @@ class TestRaster(unittest.TestCase):
         self.raster.metadata = {"Test":"Test"}
         self.assertTrue(self.raster.metadata == {"Test":"Test"})
 
-    def test_get_extent(self):
+    def test_extent(self):
         self.assertTrue(self.raster.extent.tolist() == [[328530.0, 2750790.0], [333650.0, 2750790.0], [333650.0, 2745670.0], [328530.0, 2745670.0]])
         self.assertTrue(self.raster.extent_for_plot == (328530.0, 333650.0, 2745670.0, 2750790.0))
+
+    def test_astype(self):
+        self.raster.astype(np.int16)
+        self.assertTrue(self.raster.gdaldtype == gdal.GDT_Int16)
+        self.assertTrue(self.raster.data.dtype == np.int16)
+
+    def test_get_values_by_coords(self):
+        xmin, xmax, ymin, ymax = self.raster.extent_for_plot
+        xmax -= 1
+        ymin += 1
+        extent = np.array([(xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)])
+        npidxs_row, npidxs_col = np.array([(0, 0), (0, -1), (-1, -1), (-1, 0)]).T
+        calcul_values = self.raster.get_values_by_coords(extent)
+        target_values = self.raster.data[npidxs_row, npidxs_col]
+        self.assertTrue(np.sum(calcul_values == target_values) / np.product(target_values.shape) == 1)
 
     def test_update_gdaltype_by_npdtype(self):
         self.raster.data = np.random.randint(0, 100, self.raster.shape, dtype=np.uint8)
@@ -374,6 +389,8 @@ class TestTypeCast(unittest.TestCase):
 
     def test_npdtype_to_gdaldtype(self):
         self.assertTrue(tgp.npdtype_to_gdaldtype(np.int32) == 5)
+        self.assertTrue(tgp.npdtype_to_gdaldtype(np.bool) == gdal.GDT_Byte)
+
 
 class TestAeroTriangulation(unittest.TestCase):
     def setUp(self):
@@ -520,6 +537,21 @@ class TestInterpolation(unittest.TestCase):
             axes[1].imshow(X_interp, cmap='gray')
             axes[1].set_title('interp')
             plt.show()
+
+    def test_gdal_fillnodata(self):
+        raster = tgp.read_raster(tif_forinterpolation_path)
+        raster.data[np.isnan(raster.data)] = 999
+        raster_interp = Interpolation.gdal_fillnodata(raster)
+        self.assertTrue(np.sum(raster_interp.data == 999) == 0)
+        if show_image:
+            fig, axes = plt.subplots(1, 2, figsize=(20, 5))
+            fig.suptitle("TestInterpolation" + ": " + "test_gdal_fillnodata")
+            raster.plot(ax=axes[0], cmap='gray')
+            axes[0].set_title('original')
+            raster_interp.plot(ax=axes[1], cmap='gray')
+            axes[1].set_title('interp')
+            plt.show()
+
 
 
 class TestSplittedImage(unittest.TestCase):

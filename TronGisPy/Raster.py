@@ -1,9 +1,8 @@
 import gdal
 import numpy as np
 import TronGisPy as tgp
-from TronGisPy import GisIO
 from matplotlib import pyplot as plt
-gdal.GDT_Float32
+
 class Raster():
     """A Raster object contains all required information for a gis raster file such
     as `.tif` file including digital number for each pixel, number of rows,
@@ -88,6 +87,7 @@ class Raster():
     def __repr__(self):
         desc = ""
         desc += "shape: ({rows}, {cols}, {bands})\n".format(rows=self.rows, cols=self.cols, bands=self.bands)
+        desc += "gdaltype: {gdaltype}\n".format(gdaltype=tgp.get_gdaldtype_name(self.gdaldtype))
         desc += "geo_transform: {geo_transform}\n".format(geo_transform=self.geo_transform)
         desc += "projection: {projection}\n".format(projection=self.projection)
         desc += "no_data_value: {no_data_value}\n".format(no_data_value=self.no_data_value)
@@ -111,6 +111,10 @@ class Raster():
         return self.data.shape
 
     @property
+    def gdaltype(self):
+        return tgp.get_gdaldtype_name(self.gdaltype)
+
+    @property
     def data(self):
         return self.__data
 
@@ -119,7 +123,8 @@ class Raster():
         assert type(data) == np.ndarray, "data should be numpy.ndarray type"
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=2)
-        self.__data = data
+        self.__data = data.copy()
+        self.update_gdaltype_by_npdtype()
 
     @property
     def geo_transform(self):
@@ -151,7 +156,48 @@ class Raster():
 
     @property
     def extent_for_plot(self):
+        """get the extent for matplotlib extent
+
+        Returns
+        -------
+        extent: `numpy.array` or tuple. If return_poly==True, return four corner coordinates, else return
+        (xmin, xmax, ymin, ymax)
+        """
         return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_poly=False)
+
+    # def __getitem__(self, slice_value):
+    #     if type(slice_value) in [int, slice]:
+    #         h_start_inner, h_stop_inner = self.get_values_by_coords(slice_value)
+    #         return self.data[h_start_inner:h_stop_inner, :]
+
+    #     elif type(slice_value) == tuple:
+    #         h_start_inner, h_stop_inner = self.get_values_by_coords(slice_value[0])
+    #         w_start_inner, w_stop_inner = self.get_values_by_coords(slice_value[1])
+    #         return self.data[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner]
+
+    def astype(self, dtype, update_gdaltype=True):
+        """Change dtype of self.data.
+
+        Parameters
+        ----------
+        dtype: type. Target dtype.
+
+        update_gdaltype: bool. Change gdaldtype according to `self.data.dtype`.
+        """
+        assert type(dtype) is type, "dtype should type type"
+        self.data = self.data.astype(dtype)
+        self.update_gdaltype_by_npdtype()
+
+    def get_values_by_coords(self, coords):
+        """get the data values be the coordinates
+
+        Returns
+        -------
+        coords: `numpy.array`. The coordinates with shape (n_points, 2). The order of
+        last dimension is (lng, lat).
+        """
+        npidxs_row, npidxs_col = tgp.coords_to_npidxs(coords, self.geo_transform).T
+        return self.data[npidxs_row, npidxs_col]
 
     def update_gdaltype_by_npdtype(self):
         """Update gdaltype according to gdaltype using `TronGisPy.npdtype_to_gdaldtype`.
@@ -186,7 +232,7 @@ class Raster():
         """copy raster object."""
         return Raster(self.data, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value, self.metadata)
 
-    def plot(self, ax=None, bands=None, title=None, cmap=None):
+    def plot(self, ax=None, bands=None, title=None, cmap=None, figsize=None):
         """plot raster object.
 
         Parameters
@@ -213,6 +259,10 @@ class Raster():
         else:
             data = self.data[:, :, bands]
 
+        # deal with no data
+        data = data.astype(np.float)
+        data[data == self.no_data_value] = np.nan
+
         # normalize
         data = tgp.Normalizer().fit_transform(data)
 
@@ -221,6 +271,8 @@ class Raster():
             ax.imshow(data, extent=self.extent_for_plot, cmap=cmap)
             ax.set_title(title)
         else:
+            if figsize is not None:
+                plt.figure(figsize=figsize)
             plt.imshow(data, extent=self.extent_for_plot, cmap=cmap)
             plt.title(title)
             plt.show()

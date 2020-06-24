@@ -36,3 +36,5 @@ def npdtype_to_gdaldtype(npdtype):
         return gdal.GDT_UInt16
     elif np.issubdtype(npdtype, np.floating):
         return gdal.GDT_Float32
+    elif np.issubdtype(npdtype, np.generic):
+        return gdal.GDT_Byte

@@ -100,11 +100,12 @@ class SplittedImage():
 
     def apply(self, apply_fun): # apply functino to all images:
         return_objs = []
+        padded_image = self.padded_image
         for i in range(self.n_splitted_images):
             idx_h , idx_w = self.convert_order_to_location_index(i)
             h_start_inner, h_stop_inner = self.convert_to_inner_index_h(idx_h, idx_h)
             w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
-            splitted_img = self.padded_image[h_start_inner:h_stop_inner,w_start_inner:w_stop_inner].copy()
+            splitted_img = padded_image[h_start_inner:h_stop_inner,w_start_inner:w_stop_inner].copy()
             return_objs.append(apply_fun(splitted_img))
         return return_objs
 
