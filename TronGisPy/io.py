@@ -149,7 +149,7 @@ def update_raster_info(fp, geo_transform=None, projection=None, gdaldtype=None, 
 
 # operation on Raster class
 # ===========================
-def read_raster(fp):
+def read_raster(fp, fill_na=False):
     """Read raster file as `TronGisPy.Raster` object.
 
     Parameters
@@ -173,10 +173,13 @@ def read_raster(fp):
     no_data_value: -32768.0
     metadata: {'AREA_OR_POINT': 'Area'}
     """
+    from TronGisPy import Raster
     data = get_raster_data(fp)
     rows, cols, bands, geo_transform, projection, gdaldtype, no_data_value, metadata = get_raster_info(fp)
-    from TronGisPy import Raster
-    return Raster(data, geo_transform, projection, gdaldtype, no_data_value, metadata)
+    raster = Raster(data, geo_transform, projection, gdaldtype, no_data_value, metadata)
+    if fill_na and np.sum(np.isnan(raster.data)):
+        raster.fill_na()
+    return raster
 
 def write_raster(fp, data, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
     """write raster file.

@@ -57,8 +57,6 @@ def img_interpolation(data, method='linear', no_data_value=None):
         data_interp[:,:,b] = band_interpolation(data_interp[:,:,b], method='linear', no_data_value=None)
     return data_interp
 
-
-
 @jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
 def _jit_majority_interpolation(X_stacked, no_data_value): # Function is compiled to machine code when called the first time
     X_interp = np.zeros((X_stacked.shape[0], X_stacked.shape[1]), dtype=np.int32)
@@ -119,7 +117,7 @@ def _mean_interpolation_single(X, no_data_value, window_size):
     X_interp = _jit_mean_interpolation(X_stacked, no_data_value=no_data_value)
     return X_interp
 
-def majority_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=-1):
+def majority_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=5):
     """Interpolate values on specific cells (generally nan cell) using 
     the majority value in the window.
 
@@ -139,7 +137,7 @@ def majority_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_
     value in the data.
 
     loop_limit: bool. The maximum limitation on loop. if loop_to_fill_all==True, 
-    loop_limit will be considered.
+    loop_limit will be considered. `-1` means no limitation.
 
     Returns
     -------
@@ -165,7 +163,7 @@ def majority_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_
     """
     assert len(data.shape) == 2, "data should have onle 2 dimension"
     assert np.issubdtype(data.dtype, np.integer), "data should be in integer type"
-    assert no_data_value%2==1 , "no_data_value should be odd number"
+    assert window_size%2==1 , "window_size should be odd number"
     data_interp = _majority_interpolation_single(data, no_data_value=no_data_value, window_size=window_size)
     if loop_to_fill_all and (loop_limit != -1):
         loop_count = 0
@@ -177,7 +175,7 @@ def majority_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_
             data_interp = _majority_interpolation_single(data_interp, no_data_value=no_data_value, window_size=window_size)
     return data_interp
 
-def mean_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=-1):
+def mean_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=5):
     """Interpolate values on specific cells (generally nan cell) using 
     the majority value in the window.
 
@@ -197,7 +195,7 @@ def mean_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_all=
     value in the data.
 
     loop_limit: bool. The maximum limitation on loop. if loop_to_fill_all==True, 
-    loop_limit will be considered.
+    loop_limit will be considered. `-1` means no limitation.
 
     Returns
     -------
@@ -221,7 +219,7 @@ def mean_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_all=
     >>> plt.show()
     """
     assert len(data.shape) == 2, "data should have onle 2 dimension"
-    assert no_data_value%2==1 , "no_data_value should be odd number"
+    assert window_size%2==1 , "window_size should be odd number"
     data_interp = _mean_interpolation_single(data, no_data_value=no_data_value, window_size=window_size)
     if loop_to_fill_all and (loop_limit != -1): # with loop_limit
         loop_count = 0

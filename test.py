@@ -59,6 +59,7 @@ class Testio(unittest.TestCase):
         self.assertTrue((rows, cols, bands) == (512, 512, 4))
         self.assertTrue(geo_transform == (328530.0, 10.0, 0.0, 2750790.0, 0.0, -10.0))
         self.assertTrue(no_data_value == -99.0)
+
         no_data_value = tgp.get_raster_info(satellite_tif_path, 'no_data_value')
         self.assertTrue(no_data_value == -99.0)
 
@@ -101,6 +102,8 @@ class Testio(unittest.TestCase):
         raster = tgp.read_raster(satellite_tif_path)
         self.assertTrue(raster.shape == (512, 512, 4))
         self.assertTrue(raster.geo_transform == (328530.0, 10.0, 0.0, 2750790.0, 0.0, -10.0))
+        raster = tgp.read_raster(tif_forinterpolation_path, fill_na=True)
+        self.assertTrue(np.sum(raster.data == raster.no_data_value) == 34915)
 
     def test_write_raster(self):
         dst_image_path = os.path.join(self.output_dir, 'clipped_image.tif')
@@ -180,6 +183,7 @@ class TestRaster(unittest.TestCase):
         self.assertTrue(self.raster.rows == 512)
         self.assertTrue(self.raster.cols == 512)
         self.assertTrue(self.raster.bands == 4)
+        self.assertTrue(self.raster.gdaldtype_name == 'GDT_Int32')
         self.assertTrue(self.raster.shape == (512, 512, 4))
         self.assertTrue(self.raster.data.shape == (512, 512, 4))
         self.assertTrue(self.raster.geo_transform == (328530.0, 10.0, 0.0, 2750790.0, 0.0, -10.0))
@@ -213,9 +217,9 @@ class TestRaster(unittest.TestCase):
         target_values = self.raster.data[npidxs_row, npidxs_col]
         self.assertTrue(np.sum(calcul_values == target_values) / np.product(target_values.shape) == 1)
 
-    def test_update_gdaltype_by_npdtype(self):
+    def test_update_gdaldtype_by_npdtype(self):
         self.raster.data = np.random.randint(0, 100, self.raster.shape, dtype=np.uint8)
-        self.raster.update_gdaltype_by_npdtype()
+        self.raster.update_gdaldtype_by_npdtype()
         self.assertTrue(self.raster.gdaldtype == tgp.npdtype_to_gdaldtype(np.uint8))
         
     def test_to_file(self):
@@ -232,6 +236,18 @@ class TestRaster(unittest.TestCase):
         self.assertTrue(type(ds) == gdal.Dataset)
         self.assertTrue(ds.GetGeoTransform() == (328530.0, 10.0, 0.0, 2750790.0, 0.0, -10.0))
         self.assertTrue(ds.GetRasterBand(1).DataType == 5)
+
+    def test_fill_no_data(self):
+        raster = tgp.read_raster(tif_forinterpolation_path)
+        raster.fill_no_data(mode='constant', constant=0, fill_na=True)
+        self.assertTrue(np.sum(raster.data==0) == 34915)
+
+        raster.fill_no_data(mode='neighbor_mean', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
+        self.assertTrue(np.sum(np.unique(raster.data) == [ 0, 47, 48, 69, 75, 82]) == 6)
+
+        raster.astype(np.int)
+        raster.fill_no_data(mode='neighbor_majority', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
+        self.assertTrue(np.sum(np.unique(raster.data) == [ 0, 47, 48, 69, 75, 82]) == 6)
 
     def test_copy(self):
         raster_copy = self.raster.copy()

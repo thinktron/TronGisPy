@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.0.7",
+    version="1.0.8",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -100,8 +100,9 @@ setuptools.setup(
 # 1.0.5 add data.copy() when assign data to Raster, and call update_gdaltype_by_npdtype() after assignment
 # 1.0.6 add figsize when assign data to Raster, fill no_data when plotting Raster, add note in Interpolation.gdal_fillnodata
 # 1.0.7 add gdaltype property in Raster, call paddedimage in `SplittedImage.apply` for efficiency.
+# 1.0.8 add change gdaltype to gdaldtype, gdaltype property to gdaldtype_name in Raster, fill_na and fill_no_data in Raster, add fill_na param in `tgp.read_raster`
 
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.0.7-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.7-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.0.7-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.7-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.0.8-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.8-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.0.8-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.0.8-py3-none-any.whl

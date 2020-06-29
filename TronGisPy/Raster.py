@@ -1,6 +1,7 @@
 import gdal
 import numpy as np
 import TronGisPy as tgp
+from TronGisPy import Interpolation
 from matplotlib import pyplot as plt
 
 class Raster():
@@ -87,7 +88,7 @@ class Raster():
     def __repr__(self):
         desc = ""
         desc += "shape: ({rows}, {cols}, {bands})\n".format(rows=self.rows, cols=self.cols, bands=self.bands)
-        desc += "gdaltype: {gdaltype}\n".format(gdaltype=tgp.get_gdaldtype_name(self.gdaldtype))
+        desc += "gdaldtype: {gdaldtype}\n".format(gdaldtype=tgp.get_gdaldtype_name(self.gdaldtype))
         desc += "geo_transform: {geo_transform}\n".format(geo_transform=self.geo_transform)
         desc += "projection: {projection}\n".format(projection=self.projection)
         desc += "no_data_value: {no_data_value}\n".format(no_data_value=self.no_data_value)
@@ -111,8 +112,8 @@ class Raster():
         return self.data.shape
 
     @property
-    def gdaltype(self):
-        return tgp.get_gdaldtype_name(self.gdaltype)
+    def gdaldtype_name(self):
+        return tgp.get_gdaldtype_name(self.gdaldtype)
 
     @property
     def data(self):
@@ -124,7 +125,7 @@ class Raster():
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=2)
         self.__data = data.copy()
-        self.update_gdaltype_by_npdtype()
+        self.update_gdaldtype_by_npdtype()
 
     @property
     def geo_transform(self):
@@ -175,18 +176,18 @@ class Raster():
     #         w_start_inner, w_stop_inner = self.get_values_by_coords(slice_value[1])
     #         return self.data[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner]
 
-    def astype(self, dtype, update_gdaltype=True):
+    def astype(self, dtype, update_gdaldtype=True):
         """Change dtype of self.data.
 
         Parameters
         ----------
         dtype: type. Target dtype.
 
-        update_gdaltype: bool. Change gdaldtype according to `self.data.dtype`.
+        update_gdaldtype: bool. Change gdaldtype according to `self.data.dtype`.
         """
         assert type(dtype) is type, "dtype should type type"
         self.data = self.data.astype(dtype)
-        self.update_gdaltype_by_npdtype()
+        self.update_gdaldtype_by_npdtype()
 
     def get_values_by_coords(self, coords):
         """get the data values be the coordinates
@@ -199,8 +200,8 @@ class Raster():
         npidxs_row, npidxs_col = tgp.coords_to_npidxs(coords, self.geo_transform).T
         return self.data[npidxs_row, npidxs_col]
 
-    def update_gdaltype_by_npdtype(self):
-        """Update gdaltype according to gdaltype using `TronGisPy.npdtype_to_gdaldtype`.
+    def update_gdaldtype_by_npdtype(self):
+        """Update gdaldtype according to gdaldtype using `TronGisPy.npdtype_to_gdaldtype`.
         For memory operation, numpy dtype will be used. For saving the file,
         gdal dtype will be used. If the data of raster object have being
         changed, its recomended to update the dtype before saveing the file.
@@ -228,15 +229,72 @@ class Raster():
                                 gdaldtype=self.gdaldtype, no_data_value=self.no_data_value)
         return ds
 
+    def fill_na(self, no_data_value=None):
+        """Fill np.nan with self.no_data_value
+
+        Parameters
+        ----------
+        no_data_value: int. If None, `self.no_data_value` will be used, else self.no_data_value 
+        will be re-assigned.
+        """
+        data = self.data.copy()
+        self.no_data_value =  self.no_data_value if no_data_value is None else no_data_value
+        data[np.isnan(data)] = self.no_data_value
+        self.data = data
+
+    def fill_no_data(self, mode='constant', no_data_value=None, constant=0, window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True):
+        """Fill no_data_value
+        
+        Parameters
+        ----------
+        mode: str. Should be in {'constant', 'neighbor_mean', 'neighbor_majority'}
+
+        no_data_value: int. If None, `self.no_data_value` will be used, else self.no_data_value 
+        will be re-assigned.
+
+        constant: int. If `constant` mode is used, use the constant to fill the cell with values
+        no_data_value.
+
+        window_size: int. If `neighbor_mean` or `neighbor_majority` mode is used, the size of the 
+        window of the convolution to calculate the mean value. window_size should be odd number. 
+        See also `TronGisPy.Interpolation.mean_interpolation` or 
+        `TronGisPy.Interpolation.majority_interpolation`.
+
+        loop_to_fill_all: bool. If `neighbor_mean` or `neighbor_majority` mode is used, fill all 
+        no_data_value until there is no no_data_value value in the data. See also 
+        `TronGisPy.Interpolation.mean_interpolation` or `TronGisPy.Interpolation.majority_interpolation`.
+
+        loop_limit: bool.  If `neighbor_mean` or `neighbor_majority` mode is used, the maximum 
+        limitation on loop. if loop_to_fill_all==True, loop_limit will be considered. `-1` means 
+        no limitation. See also `TronGisPy.Interpolation.mean_interpolation` or 
+        `TronGisPy.Interpolation.majority_interpolation`.
+        """
+        self.no_data_value =  self.no_data_value if no_data_value is None else no_data_value
+        if fill_na and np.sum(np.isnan(self.data)) > 0:
+            self.fill_na(self.no_data_value)
+
+        data = self.data.copy()
+        if mode == 'constant':
+            data[data == self.no_data_value] = constant
+            self.data = data
+        elif mode == 'neighbor_mean':
+            for i in range(self.bands):
+                self.data[:, :, i] = Interpolation.mean_interpolation(data[:, :, i], no_data_value=self.no_data_value, window_size=window_size, loop_to_fill_all=loop_to_fill_all, loop_limit=loop_limit) 
+        elif mode == 'neighbor_majority':
+            for i in range(self.bands):
+                self.data[:, :, i] = Interpolation.majority_interpolation(data[:, :, i], no_data_value=self.no_data_value, window_size=window_size, loop_to_fill_all=loop_to_fill_all, loop_limit=loop_limit)
+
     def copy(self):
         """copy raster object."""
         return Raster(self.data, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value, self.metadata)
 
-    def plot(self, ax=None, bands=None, title=None, cmap=None, figsize=None):
+    def plot(self, norm=True, ax=None, bands=None, title=None, cmap=None, figsize=None):
         """plot raster object.
 
         Parameters
         ----------
+        norm: bool. Normalize the image for showing.
+
         ax: `matplotlib.axes._subplots.AxesSubplot`. On which ax the raster will
         be plot.
 
@@ -264,7 +322,8 @@ class Raster():
         data[data == self.no_data_value] = np.nan
 
         # normalize
-        data = tgp.Normalizer().fit_transform(data)
+        if norm:
+            data = tgp.Normalizer().fit_transform(data)
 
         # plotting
         if ax is not None:
