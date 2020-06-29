@@ -17,12 +17,12 @@ pip install -U --extra-index-url http://rd.thinktronltd.com:28181/simple --trust
 1. Build GDAL==3.0.4 by yourself
 2. install preinstall from public pypi server
 ```
-pip install GDAL==3.0.4 Fiona==1.8.13
+pip install GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0
 ```
 
 3. Install TronGisPy from thinktron pypi server (Windows)
 ```
-pip install -U TronGisPy
+pip install -U --extra-index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
 ```
 
 ## TronGisPy Main Modules
