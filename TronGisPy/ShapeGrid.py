@@ -4,6 +4,7 @@ import gdal
 import pyproj
 import shapely
 import numpy as np
+import pandas as pd
 import geopandas as gpd
 import TronGisPy as tgp
 
@@ -134,7 +135,6 @@ def vectorize_layer(src_raster, band_num=1, field_name='value', multipolygon=Fal
         df_vectorized[field_name] = values
 
     return df_vectorized
-
 
 def clip_raster_with_polygon(src_raster, src_poly):
     """Clip raster with polygon.
@@ -267,3 +267,57 @@ def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=No
     dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, outputBounds=extent, format='MEM', resampleAlg=resample_alg)
     dst_raster = tgp.read_gdal_ds(dst_ds)
     return dst_raster
+
+def zonal_stats(src_poly, src_raster, operator=['mean']):
+    """Calculate the statistic value for each zone defined by src_poly, base on values from src_raster. 
+
+    Parameters
+    ----------
+    src_poly: `Geopandas.GeoDataFrame`. The Zone dataset to calculated statistic values.
+
+    src_raster: `TronGisPy.Raster`. Which value dataset to be calculated statistic values.
+    
+    operator: list of str. Which statistic to be used. Including mean, max, min, median, std, sum, count...
+
+    Returns
+    -------
+    vector: `Geopandas.GeoDataFrame`. Vectorize result.
+
+    Examples
+    -------- 
+    >>> import TronGisPy as tgp
+    >>> from TronGisPy import ShapeGrid
+    >>> src_raster_fp = tgp.get_testing_fp('satellite_tif')
+    >>> src_poly_fp = tgp.get_testing_fp('satellite_tif_clipper')
+    >>> src_raster = tgp.read_raster(src_raster_fp)
+    >>> src_poly = gpd.read_file(src_poly_fp)
+    >>> df_shp = ShapeGrid.zonal_stats(src_poly, src_raster, operator=['mean'])
+    >>> df_shp.head()
+    """
+    assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
+    assert isinstance(operator, list), "operator should be a list of string. ex: ['mean']"
+    df_shp = src_poly.copy()
+    df_shp['poly_idx'] = list(range(len(df_shp)))
+    df_shp['poly_idx'] = df_shp['poly_idx'].astype('float')
+    poly_rst = tgp.ShapeGrid.rasterize_layer(df_shp, src_raster.rows, src_raster.cols, src_raster.geo_transform, 'poly_idx', all_touched=True, no_data_value=np.nan)
+    X_combine = np.concatenate([poly_rst.data, src_raster.data], axis=-1)
+    X_combine_df = pd.DataFrame(X_combine.reshape(-1, 2))
+    X_groupby = X_combine_df.groupby(0, as_index=False)
+    for op in operator:
+        if op == 'mean':
+            df_shp = df_shp.merge(X_groupby.mean().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+        elif op == 'max':
+            df_shp = df_shp.merge(X_groupby.max().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+        elif op == 'min':
+            df_shp = df_shp.merge(X_groupby.min().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+        elif op == 'median':
+            df_shp = df_shp.merge(X_groupby.median().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+        elif op == 'sum':
+            df_shp = df_shp.merge(X_groupby.sum().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+        elif op == 'std':
+            df_shp = df_shp.merge(X_groupby.std().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+        elif op == 'count':
+            df_shp = df_shp.merge(X_groupby.count().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+        else:
+            assert False, "no this operator"
+    return df_shp
