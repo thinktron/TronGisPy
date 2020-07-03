@@ -40,8 +40,8 @@ flipped_gt_path = tgp.get_testing_fp('flipped_gt')
 shp_clipper_path = tgp.get_testing_fp('shp_clipper')
 dem_process_path = tgp.get_testing_fp('dem_process_path')
 
-# show_image = True
-show_image = False
+show_image = True
+# show_image = False
 
 # operation on gis data
 class Testio(unittest.TestCase):

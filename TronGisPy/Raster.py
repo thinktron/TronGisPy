@@ -337,7 +337,7 @@ class Raster():
         # flip xy
         c, a, b, f, d, e = self.geo_transform 
         if np.abs(d) > np.abs(a): # a=d(lng)/d(col), b=d(lat)/d(col), if d > a, 1 col move contribute more on lat, less on lng
-            data = data.transpose([1, 0, 2])
+            data = np.rot90(data)
 
         # plotting
         if ax is not None:
