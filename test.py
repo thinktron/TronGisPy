@@ -346,6 +346,19 @@ class TestShapeGrid(unittest.TestCase):
             dst_raster.plot(title="TestShapeGrid" + ": " + "test_refine_resolution")
         self.assertTrue(dst_raster.shape == (1024, 1024, 4))
         self.assertTrue(dst_raster.geo_transform == (328530.0, 5.0, 0.0, 2750790.0, 0.0, -5.0))
+    
+    def test_zonal_stats(self):
+        src_raster = tgp.read_raster(satellite_tif_path)
+        src_shp = gpd.read_file(satellite_tif_clipper_path)
+        dst_shp = ShapeGrid.zonal_stats(src_shp, src_raster, operator=['mean', 'max', 'min', 'median', 'std', 'sum', 'count'])
+        self.assertTrue(dst_shp.shape == (1, 10))
+        self.assertTrue(dst_shp[f'zonal_mean'].values[0] == 57.394941075021556)
+        self.assertTrue(dst_shp[f'zonal_max'].values[0] == 219.0)
+        self.assertTrue(dst_shp[f'zonal_min'].values[0] == 16.0)
+        self.assertTrue(dst_shp[f'zonal_median'].values[0] == 46.0)
+        self.assertTrue(dst_shp[f'zonal_std'].values[0] == 33.44787374465527)
+        self.assertTrue(dst_shp[f'zonal_sum'].values[0] == 599031.0	)
+        self.assertTrue(dst_shp[f'zonal_count'].values[0] == 10437)
 
 # gis tool
 class TestCRS(unittest.TestCase):
