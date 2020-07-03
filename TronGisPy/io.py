@@ -402,6 +402,8 @@ def get_testing_fp(fn=None):
         fp = os.path.join(data_dir, 'interpolation', 'X_forinterpolation.tif')
     elif fn == 'aero_triangulation_PXYZs':
         fp = os.path.join(data_dir, 'aero_triangulation', 'P_XYZs.npy')
+    elif fn == 'flipped_gt':
+        fp = os.path.join(data_dir, 'flipped_gt', 'flipped_gt.tif')
     else:
         assert False, "cannot find the file!!"
     return os.path.abspath(fp)

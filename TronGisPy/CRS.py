@@ -40,9 +40,9 @@ def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
 def coords_to_npidxs(coords, geo_transform):
     """Find the cells' numpy index the coordinates belong to using 
     the following functions.
-    | npidx_col |   | a  b  c | | coord_x |
-    | npidx_row | = | d  e  f | | coord_y |
-    |     1     |   | 0  0  1 | |    1    |
+    | coord_lng |   | a  b  c | | npidx_col |
+    | coord_lat | = | d  e  f | | npidx_row |
+    |     1     |   | 0  0  1 | |     1     |
 
     Parameters
     ----------
@@ -76,9 +76,9 @@ def coords_to_npidxs(coords, geo_transform):
 def npidxs_to_coords(npidxs, geo_transform): # TODO: reproduce to numba
     """Get coordinates of cells' left-top corner by its numpy index using 
     the following functions.
-    | npidx_col |   | a  b  c | | coord_x |
-    | npidx_row | = | d  e  f | | coord_y |
-    |     1     |   | 0  0  1 | |    1    |
+    | coord_lng |   | a  b  c | | npidx_col |
+    | coord_lat | = | d  e  f | | npidx_row |
+    |     1     |   | 0  0  1 | |     1     |
 
     Parameters
     ----------
@@ -189,6 +189,7 @@ def get_extent(rows, cols, geo_transform, return_poly=True):
     else:
         extent = (np.min(poly[:, 0]), np.max(poly[:, 0]), np.min(poly[:, 1]), np.max(poly[:, 1]))
     return extent
+
 def epsg_to_wkt(epsg=4326):
     """convert epsg code to well known text (WKT).
 

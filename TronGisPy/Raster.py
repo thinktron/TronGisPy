@@ -152,6 +152,14 @@ class Raster():
             self.__metadata = None
 
     @property
+    def pixel_size(self):
+        """Return pixel resolution on both row and col axes"""
+        c, a, b, f, d, e = self.geo_transform 
+        res_row = (b**2 + e **2)**(1/2)
+        res_col = (a**2 + d**2)**(1/2)
+        return (res_row, res_col)
+
+    @property
     def extent(self):
         return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_poly=True)
 
@@ -277,6 +285,7 @@ class Raster():
         if mode == 'constant':
             data[data == self.no_data_value] = constant
             self.data = data
+            self.no_data_value = constant
         elif mode == 'neighbor_mean':
             for i in range(self.bands):
                 self.data[:, :, i] = Interpolation.mean_interpolation(data[:, :, i], no_data_value=self.no_data_value, window_size=window_size, loop_to_fill_all=loop_to_fill_all, loop_limit=loop_limit) 
@@ -324,6 +333,11 @@ class Raster():
         # normalize
         if norm:
             data = tgp.Normalizer().fit_transform(data)
+
+        # flip xy
+        c, a, b, f, d, e = self.geo_transform 
+        if np.abs(d) > np.abs(a): # a=d(lng)/d(col), b=d(lat)/d(col), if d > a, 1 col move contribute more on lat, less on lng
+            data = data.transpose([1, 0, 2])
 
         # plotting
         if ax is not None:

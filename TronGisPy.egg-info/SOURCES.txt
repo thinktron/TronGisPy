@@ -19,8 +19,6 @@ TronGisPy.egg-info/SOURCES.txt
 TronGisPy.egg-info/dependency_links.txt
 TronGisPy.egg-info/requires.txt
 TronGisPy.egg-info/top_level.txt
-TronGisPy/data/P0015913_SP5_006_001_002_049_006_001.tif
-TronGisPy/data/P0015913_SP5_006_001_002_049_006_001.tif.aux.xml
 TronGisPy/data/aero_triangulation/P_XYZs.npy
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.cpg
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.dbf
@@ -43,6 +41,7 @@ TronGisPy/data/clip_shp_by_shp/shp_clipper.dbf
 TronGisPy/data/clip_shp_by_shp/shp_clipper.shp
 TronGisPy/data/clip_shp_by_shp/shp_clipper.shx
 TronGisPy/data/dem_tif/crop_dem.tif
+TronGisPy/data/flipped_gt/flipped_gt.tif
 TronGisPy/data/interpolation/X_forinterpolation.tif
 TronGisPy/data/interpolation/climate_points.dbf
 TronGisPy/data/interpolation/climate_points.mshp

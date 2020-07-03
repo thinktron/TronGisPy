@@ -35,6 +35,7 @@ remap_rgb_clipper_path = tgp.get_testing_fp('remap_rgb_clipper_path')
 remap_ndvi_path = tgp.get_testing_fp('remap_ndvi_path')
 tif_forinterpolation_path = tgp.get_testing_fp('tif_forinterpolation')
 aero_triangulation_PXYZs_path = tgp.get_testing_fp('aero_triangulation_PXYZs')
+flipped_gt_path = tgp.get_testing_fp('flipped_gt')
 
 shp_clipper_path = tgp.get_testing_fp('shp_clipper')
 dem_process_path = tgp.get_testing_fp('dem_process_path')
@@ -198,6 +199,10 @@ class TestRaster(unittest.TestCase):
         self.raster.metadata = {"Test":"Test"}
         self.assertTrue(self.raster.metadata == {"Test":"Test"})
 
+    def test_pixel_size(self):
+        flipped_raster = tgp.read_raster(flipped_gt_path)
+        self.assertTrue(flipped_raster.pixel_size == (0.4327509283098073, 0.4327509283098073))
+
     def test_extent(self):
         self.assertTrue(self.raster.extent.tolist() == [[328530.0, 2750790.0], [333650.0, 2750790.0], [333650.0, 2745670.0], [328530.0, 2745670.0]])
         self.assertTrue(self.raster.extent_for_plot == (328530.0, 333650.0, 2745670.0, 2750790.0))
@@ -238,22 +243,38 @@ class TestRaster(unittest.TestCase):
         self.assertTrue(ds.GetRasterBand(1).DataType == 5)
 
     def test_fill_no_data(self):
-        raster = tgp.read_raster(tif_forinterpolation_path)
-        raster.fill_no_data(mode='constant', constant=0, fill_na=True)
-        self.assertTrue(np.sum(raster.data==0) == 34915)
+        raster1 = tgp.read_raster(tif_forinterpolation_path)
+        raster1.fill_no_data(mode='constant', constant=0, fill_na=True)
+        self.assertTrue(np.sum(raster1.data==0) == 34915)
 
-        raster.fill_no_data(mode='neighbor_mean', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
-        self.assertTrue(np.sum(np.unique(raster.data) == [ 0, 47, 48, 69, 75, 82]) == 6)
+        raster2 = tgp.read_raster(tif_forinterpolation_path)
+        raster2.fill_no_data(mode='neighbor_mean', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
+        self.assertTrue(np.mean(np.unique(raster2.data)).astype(np.int) == 63)
+        self.assertTrue(np.std(np.unique(raster2.data)).astype(np.int) == 12)
 
-        raster.astype(np.int)
-        raster.fill_no_data(mode='neighbor_majority', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
-        self.assertTrue(np.sum(np.unique(raster.data) == [ 0, 47, 48, 69, 75, 82]) == 6)
+        raster3 = tgp.read_raster(tif_forinterpolation_path)
+        raster3.fill_no_data(mode='constant', constant=raster3.no_data_value, fill_na=True)
+        raster3.astype(np.int)
+        raster3.fill_no_data(mode='neighbor_majority', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
+        self.assertTrue(np.sum(np.unique(raster3.data) == [ 0, 47, 48, 69, 75, 82]) == 6)
+
+        if show_image:
+            fig , (ax1, ax2, ax3) = plt.subplots(1, 3)
+            raster1.plot(ax=ax1)
+            raster2.plot(ax=ax2)
+            raster3.plot(ax=ax3)
+            plt.show()
 
     def test_copy(self):
         raster_copy = self.raster.copy()
         raster_copy.geo_transform = [0, 1, 0, 0, 0, -1]
         self.assertTrue(self.raster.geo_transform == (328530.0, 10.0, 0.0, 2750790.0, 0.0, -10.0))
 
+    def test_plot(self):
+        flipped_raster = tgp.read_raster(flipped_gt_path)
+        if show_image:
+            flipped_raster.plot()
+            
 class TestShapeGrid(unittest.TestCase):
     def setUp(self):
         time.sleep(1)
