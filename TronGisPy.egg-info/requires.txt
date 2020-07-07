@@ -3,4 +3,3 @@ affine
 scikit-learn
 descartes
 matplotlib
-Rtree==0.9.4

@@ -75,7 +75,7 @@ class Raster():
     (271982.8783, 272736.8295, 2769215.7524, 2769973.0653)
     """
 
-    def __init__(self, data, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
+    def __init__(self, data, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None, cache_data_for_plot=None):
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=2)
         self.data = data
@@ -84,6 +84,7 @@ class Raster():
         self.projection = projection
         self.no_data_value = no_data_value
         self.metadata = metadata
+        self.cache_data_for_plot= cache_data_for_plot
 
     def __repr__(self):
         desc = ""
@@ -297,19 +298,79 @@ class Raster():
         """copy raster object."""
         return Raster(self.data, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value, self.metadata)
 
-    def plot(self, norm=True, ax=None, bands=None, title=None, cmap=None, figsize=None):
+    def hist(self, norm=False, clip_percentage=None, log=False, bands=None, ax=None, title=None, figsize=None):
+        if bands is None:
+            data = self.data[self.data != self.no_data_value].flatten()
+        else:
+            data = self.data[:, :, bands]
+            data = self.data[self.data != self.no_data_value].flatten()
+
+        # clip_percentage
+        if clip_percentage is not None:
+            assert len(clip_percentage) == 2, "clip_percentage two element tuple"
+            idx_st = int(len(data.flatten()) * clip_percentage[0])
+            idx_end = int(len(data.flatten()) * clip_percentage[1])
+            X_sorted = np.sort(data.flatten())
+            data_min = X_sorted[idx_st]
+            data_max = X_sorted[idx_end]
+            data[data<data_min] = data_min
+            data[data>data_max] = data_max
+            
+        # log
+        if log:
+            data = np.log(data)
+
+        # normalize
+        if norm:
+            data = tgp.Normalizer().fit_transform(data, clip_percentage=clip_percentage)
+
+        if ax is not None:
+            ax.hist(data)
+            ax.set_title(title)
+        else:
+            if figsize is not None:
+                plt.figure(figsize=figsize)
+            plt.hist(data)
+            plt.title(title)
+            plt.show()
+
+    @property
+    def cache_data_for_plot(self):
+        """cache the processed data (norm & fill_na) for plotting
+
+        Returns
+        -------
+        cache_data: `numpy.array`. Processed data.
+        """
+        return self.__cache_data_for_plot
+
+    @cache_data_for_plot.setter
+    def cache_data_for_plot(self, cache_data_for_plot):
+        """set value for cache_data_for_plot"""
+        if cache_data_for_plot is not None:
+            self.__cache_data_for_plot = cache_data_for_plot
+        else:
+            self.__cache_data_for_plot = None
+
+    def plot(self, flush_cache=False, norm=True, clip_percentage=(0.02, 0.98), log=False, bands=None, ax=None, title=None, cmap=None, figsize=None):
         """plot raster object.
 
         Parameters
         ----------
+        flush_cache: bool. Cache the processed result for quick plotting.
+
         norm: bool. Normalize the image for showing.
 
-        ax: `matplotlib.axes._subplots.AxesSubplot`. On which ax the raster will
-        be plot.
+        clip_percentage: tuple of float. The percentage to cut the data in head and tail e.g. (0.02, 0.98)
+
+        log: bool. Get the log value of data to show the image.
 
         bands: list. Which bands to plot. Length of bands should be 1, 3 or 4.
         If 3 bands is used, each of them will be defined as rgb bands. If the
         forth band is used, it will be the opacity value.
+
+        ax: `matplotlib.axes._subplots.AxesSubplot`. On which ax the raster will
+        be plot.
 
         cmap: string, dict or `matplotlib.colors.Colormap`. Color map used to plot
         the raster. 
@@ -320,24 +381,43 @@ class Raster():
         assert type(bands) is list, "type of bands should be list"
         assert len(bands) in [1, 3, 4], "length of bands should be 1, 3 or 4"
 
-        # reshape to valid shape for matplotlib
-        if len(bands) == 1:
-            data = self.data[:, :, bands[0]]
+        if (self.cache_data_for_plot is None) or flush_cache:
+            # reshape to valid shape for matplotlib
+            if len(bands) == 1:
+                data = self.data[:, :, bands[0]]
+            else:
+                data = self.data[:, :, bands]
+
+            # deal with no data
+            data = data.astype(np.float)
+            data[data == self.no_data_value] = np.nan
+
+            # clip_percentage
+            if clip_percentage is not None:
+                assert len(clip_percentage) == 2, "clip_percentage two element tuple"
+                idx_st = int(len(data.flatten()) * clip_percentage[0])
+                idx_end = int(len(data.flatten()) * clip_percentage[1])
+                X_sorted = np.sort(data.flatten())
+                data_min = X_sorted[idx_st]
+                data_max = X_sorted[idx_end]
+                data[data<data_min] = data_min
+                data[data>data_max] = data_max
+
+            # log
+            if log:
+                data = np.log(data)
+
+            # normalize
+            if norm:
+                data = tgp.Normalizer().fit_transform(data)
+            self.cache_data_for_plot = data
         else:
-            data = self.data[:, :, bands]
-
-        # deal with no data
-        data = data.astype(np.float)
-        data[data == self.no_data_value] = np.nan
-
-        # normalize
-        if norm:
-            data = tgp.Normalizer().fit_transform(data)
+            data = self.cache_data_for_plot
 
         # flip xy
         c, a, b, f, d, e = self.geo_transform 
         if np.abs(d) > np.abs(a): # a=d(lng)/d(col), b=d(lat)/d(col), if d > a, 1 col move contribute more on lat, less on lng
-            data = np.rot90(data)
+            data = np.rot90(data, k=3)
 
         # plotting
         if ax is not None:

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.1.1",
+    version="1.1.4",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -27,7 +27,6 @@ setuptools.setup(
           'scikit-learn',
           'descartes',
           'matplotlib',
-          'Rtree==0.9.4',
       ]
 )
 
@@ -104,8 +103,11 @@ setuptools.setup(
 # 1.0.9 add pixel_size attribute & flipped_gt image ploting in Raster, fix meighbor_majority fill_na test.
 # 1.1.0 zonal_stats in ShapeGrid
 # 1.1.1 fix bug of flipped_gt image ploting in Raster
+# 1.1.2 add cache data for plotting in Raster
+# 1.1.3 add hist plotting in Raster
+# 1.1.4 clip and norm param in hit and plot of Raster
 
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.1.1-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.1.1-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.1.1-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.1.1-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.1.4-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.1.4-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.1.4-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.1.4-py3-none-any.whl

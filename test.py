@@ -40,8 +40,8 @@ flipped_gt_path = tgp.get_testing_fp('flipped_gt')
 shp_clipper_path = tgp.get_testing_fp('shp_clipper')
 dem_process_path = tgp.get_testing_fp('dem_process_path')
 
-show_image = True
-# show_image = False
+# show_image = True
+show_image = False
 
 # operation on gis data
 class Testio(unittest.TestCase):
@@ -273,8 +273,30 @@ class TestRaster(unittest.TestCase):
     def test_plot(self):
         flipped_raster = tgp.read_raster(flipped_gt_path)
         if show_image:
-            flipped_raster.plot()
-            
+            fig, (ax1, ax2,ax3) = plt.subplots(1, 3, figsize=(15, 7))
+            flipped_raster.plot(ax=ax1, flush_cache=True)
+            ax1.set_title('original')
+            flipped_raster.plot(ax=ax2, flush_cache=True, clip_percentage=(0.1, 0.9))
+            ax2.set_title('clip_percentage')
+            flipped_raster.plot(ax=ax3, flush_cache=True, log=True)
+            ax3.set_title('log')
+            plt.show()
+
+    def test_hist(self):
+        flipped_raster = tgp.read_raster(flipped_gt_path)
+        if show_image:
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+            flipped_raster.hist(ax=ax1)
+            ax1.set_title('original')
+            flipped_raster.hist(ax=ax2, clip_percentage=(0.1, 0.9))
+            ax2.set_title('clip_percentage')
+            flipped_raster.hist(ax=ax3, log=True)
+            ax3.set_title('log')
+            flipped_raster.hist(ax=ax4, bands=[1,2])
+            ax4.set_title('bands')
+            plt.show()
+
+
 class TestShapeGrid(unittest.TestCase):
     def setUp(self):
         time.sleep(1)
