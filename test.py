@@ -177,7 +177,7 @@ class TestRaster(unittest.TestCase):
     def test___init__(self):
         raster = tgp.Raster(np.zeros((3,3)))
         self.assertTrue(raster.shape == (3, 3, 1))
-        self.assertTrue(raster.geo_transform is None)
+        self.assertTrue(raster.geo_transform == [0, 1, 0, 0, 0, -1])
         self.assertTrue(raster.metadata is None)
 
     def test_get_properties(self):
@@ -273,13 +273,15 @@ class TestRaster(unittest.TestCase):
     def test_plot(self):
         flipped_raster = tgp.read_raster(flipped_gt_path)
         if show_image:
-            fig, (ax1, ax2,ax3) = plt.subplots(1, 3, figsize=(15, 7))
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(8, 8))
             flipped_raster.plot(ax=ax1, flush_cache=True)
             ax1.set_title('original')
             flipped_raster.plot(ax=ax2, flush_cache=True, clip_percentage=(0.1, 0.9))
             ax2.set_title('clip_percentage')
             flipped_raster.plot(ax=ax3, flush_cache=True, log=True)
             ax3.set_title('log')
+            flipped_raster.plot(ax=ax4, flush_cache=True, rescale_percentage=0.5)
+            ax4.set_title('rescale')
             plt.show()
 
     def test_hist(self):
@@ -307,6 +309,18 @@ class TestShapeGrid(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
+
+    def test_get_rasterize_layer_params(self):
+        src_shp = gpd.read_file(satellite_tif_clipper_path)
+        src_shp['FEATURE'] = 1
+        rows, cols ,geo_transform = ShapeGrid.get_rasterize_layer_params(src_shp, res=2)
+        self.assertTrue(rows == 691)
+        self.assertTrue(cols == 1131)
+        self.assertTrue(geo_transform == (329405.4857111082, 2, 0, 2748181.2743610824, 0, -2))
+        dst_raster = ShapeGrid.rasterize_layer(src_shp, rows, cols, geo_transform, use_attribute='FEATURE', no_data_value=99)
+        self.assertTrue(np.sum(dst_raster.data==1) == 512779)
+        if show_image:
+            dst_raster.plot(title="TestShapeGrid" + ": " + "test_get_rasterize_layer_params", cmap='gray')
 
     def test_rasterize_layer(self):
         src_shp = gpd.read_file(satellite_tif_clipper_path)

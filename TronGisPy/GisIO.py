@@ -145,10 +145,10 @@ def rasterize_layer(src_shp_path, dst_tif_path, ref_tif_path, use_attribute=None
     rasterize_raster.to_file(dst_tif_path)
 
 
-def vectorize_layer(src_tif_path, dst_shp_path, field_name='value', band_num=1, multipolygon=False):
+def vectorize_layer(src_tif_path, dst_shp_path, field_name='value', band_num=0, multipolygon=False):
     """band_num start from 1"""
     src_ds = gdal.Open(src_tif_path)
-    srcband = src_ds.GetRasterBand(band_num)
+    srcband = src_ds.GetRasterBand(band_num+1)
     src_srs=osr.SpatialReference(wkt=src_ds.GetProjection())        
     drv = ogr.GetDriverByName("ESRI Shapefile")
     dst_ds = drv.CreateDataSource(dst_shp_path)
@@ -218,42 +218,6 @@ def remap_tif(src_tif_path, dst_tif_path, ref_tif_path):
                                             dstSRS=ref_projection)
 
 
-
-# def zonal(src_shp_path, src_tif_path, dst_shp_path, band_num=1, operator='mean'):
-#     """band_num start from 1"""
-#     df_shp = gpd.read_file(src_shp_path)
-#     df_shp['poly_idx'] = list(range(len(df_shp)))
-    
-#     X = tgp.get_raster_data(src_tif_path)
-#     cols, rows, bands, geo_transform, projection, dtype_gdal, no_data_value = tgp.get_raster_info(src_tif_path)
-#     npidxs = list(zip(*np.where(np.ones_like(X))))
-#     coords = [Point(tgp.npidxs_to_coords([npidx], geo_transform))[0] for npidx in npidxs]
-#     gdf_raster = gpd.GeoDataFrame(geometry=coords, crs=df_shp.crs)
-#     gdf_raster['np_idx'] = npidxs
-#     gdf_raster['order_idx'] = list(range(len(gdf_raster)))
-#     gdf_raster['value'] = X[:, :, band_num-1].flatten().tolist()
-
-#     gdf_join = gpd.sjoin(gdf_raster, df_shp)
-#     values = []
-#     for poly_idx in set(df_shp['poly_idx']):
-#         if operator == 'mean':
-#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].mean()
-#         elif operator == 'max':
-#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].max()
-#         elif operator == 'min':
-#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].min()
-#         elif operator == 'sum':
-#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].sum()
-#         elif operator == 'std':
-#             value = gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value'].std()
-#         elif operator == 'max_count':
-#             value = sorted(Counter(gdf_join.loc[gdf_join['poly_idx']==poly_idx, 'value']).items(), key=lambda x:x[1], reverse=True)[0][0]
-#         else:
-#             assert False, "no this operator"
-#         values.append(value)
-
-#     df_shp['value'] = values
-#     df_shp.to_file(dst_shp_path)
 
 #TODO
 # 1. raster pixel to points

@@ -75,16 +75,16 @@ class Raster():
     (271982.8783, 272736.8295, 2769215.7524, 2769973.0653)
     """
 
-    def __init__(self, data, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None, cache_data_for_plot=None):
+    def __init__(self, data, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=2)
         self.data = data
-        self.geo_transform = geo_transform# if geo_transform is not None else [0, 1, 0, 0, 0, -1]
+        self.geo_transform = geo_transform if geo_transform is not None else [0, 1, 0, 0, 0, -1]
         self.gdaldtype = gdaldtype if gdaldtype is not None else tgp.npdtype_to_gdaldtype(data.dtype)
         self.projection = projection
         self.no_data_value = no_data_value
         self.metadata = metadata
-        self.cache_data_for_plot= cache_data_for_plot
+        self.cache_data_for_plot = None
 
     def __repr__(self):
         desc = ""
@@ -127,6 +127,7 @@ class Raster():
             data = np.expand_dims(data, axis=2)
         self.__data = data.copy()
         self.update_gdaldtype_by_npdtype()
+        self.cache_data_for_plot = None
 
     @property
     def geo_transform(self):
@@ -299,11 +300,28 @@ class Raster():
         return Raster(self.data, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value, self.metadata)
 
     def hist(self, norm=False, clip_percentage=None, log=False, bands=None, ax=None, title=None, figsize=None):
+        """plot digital value histgram (distribution) of raster object.
+
+        Parameters
+        ----------
+        norm: bool. Normalize the image for showing.
+
+        clip_percentage: tuple of float. The percentage to cut the data in head and tail e.g. (0.02, 0.98)
+
+        log: bool. Get the log value of data to show the image.
+
+        bands: list. Which bands to plot. 
+
+        ax: `matplotlib.axes._subplots.AxesSubplot`. On which ax the raster will
+        be plot.
+
+        figsize: tuple of float, Width and height of the histgram. 
+        """
         if bands is None:
             data = self.data[self.data != self.no_data_value].flatten()
         else:
             data = self.data[:, :, bands]
-            data = self.data[self.data != self.no_data_value].flatten()
+            data = data[data != self.no_data_value].flatten()
 
         # clip_percentage
         if clip_percentage is not None:
@@ -352,7 +370,7 @@ class Raster():
         else:
             self.__cache_data_for_plot = None
 
-    def plot(self, flush_cache=False, norm=True, clip_percentage=(0.02, 0.98), log=False, bands=None, ax=None, title=None, cmap=None, figsize=None):
+    def plot(self, flush_cache=True, norm=True, clip_percentage=(0.02, 0.98), log=False, rescale_percentage=None, bands=None, ax=None, title=None, cmap=None, figsize=None):
         """plot raster object.
 
         Parameters
@@ -365,6 +383,8 @@ class Raster():
 
         log: bool. Get the log value of data to show the image.
 
+        rescale_percentage: float. The percentage to recale the image for efficient showing.
+
         bands: list. Which bands to plot. Length of bands should be 1, 3 or 4.
         If 3 bands is used, each of them will be defined as rgb bands. If the
         forth band is used, it will be the opacity value.
@@ -374,10 +394,12 @@ class Raster():
 
         cmap: string, dict or `matplotlib.colors.Colormap`. Color map used to plot
         the raster. 
+    
+        figsize: tuple of float, Width and height of the histgram. 
         """
         if bands is None:
            bands = [0, 1, 2] if self.bands >= 3 else [0]
-
+        
         assert type(bands) is list, "type of bands should be list"
         assert len(bands) in [1, 3, 4], "length of bands should be 1, 3 or 4"
 
@@ -392,32 +414,61 @@ class Raster():
             data = data.astype(np.float)
             data[data == self.no_data_value] = np.nan
 
+            # detect single value
+            if len(np.unique(data[~np.isnan(data)])) == 1:
+                norm = False
+                log = False
+                clip_percentage = None
+
             # clip_percentage
             if clip_percentage is not None:
                 assert len(clip_percentage) == 2, "clip_percentage two element tuple"
-                idx_st = int(len(data.flatten()) * clip_percentage[0])
-                idx_end = int(len(data.flatten()) * clip_percentage[1])
-                X_sorted = np.sort(data.flatten())
+                data_notna = data[~np.isnan(data)]
+                idx_st = int(len(data_notna.flatten()) * clip_percentage[0])
+                idx_end = int(len(data_notna.flatten()) * clip_percentage[1])
+                X_sorted = np.sort(data_notna.flatten())
                 data_min = X_sorted[idx_st]
                 data_max = X_sorted[idx_end]
-                data[data<data_min] = data_min
-                data[data>data_max] = data_max
-
+                data[~np.isnan(data) & (data<data_min)] = data_min
+                data[~np.isnan(data) & (data>data_max)] = data_max
+                
             # log
             if log:
-                data = np.log(data)
+                if data[~np.isnan(data)].min() < 0: 
+                    data -= data[~np.isnan(data)].min()
+                data[~np.isnan(data)] = np.log(data[~np.isnan(data)] + 10**-6)
 
             # normalize
             if norm:
                 data = tgp.Normalizer().fit_transform(data)
+
+            if rescale_percentage is not None:
+                import cv2
+                data = cv2.resize(data, (int(self.cols*rescale_percentage), int(self.rows*rescale_percentage)))
+
             self.cache_data_for_plot = data
         else:
             data = self.cache_data_for_plot
 
         # flip xy
-        c, a, b, f, d, e = self.geo_transform 
-        if np.abs(d) > np.abs(a): # a=d(lng)/d(col), b=d(lat)/d(col), if d > a, 1 col move contribute more on lat, less on lng
-            data = np.rot90(data, k=3)
+        c, a, b, f, d, e = self.geo_transform
+        # lng = a * col + b * row + c
+        # lat = d * col + e * row + f
+        # a = d(lng) / d(col)
+        # b = d(lng) / d(row)
+        # d = d(lat) / d(col)
+        # e = d(lat) / d(row)
+        if (np.abs(a) > np.abs(d)) and (np.abs(e) > np.abs(b)):
+            lng_res, lat_res = a, e
+        elif (np.abs(d) > np.abs(a)) and (np.abs(b) > np.abs(e)): # if d > a, 1 col move contribute more on lat, less on lng
+            data = np.flipud(np.rot90(data))
+            lng_res, lat_res = d, b
+        else:
+            assert False, "not acceptable geotransform"
+        if lng_res < 0: # general lng_res > 0
+            data = np.fliplr(data)
+        if lat_res > 0: # general lat_res < 0
+            data = np.flipud(data)
 
         # plotting
         if ax is not None:

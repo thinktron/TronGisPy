@@ -7,6 +7,12 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import TronGisPy as tgp
+def get_rasterize_layer_params(src_vector, res=5):
+    xmin, ymin, xmax, ymax = src_vector.total_bounds 
+    geo_transform = (xmin, res, 0, ymax, 0, -res)
+    cols = int((xmax - xmin) / res) + 1
+    rows = int((ymax - ymin) / res) + 1
+    return rows, cols, geo_transform
 
 def rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute, all_touched=False, no_data_value=0):
     """Rasterize vector data. Get the cell value in defined grid (rows, cols, geo_transform)

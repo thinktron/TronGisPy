@@ -20,6 +20,7 @@ class Normalizer():
         else:            
             self.min = np.nanmin(X)
             self.max = np.nanmax(X)
+        assert self.min != self.max, "The image has only single value, that cannot be normed!"
 
     def transform(self, X):
         X = (X - self.min) / (self.max - self.min)

@@ -5,7 +5,7 @@ The repo aims to build a geographic information system (GIS) library for Python 
 ## Windows
 1. Install preinstall thinktron pypi server
 ```
-pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtree==0.9.4
+pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtree==0.9.4 opencv_python==4.1.2
 ```
 
 2. Install TronGisPy from thinktron pypi server (Windows)
@@ -15,6 +15,7 @@ pip install -U --extra-index-url http://rd.thinktronltd.com:28181/simple --trust
 
 ## Linux
 1. Build GDAL==3.0.4 by yourself
+2. Build opencv==4.1.2 by yourself
 2. install preinstall from public pypi server
 ```
 pip install GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtree==0.9.4

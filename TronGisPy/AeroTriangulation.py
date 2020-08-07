@@ -67,7 +67,8 @@ def project_XYZs_to_npidxs(P_XYZs, aerotri_params):
     idxs conversion from object space and image space.
     P_XYZs: XYZs of points in object space.
     aerotri_params: opk, L_XYZ, rows, cols, focal_length, pixel_size
-        L_XYZ: 
+        opk: omega, phi, kappa.
+        L_XYZ: the location of the camera.
         focal_length: dmc image is 120 (m).
         pixel_size: dmc image is sensor_width/image_cols = sensor_height/image_rows = 0.012 (mm).
     """

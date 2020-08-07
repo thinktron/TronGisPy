@@ -2,7 +2,7 @@ import gdal
 import numpy as np
 import TronGisPy as tgp
 
-def dem_to_hillshade(src_raster, band=1, alg='Horn', azimuth=315, altitude=45):
+def dem_to_hillshade(src_raster, band=0, alg='Horn', azimuth=315, altitude=45):
     '''
     band:
         source band number to use
@@ -19,14 +19,13 @@ def dem_to_hillshade(src_raster, band=1, alg='Horn', azimuth=315, altitude=45):
         No data value in output tiff. If None the value will follow src dem's no data value.
     return raster with no_data_value = 0
     '''
-    azimuth -= 180
-    options = dict(band=band, alg=alg,  azimuth=azimuth, altitude=altitude, format='MEM')
+    options = dict(band=band+1, alg=alg,  azimuth=azimuth, altitude=altitude, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'hillshade', **options)
     dst_raster = tgp.read_gdal_ds(ds)
     return dst_raster
 
-def dem_to_slope(src_raster, band=1, alg='Horn', slope_format='degree', no_data_value=None):
+def dem_to_slope(src_raster, band=0, alg='Horn', slope_format='degree', no_data_value=None):
     '''
     band:
         source band number to use
@@ -40,13 +39,13 @@ def dem_to_slope(src_raster, band=1, alg='Horn', slope_format='degree', no_data_
         No data value in output tiff. If None the value will follow src dem's no data value.
     return raster with no_data_value = -9999
     '''
-    options = dict(band=band, alg=alg,  slopeFormat=slope_format, format='MEM')
+    options = dict(band=band+1, alg=alg,  slopeFormat=slope_format, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'slope', **options)
     dst_raster = tgp.read_gdal_ds(ds)
     return dst_raster
 
-def dem_to_aspect(src_raster, band=1, alg='Horn', trigonometric=False, no_data_value=None):
+def dem_to_aspect(src_raster, band=0, alg='Horn', trigonometric=False, no_data_value=None):
     '''
     band:
         source band number to use
@@ -61,13 +60,13 @@ def dem_to_aspect(src_raster, band=1, alg='Horn', trigonometric=False, no_data_v
         No data value in output tiff. If None the value will follow src dem's no data value.
     return raster with no_data_value = -9999
     '''
-    options = dict(band=band, alg=alg,  trigonometric=trigonometric, format='MEM')
+    options = dict(band=band+1, alg=alg,  trigonometric=trigonometric, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'aspect', **options)
     dst_raster = tgp.read_gdal_ds(ds)
     return dst_raster
 
-def dem_to_TRI(src_raster, band=1, alg='Horn', no_data_value=None):
+def dem_to_TRI(src_raster, band=0, alg='Horn', no_data_value=None):
     '''
     Terrain Ruggedness Index
     band:
@@ -80,13 +79,13 @@ def dem_to_TRI(src_raster, band=1, alg='Horn', no_data_value=None):
         No data value in output tiff. If None the value will follow src dem's no data value.
     return raster with no_data_value = -9999
     '''
-    options = dict(band=band, alg=alg, format='MEM')
+    options = dict(band=band+1, alg=alg, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'TRI', **options)
     dst_raster = tgp.read_gdal_ds(ds)
     return dst_raster
 
-def dem_to_TPI(src_raster, band=1, alg='Horn', no_data_value=None):
+def dem_to_TPI(src_raster, band=0, alg='Horn', no_data_value=None):
     '''
     Topographic Position Index
     band:
@@ -99,13 +98,13 @@ def dem_to_TPI(src_raster, band=1, alg='Horn', no_data_value=None):
         No data value in output tiff. If None the value will follow src dem's no data value.
     return raster with no_data_value = -9999
     '''
-    options = dict(band=band, alg=alg, format='MEM')
+    options = dict(band=band+1, alg=alg, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'TPI', **options)
     dst_raster = tgp.read_gdal_ds(ds)
     return dst_raster
 
-def dem_to_roughness(src_raster, band=1, alg='Horn', no_data_value=None):
+def dem_to_roughness(src_raster, band=0, alg='Horn', no_data_value=None):
     '''
     band:
         source band number to use
@@ -117,7 +116,7 @@ def dem_to_roughness(src_raster, band=1, alg='Horn', no_data_value=None):
         No data value in output tiff. If None the value will follow src dem's no data value.
     return raster with no_data_value = -9999
     '''
-    options = dict(band=band, alg=alg, format='MEM')
+    options = dict(band=band+1, alg=alg, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'Roughness', **options)
     dst_raster = tgp.read_gdal_ds(ds)
