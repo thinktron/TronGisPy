@@ -8,6 +8,23 @@ import pandas as pd
 import geopandas as gpd
 import TronGisPy as tgp
 def get_rasterize_layer_params(src_vector, res=5):
+    """Get params for rasterize_layer if you don't have a grid system. 
+
+    Parameters
+    ----------
+    src_vector: `Geopandas.GeoDataFrame`. Which vector data to be rasterize.
+
+    res: resolution. The resolution of the grid.
+
+    Returns
+    -------
+    rows: int. Target rasterized image's rows.
+
+    cols: int. Target rasterized image's cols.
+    
+    geo_transform: tuple or list. Target rasterized image's geo_transform which is 
+    the affine parameter.
+    """
     xmin, ymin, xmax, ymax = src_vector.total_bounds 
     geo_transform = (xmin, res, 0, ymax, 0, -res)
     cols = int((xmax - xmin) / res) + 1
