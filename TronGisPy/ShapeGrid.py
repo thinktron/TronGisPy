@@ -14,7 +14,7 @@ def get_rasterize_layer_params(src_vector, res=5):
     ----------
     src_vector: `Geopandas.GeoDataFrame`. Which vector data to be rasterize.
 
-    res: resolution. The resolution of the grid.
+    res: resolution. The resolution (in meters) of the grid.
 
     Returns
     -------

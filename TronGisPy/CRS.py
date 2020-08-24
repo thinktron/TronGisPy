@@ -209,7 +209,7 @@ def epsg_to_wkt(epsg=4326):
     """
     return pyproj.CRS.from_epsg(epsg).to_wkt()
 
-def wkt_to_epsg(wkt):
+def wkt_to_epsg(wkt, pkg='both'):
     """convert well known text (WKT) to epsg code.
 
     Parameters
@@ -219,6 +219,7 @@ def wkt_to_epsg(wkt):
     Returns
     -------
     epsg: int. The epsg code.
+    pkg: str. Which package to use to convert the wkt. Should be in {'pyproj', 'osr', 'both'}.
 
     Examples
     --------
@@ -226,8 +227,17 @@ def wkt_to_epsg(wkt):
     >>> projection = tgp.get_raster_info(tgp.get_testing_fp(), 'projection')
     >>> tgp.wkt_to_epsg(projection)
     """
-    srs = osr.SpatialReference(wkt=wkt) # pyproj.CRS(wkt).to_epsg() will fail
-    epsg = srs.GetAuthorityCode(None)
+    if pkg == 'osr':
+        srs = osr.SpatialReference(wkt=wkt)
+        epsg = srs.GetAuthorityCode(None)
+    elif pkg == 'pyproj':
+        epsg = pyproj.CRS(wkt).to_epsg()
+    elif pkg == 'both':
+        srs = osr.SpatialReference(wkt=wkt) 
+        epsg = srs.GetAuthorityCode(None)
+        if epsg is None:
+            epsg = pyproj.CRS(wkt).to_epsg()
+
     if epsg is not None:
         return int(epsg)
     else:
