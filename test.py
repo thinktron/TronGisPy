@@ -146,21 +146,24 @@ class Testio(unittest.TestCase):
         self.assertTrue(ds.GetRasterBand(1).DataType == 5)
 
     def test_get_testing_fp(self):
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        data_dir = os.path.join(base_dir, 'TronGisPy', 'data')
+
         fn = 'satellite_tif'
         fp = tgp.get_testing_fp(fn)
-        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif\\satellite_tif.tif')
+        self.assertTrue(fp == os.path.join(data_dir, 'satellite_tif', 'satellite_tif.tif'))
         
         fn = 'satellite_tif_clipper'
         fp = tgp.get_testing_fp(fn)
-        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif_clipper\\satellite_tif_clipper.shp')
+        self.assertTrue(fp == os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp'))
 
         fn = 'satellite_tif_kmeans'
         fp = tgp.get_testing_fp(fn)
-        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\satellite_tif_kmeans\\satellite_tif_kmeans.tif')
+        self.assertTrue(fp == os.path.join(data_dir, 'satellite_tif_kmeans', 'satellite_tif_kmeans.tif'))
 
         fn = 'rasterized_image'
         fp = tgp.get_testing_fp(fn)
-        self.assertTrue(fp == 'C:\\Users\\Thinktron\\Projects\\TronGisPy\\TronGisPy\\data\\rasterized_image\\rasterized_image.tif')
+        self.assertTrue(fp == os.path.join(data_dir, 'rasterized_image', 'rasterized_image.tif'))
 
 class TestRaster(unittest.TestCase):
     def setUp(self):
