@@ -12,18 +12,19 @@ def get_rasterize_layer_params(src_vector, res=5):
 
     Parameters
     ----------
-    src_vector: `Geopandas.GeoDataFrame`. Which vector data to be rasterize.
-
-    res: resolution. The resolution (in meters) of the grid.
+    src_vector: Geopandas.GeoDataFrame
+        The vector data to be rasterize.
+    res: resolution
+        The resolution (in meters) of the grid.
 
     Returns
     -------
-    rows: int. Target rasterized image's rows.
-
-    cols: int. Target rasterized image's cols.
-    
-    geo_transform: tuple or list. Target rasterized image's geo_transform which is 
-    the affine parameter.
+    rows: int
+        Target rasterized image's rows.
+    cols: int
+        Target rasterized image's cols.
+    geo_transform: tuple
+        Target rasterized image's geo_transform which is the affine parameter.
     """
     xmin, ymin, xmax, ymax = src_vector.total_bounds 
     geo_transform = (xmin, res, 0, ymax, 0, -res)
@@ -37,26 +38,25 @@ def rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute, all_to
 
     Parameters
     ----------
-    src_vector: `Geopandas.GeoDataFrame`. Which vector data to be rasterize.
-
-    rows: int. Target rasterized image's rows.
-
-    cols: int. Target rasterized image's cols.
-    
-    geo_transform: tuple or list. Target rasterized image's geo_transform which is 
-    the affine parameter.
-
-    use_attribute: str. The column to use as rasterized image value.
-
-    all_touched: bool. Pixels that touch (not overlap over 50%) the polygon will be 
-    assign the use_attribute value of the polygon.
-
-    no_data_value: int or float. The pixels not covered by any polygon will be filled
-    no_data_value.
+    src_vector: Geopandas.GeoDataFrame
+        Which vector data to be rasterize.
+    rows: int
+        Target rasterized image's rows.
+    cols: int
+        Target rasterized image's cols.
+    geo_transform: tuple
+        Target rasterized image's geo_transform which is the affine parameter.
+    use_attribute: str
+        The column to use as rasterized image value.
+    all_touched: bool, optioonal, default: False
+        Pixels that touch (not overlap over 50%) the polygon will be assign the use_attribute value of the polygon.
+    no_data_value: int or float
+        The pixels not covered by any polygon will be filled no_data_value.
 
     Returns
     -------
-    raster: `TronGisPy.Raster`. Rasterized result.
+    raster: Raster. 
+        Rasterized result.
 
     Examples
     -------- 
@@ -105,18 +105,19 @@ def vectorize_layer(src_raster, band_num=1, field_name='value', multipolygon=Fal
 
     Parameters
     ----------
-    src_raster: `TronGisPy.Raster`. Which raster data to be vectorize.
-    
-    band_num: int. Which band to be vectorized.
-
-    field_name: str. Field to be generated in output vector data.
-
-    multipolygon: bool. Combine the polygon with the same value to be a 
-    `shapely.geometry.MultiPolygon`.
+    src_raster: Raster
+        Which raster data to be vectorize.
+    band_num: int
+        Which band to be vectorized.
+    field_name: str, optional, default: value
+        Field to be generated in output vector data.
+    multipolygon: bool, optional, default: False
+        Combine the polygon with the same value to be a `shapely.geometry.MultiPolygon`.
 
     Returns
     -------
-    vector: `Geopandas.GeoDataFrame`. Vectorize result.
+    vector: Geopandas.GeoDataFrame
+        Vectorized result.
 
     Examples
     -------- 
@@ -164,13 +165,15 @@ def clip_raster_with_polygon(src_raster, src_poly):
 
     Parameters
     ----------
-    src_raster: `TronGisPy.Raster`. Which raster data to be clipped.
-    
-    src_poly: `Geopandas.GeoDataFrame`. The clipper(clipping boundary).
+    src_raster: Raster
+        Which raster data to be clipped.
+    src_poly: Geopandas.GeoDataFrame
+        The clipper(clipping boundary).
 
     Returns
     -------
-    dst_raster: `TronGisPy.Raster`. Clipped result.
+    dst_raster: Raster 
+        Clipped result.
 
     Examples
     -------- 
@@ -206,13 +209,15 @@ def clip_raster_with_extent(src_raster, extent):
 
     Parameters
     ----------
-    src_raster: `TronGisPy.Raster`. Which raster data to be clipped.
-    
-    extent: tuple or list. Output bounds as (xmin, ymin, xmax, ymax).
+    src_raster: Raster
+        Which raster data to be clipped.
+    extent: tuple
+        extent to clip the data with (xmin, ymin, xmax, ymax) format.
 
     Returns
     -------
-    dst_raster: `TronGisPy.Raster`. Clipped result.
+    dst_raster: Raster. 
+        Clipped result.
 
     Examples
     -------- 
@@ -235,9 +240,6 @@ def clip_raster_with_extent(src_raster, extent):
     >>> ax2.set_title('clipped image')
     >>> plt.show()
     """
-    """
-    extent --- output bounds as (minX, minY, maxX, maxY) in target SRS
-    """
     assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
     src_ds = src_raster.to_gdal_ds()
     dst_ds = gdal.Warp('', src_ds, format= 'MEM', outputBounds=extent, cropToCutline=True)
@@ -249,12 +251,11 @@ def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=No
 
     Parameters
     ----------
-    src_raster: `TronGisPy.Raster` . Which raster data to be refined.
-    
-    dst_resolution: int. Target Resolution.
-
-    resample_alg: str. Should be in {'near', 'bilinear', 'cubic', 
-    'cubicspline', 'lanczos', 'average', 'mode'}.
+    src_raster: Raster 
+        Which raster data to be refined.
+    dst_resolution: int
+        Target Resolution.
+    resample_alg: {'near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode'}.
         ``near``: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
         ``bilinear``: bilinear resampling.
         ``cubic``: cubic resampling.
@@ -262,12 +263,13 @@ def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=No
         ``lanczos``: Lanczos windowed sinc resampling.
         ``average``: average resampling, computes the weighted average of all non-NODATA contributing pixels.
         ``mode``: mode resampling, selects the value which appears most often of all the sampled points.
-
-    extent: extent to clip the data.
+    extent: tuple
+        extent to clip the data with (xmin, ymin, xmax, ymax) format.
 
     Returns
     -------
-    dst_raster: `TronGisPy.Raster`. Refined result.
+    dst_raster: Raster
+        Refined result.
 
     Examples
     -------- 
@@ -291,20 +293,50 @@ def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=No
     dst_raster = tgp.read_gdal_ds(dst_ds)
     return dst_raster
 
+def reproject(src_raster, dst_crs='EPSG:4326', src_crs=None):
+    """Reproject the raster data.
+
+    Parameters
+    ----------
+    src_raster: Raster 
+        Which raster data to be refined.
+    dst_crs: str, optional, default: EPSG:4326
+        The target crs to transform the raster to.
+    src_crs: str, optional
+        The source crs to transform the raster from. If None, 
+        get the projection from src_raster.
+
+    Returns
+    -------
+    dst_raster: Raster
+        Reprojected result.
+
+    """
+    src_ds = src_raster.to_gdal_ds()
+
+    if src_crs:
+        dst_ds = gdal.Warp('', src_ds, srcSRS=src_crs, dstSRS=dst_crs, format='MEM')
+    else:
+        dst_ds = gdal.Warp('', src_ds, dstSRS=dst_crs, format='MEM')
+    dst_raster = tgp.read_gdal_ds(dst_ds)
+    return dst_raster
+
 def zonal_stats(src_poly, src_raster, operator=['mean']):
     """Calculate the statistic value for each zone defined by src_poly, base on values from src_raster. 
 
     Parameters
     ----------
-    src_poly: `Geopandas.GeoDataFrame`. The Zone dataset to calculated statistic values.
-
-    src_raster: `TronGisPy.Raster`. Which value dataset to be calculated statistic values.
-    
-    operator: list of str. Which statistic to be used. Including mean, max, min, median, std, sum, count...
+    src_poly: Geopandas.GeoDataFrame
+        The Zone dataset to calculated statistic values.
+    src_raster: Raster
+        Which value dataset to be calculated statistic values.
+    operator: list of {'mean', 'max', 'min', 'median', 'std', 'sum', 'count'}, optional, defalut: ['mean']
+        The statistic operator to be used.
 
     Returns
     -------
-    vector: `Geopandas.GeoDataFrame`. Vectorize result.
+    vector: Geopandas.GeoDataFrame 
+        Vectorize result.
 
     Examples
     -------- 
