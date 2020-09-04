@@ -7,6 +7,29 @@ from shapely.geometry import Polygon
 epsilon = 10**-6
 
 class SplittedImage():
+    """SplittedImage helps to splitting big remote sensing images into tiny 
+    pieces for AI training purpose. SplittedImage supports not only images 
+    splitting, but also combination of predicted results on the splitted images.
+
+    Examples
+    --------
+    >>> import TronGisPy as tgp
+    >>> raster = tgp.read_raster(tgp.get_testing_fp())
+    >>> box_size, step_size = 254, 127
+    >>> splitted_image = tgp.SplittedImage(raster, box_size, step_size=step_size)
+    >>> splitted_image
+    window_size: (254, 254)
+    step_size: (127, 127)
+    pad_val: 0
+    src_raster:
+        shape: (677, 674, 3)
+        gdaldtype: GDT_Int16
+        geo_transform: (271982.8783, 1.1186219584569888, 0.0, 2769973.0653, 0.0, -1.1186305760705852)
+        projection: PROJCS["TWD97 / TM2 zone 121",GEOGCS["TWD97",DATUM["Taiwan_Datum_1997",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","1026"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","3824"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",121],PARAMETER["scale_factor",0.9999],PARAMETER["false_easting",250000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","3826"]]
+        no_data_value: -32768.0
+        metadata: {'AREA_OR_POINT': 'Area'}
+    """
+
     def __init__(self, src_raster, box_size, step_size=None, pad_val=0):
         """padding: ['right', 'left']"""
         self.src_raster = src_raster
@@ -21,69 +44,80 @@ class SplittedImage():
         self.step_size_h = self.step_size_w = step_size if step_size is not None else box_size
         self.pad_val = pad_val
 
+    def __repr__(self):
+        desc = ""
+        desc += "window_size: ({window_size_h}, {window_size_w})\n".format(window_size_h=self.window_size_h, window_size_w=self.window_size_w)
+        desc += "step_size: ({step_size_h}, {step_size_w})\n".format(step_size_h=self.step_size_h, step_size_w=self.step_size_w)
+        desc += "pad_val: {pad_val}\n".format(pad_val=self.pad_val)
+        desc += "src_raster: \n {src_raster}\n".format(src_raster="\n".join(["\t"+line for line in str(self.src_raster).split("\n")]))
+        return desc
+
     @property
     def n_steps_h(self):
-        """how many img will be splitted in one column"""
+        """The number of the images will be splitted in one column"""
         return int((self.src_rows - self.window_size_h) / (self.step_size_h + epsilon)) + 1
         
     @property
     def n_steps_w(self):
-        """how many img will be splitted in one row"""
+        """The number of the images will be splitted in one row"""
         return int((self.src_cols - self.window_size_w) / (self.step_size_w + epsilon)) + 1
  
     @property
     def padded_rows(self):
-        """resize image into fit for splitting size"""
+        """The padded image rows. The original image is padded 
+        in order to fit for splitting size."""
         return self.window_size_h + self.step_size_h * self.n_steps_h
 
     @property
     def padded_cols(self):
-        """resize image into fit for splitting size"""
+        """The padded image columns. The original image is padded 
+        in order to fit for splitting size."""
         return self.window_size_w + self.step_size_w * self.n_steps_w
 
     @property
     def padded_shape(self):
-        """number of splitted images by rows and cols"""
+        """The number of splitted images by rows and columns."""
         return ((self.n_steps_h + 1), (self.n_steps_w + 1))
 
     @property
     def n_splitted_images(self):
-        """number of splitted images"""
+        """The number of splitted images."""
         return (self.n_steps_h + 1) * (self.n_steps_w + 1)
 
     @property
     def padded_image(self):
-        """pad image for splitting"""
+        """The padded image. The original image is padded 
+        in order to fit for splitting size."""
         padded_image = np.pad(self.src_image, ((0, self.padded_rows-self.src_rows), (0, self.padded_cols-self.src_cols), (0,0)), 'constant', constant_values=self.pad_val)
         return padded_image
 
     def __getitem__(self, slice_value):
         if type(slice_value) in [int, slice]:
-            h_start_inner, h_stop_inner = self.get_inner_idx(slice_value)
+            h_start_inner, h_stop_inner = self.__get_inner_idx(slice_value)
             return self.src_image[h_start_inner:h_stop_inner, :]
 
         elif type(slice_value) == tuple:
-            h_start_inner, h_stop_inner = self.get_inner_idx(slice_value[0])
-            w_start_inner, w_stop_inner = self.get_inner_idx(slice_value[1])
+            h_start_inner, h_stop_inner = self.__get_inner_idx(slice_value[0])
+            w_start_inner, w_stop_inner = self.__get_inner_idx(slice_value[1])
             return self.src_image[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner]
 
-    def get_inner_idx(self, slice_value):
+    def __get_inner_idx(self, slice_value):
         if type(slice_value) == int:
             h_start, h_stop = slice_value, slice_value
-            h_start_inner, h_stop_inner = self.convert_to_inner_index_h(h_start, h_stop)
+            h_start_inner, h_stop_inner = self.__convert_to_inner_index_h(h_start, h_stop)
         elif type(slice_value) == slice:
             h_start, h_stop = slice_value.start, slice_value.stop
-            h_start_inner, h_stop_inner = self.convert_to_inner_index_h(h_start, h_stop)
+            h_start_inner, h_stop_inner = self.__convert_to_inner_index_h(h_start, h_stop)
         return h_start_inner, h_stop_inner
 
-    def convert_to_inner_index_h(self, h_start, h_stop):
+    def __convert_to_inner_index_h(self, h_start, h_stop):
         h_start = 0 if h_start == None else h_start
         h_stop = 0 if h_stop == None else h_stop
         h_start_inner = self.step_size_h * h_start
         h_stop_inner = self.step_size_h * h_stop + self.window_size_h
         return (h_start_inner, h_stop_inner)
 
-    def convert_to_inner_index_w(self, w_start, w_stop):
+    def __convert_to_inner_index_w(self, w_start, w_stop):
         w_start = 0 if w_start == None else w_start
         w_stop = 0 if w_stop == None else w_stop
         w_start_inner = self.step_size_w * w_start
@@ -91,35 +125,116 @@ class SplittedImage():
         return (w_start_inner, w_stop_inner)
 
     def convert_location_to_order_index(self, idx_h, idx_w):
+        """Convert location index of the splitted image to the order index. 
+        The order index:
+
+        | 1 2 3 |  
+        | 4 5 6 |  
+        | 7 8 9 |
+    
+        The location index:
+
+        | (0, 0) (0, 1) (0, 2) |  
+        | (1, 0) (1, 1) (1, 2) |  
+        | (2, 0) (2, 1) (2, 2) |  
+
+        Parameters
+        ----------
+        idx_h: int
+            The row index of the splitted image.
+        idx_w: int
+            The column index of the splitted image.
+
+        Returns
+        -------
+        order_index: int
+            The order index of the aplitted index.
+        """
         return (idx_h * self.n_steps_w) + idx_w
 
     def convert_order_to_location_index(self, order_index):
+        """Convert the order index of the splitted image to location index.
+        The order index:
+
+        | 1 2 3 |  
+        | 4 5 6 |  
+        | 7 8 9 |
+    
+        The location index:
+
+        | (0, 0) (0, 1) (0, 2) |  
+        | (1, 0) (1, 1) (1, 2) |  
+        | (2, 0) (2, 1) (2, 2) |  
+
+        Parameters
+        ----------
+        order_index: int
+            The order index of the aplitted index.
+
+        Returns
+        -------
+        location_index: tuple of int
+            (idx_h, idx_w)
+        """
         idx_h = order_index // (self.n_steps_w + 1)
         idx_w = order_index % (self.n_steps_w + 1)
         return (idx_h, idx_w)
 
     def apply(self, apply_fun): # apply functino to all images:
+        """Apply a function to all splitted images.
+
+        Parameters
+        ----------
+        apply_fun: function
+            The function used to apply to all splitted images.
+
+        Returns
+        -------
+        return_objs: nparray
+            splitted images that have applied the function.
+        """
         return_objs = []
         padded_image = self.padded_image
         for i in range(self.n_splitted_images):
             idx_h , idx_w = self.convert_order_to_location_index(i)
-            h_start_inner, h_stop_inner = self.convert_to_inner_index_h(idx_h, idx_h)
-            w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
+            h_start_inner, h_stop_inner = self.__convert_to_inner_index_h(idx_h, idx_h)
+            w_start_inner, w_stop_inner = self.__convert_to_inner_index_w(idx_w, idx_w)
             splitted_img = padded_image[h_start_inner:h_stop_inner,w_start_inner:w_stop_inner].copy()
             return_objs.append(apply_fun(splitted_img))
         return return_objs
 
     def get_splitted_images(self):
+        """Get all splitted images.
+
+        Returns
+        -------
+        splitted_images: ndarray
+            All splitted images.
+        """
         return np.array(self.apply(lambda x:x))
         
     def get_geo_attribute(self, return_geo_transform=False, crs=None):
-        """crs={'init' :'epsg:xxxx'} e.g.{'init' :'epsg:4326'} """
+        """Get geo_attributes (idx, idx_h, idx_w, geo_transform, geometry) 
+        of all splitted images.
+
+        Parameters
+        ----------
+        return_geo_transform: bool, optional, default: False
+            Return gdal geo_transform for each geometry in the output GeoDataFrame.
+        crs: str, optional
+            The crs for the output GeoDataFrame e.g. 'epsg:4326'.
+
+        Returns
+        -------
+        df_attribute: gpd.GeoDataFrame
+            The geo_attributes of all splitted images, which can be output as a shapefile.
+        """
         rows = []
         for i in range(self.n_splitted_images):
             idx_h , idx_w = self.convert_order_to_location_index(i)
 
-            h_start_inner, h_stop_inner = self.convert_to_inner_index_h(idx_h, idx_h)
-            w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
+            h_start_inner, h_stop_inner = self.__convert_to_inner_index_h(idx_h, idx_h)
+            w_start_inner, w_stop_inner = self.__convert_to_inner_index_w(idx_w, idx_w)
             w_start_inner, h_start_inner, w_stop_inner, h_stop_inner
 
             left_top_coord = tgp.npidxs_to_coords([(h_start_inner, w_start_inner)], self.src_gt)[0]
@@ -144,6 +259,11 @@ class SplittedImage():
 
         if crs is not None:
             df_attribute.crs = crs
+        elif self.proj is not None: 
+            try:
+                df_attribute.crs = 'init:' + str(tgp.wkt_to_epsg(self.proj))
+            except:
+                df_attribute.crs = self.proj
 
         if not return_geo_transform:
             df_attribute.drop('geo_transform', axis=1, inplace=True)
@@ -152,10 +272,19 @@ class SplittedImage():
 
 
     def write_splitted_images(self, target_dir, filename, filter_fun=lambda x:True):
-        """
-        target_dir: where you want to store all aplitted images; 
-        filename: index number will be followed by the output filename you defined, e.g. <filename>_idx_idxh_idxw;
-        filter_fun(x_splitted): if return True, the image will be stored.
+        """Write all splitted images as tif file.
+
+        Parameters
+        ----------
+        target_dir: str
+            The directory to save the splitted images.
+        filename: str
+            The prefix od the filename. The index number will be followed by 
+            the output filename you defined, e.g. <filename>_idx_idxh_idxw;.
+        filter_fun: function, optional, default: lambda x:True
+            Filter specific spllitted images and not save it. The input of the function is 
+            a splitted image. If the function output is True, the splitted image will be 
+            saved.
         """
         df_attribute = self.get_geo_attribute(return_geo_transform=True)
         splitted_images = self.get_splitted_images()
@@ -170,9 +299,27 @@ class SplittedImage():
                 tgp.write_raster(path, target_img, gt, self.proj, self.gdaldtype, self.no_data_value)
 
     def get_combined_image(self, X, padding=3, aggregator='mean'):
-        """
-        padding:segmentation may wrong result at the boundry for each splitted image, it can be resolve to pad each image when combining it.
-        aggregator: if multuple predicting result is overlapped in the combined image, aggregator is necessary to combine them into one band. "mean", "median", "max" and "min" is available.
+        """Combine the model predict result on all splitted images
+
+        Parameters
+        ----------
+        X: array_like
+            The splitted image prediction result. should have the same shape with the 
+            SplittedImage.get_splitted_images.
+        padding: int
+            The number of pixel to remove the edge of each splitted image. Since 
+            the segmentation model may not perform well on the edge of the image, 
+            it can be resolve to pad each image when combining it.
+        aggregator: {"mean", "median", "max", "min"}, optional, default: mean
+            The operator perform on the image pixel with multiple results. If 
+            multuple predicting results are overlapped in the combined image, 
+            aggregator is necessary to combine them into one band.
+
+        Returns
+        -------
+        X_combined: ndarray
+            The combined image. The image will have the same geo-attribute (geo_transform 
+            and projection) with the original image.
         """
         if len(X.shape) == 3:
             X = np.expand_dims(X, axis=3) 
@@ -189,8 +336,8 @@ class SplittedImage():
             X_combined_overlap = np.full((rows, cols, overlapped_count), np.nan)
             for i in range(len(X)):
                 idx_h , idx_w = self.convert_order_to_location_index(i)
-                h_start_inner, h_stop_inner = self.convert_to_inner_index_h(idx_h, idx_h)
-                w_start_inner, w_stop_inner = self.convert_to_inner_index_w(idx_w, idx_w)
+                h_start_inner, h_stop_inner = self.__convert_to_inner_index_h(idx_h, idx_h)
+                w_start_inner, w_stop_inner = self.__convert_to_inner_index_w(idx_w, idx_w)
                 h_start_inner, h_stop_inner = h_start_inner + padding, h_stop_inner - padding
                 w_start_inner, w_stop_inner = w_start_inner + padding, w_stop_inner - padding
 
@@ -214,6 +361,23 @@ class SplittedImage():
         return X_combined_bands
 
     def write_combined_tif(self, X, dst_tif_path, gdaldtype=None, no_data_value=None):
+        """Combine the model predict result on splitted images and write as tif file.
+
+        Parameters
+        ----------
+        X: array_like
+            The splitted image prediction result. should have the same shape with the 
+            SplittedImage.get_splitted_images.
+        dst_tif_path: str
+            The location to save the tif file.
+        gdaldtype: int, optional
+            The type of the cell defined in gdal which will affect the information 
+            to be stored when saving the file. This can be generate from `gdal.GDT_XXX` 
+            such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32` equals 6.
+        no_data_value: int or float, optional
+            Define which value to replace nan in numpy array when saving a raster file.
+            
+        """
         X_combined_bands = self.get_combined_image(X)
         gdaldtype = gdaldtype if gdaldtype is not None else self.gdaldtype
         no_data_value = no_data_value if no_data_value is not None else self.no_data_value

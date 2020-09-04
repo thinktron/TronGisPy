@@ -311,6 +311,14 @@ def reproject(src_raster, dst_crs='EPSG:4326', src_crs=None):
     dst_raster: Raster
         Reprojected result.
 
+    Examples
+    -------- 
+    >>> import TronGisPy as tgp
+    >>> src_raster_fp = tgp.get_testing_fp()
+    >>> src_raster = tgp.read_raster(src_raster_fp)
+    >>> print("project(before)", src_raster.projection)
+    >>> dst_raster = ShapeGrid.reproject(src_raster, dst_crs='EPSG:4326', src_crs=None)
+    >>> print("project(after)", tgp.wkt_to_epsg(dst_raster.projection))
     """
     src_ds = src_raster.to_gdal_ds()
 
@@ -340,6 +348,7 @@ def zonal_stats(src_poly, src_raster, operator=['mean']):
 
     Examples
     -------- 
+    >>> import geopandas as gpd
     >>> import TronGisPy as tgp
     >>> from TronGisPy import ShapeGrid
     >>> src_raster_fp = tgp.get_testing_fp('satellite_tif')

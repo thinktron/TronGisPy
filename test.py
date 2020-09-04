@@ -385,6 +385,11 @@ class TestShapeGrid(unittest.TestCase):
             dst_raster.plot(title="TestShapeGrid" + ": " + "test_refine_resolution")
         self.assertTrue(dst_raster.shape == (1024, 1024, 4))
         self.assertTrue(dst_raster.geo_transform == (328530.0, 5.0, 0.0, 2750790.0, 0.0, -5.0))
+
+    def test_reproject(self):
+        src_raster = tgp.read_raster(satellite_tif_path)
+        dst_raster = ShapeGrid.reproject(src_raster, dst_crs='EPSG:4326', src_crs=None)
+        self.assertTrue(tgp.wkt_to_epsg(dst_raster.projection) == 4326)
     
     def test_zonal_stats(self):
         src_raster = tgp.read_raster(satellite_tif_path)
@@ -659,9 +664,6 @@ class TestSplittedImage(unittest.TestCase):
         time.sleep(1)
 
     def test___getitem__(self):
-        self.assertTrue(self.splitted_image.convert_to_inner_index_h(0,0) == (0, 254))
-        self.assertTrue(self.splitted_image.convert_to_inner_index_h(1,1) == (127, 381))
-        self.assertTrue(self.splitted_image.convert_to_inner_index_h(2,2) == (254, 508))
         self.assertTrue(Counter(pd.cut(self.splitted_image[1].flatten(), bins=3, labels=range(3))) == Counter({0: 268790, 1: 247772, 2: 3630}))
         self.assertTrue(Counter(pd.cut(self.splitted_image[:2].flatten(), bins=3, labels=range(3))) == Counter({1: 523687, 0: 508289, 2: 8408}))
         self.assertTrue(Counter(pd.cut(self.splitted_image[:2, 2].flatten(), bins=3, labels=range(3))) == Counter({0: 285697, 1: 225614, 2: 4817}))

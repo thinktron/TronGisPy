@@ -7,7 +7,6 @@ cligj==0.5.0
 colorama==0.4.3
 cycler==0.10.0
 descartes==1.1.0
-geopandas==0.7.0
 isort==4.3.21
 joblib==0.15.1
 kiwisolver==1.2.0
@@ -24,10 +23,8 @@ pyparsing==2.4.7
 pyproj==2.6.1.post1
 python-dateutil==2.8.1
 pytz==2020.1
-Rtree==0.9.4
 scikit-learn==0.23.1
 scipy==1.4.1
-Shapely==1.6.4.post2
 six==1.15.0
 threadpoolctl==2.1.0
 toml==0.10.1
@@ -36,3 +33,6 @@ wrapt==1.12.1
 --extra-index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com
 GDAL==3.0.4
 Fiona==1.8.13
+Shapely==1.6.4.post2 
+geopandas==0.7.0 
+Rtree==0.9.4

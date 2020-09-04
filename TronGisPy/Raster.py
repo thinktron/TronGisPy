@@ -10,47 +10,6 @@ class Raster():
     number of cols, number of bands, geo_transform, projection, no_data_value
     and metadata. 
 
-    Parameters
-    ----------
-    data: `numpy.array`. Digital number for each raster cell. Data is in (n_rows, n_cols, n_bands) shape.
-
-    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform). 
-
-    projection: string. The well known text (WKT) of the raster which can be
-    generate from `TronGisPy.epsg_to_wkt(<epsg_code>)`
-
-    gdaldtype: int. The type of the cell defined in gdal which will affect the
-    information to be stored when saving the file. This can be generate from
-    `gdal.GDT_XXX` such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32`
-    equals 6.
-
-    no_data_value: int or float. Define which value to replace nan in numpy
-    array when saving a raster file.
-
-    metadata: dict. Define the metadata of the raster file.
-
-    Attributes
-    ----------
-    rows: int. Number of rows.
-
-    cols: int. Number of cols.
-
-    bands: int. Number of bands.
-
-    shape: tuple. The shape of the raster data.
-
-    data: `numpy.array`. The digital number for each cell of the raster. Data is in (n_rows, n_cols, n_bands) shape.
-
-    geo_transform: tuple. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform).
-
-    metadata: dict. Metadata of the raster file.
-
-    extent: `numpy.array`. Coordinates of Four corner points' of the raster. 
-
-    extent_for_plot: tuple. (xmin, xmax, ymin, ymax) of the raster boundary.
-
     Examples
     --------
     >>> import TronGisPy as tgp
@@ -76,6 +35,26 @@ class Raster():
     """
 
     def __init__(self, data, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
+        """Initializing Raster object.
+
+        Parameters
+        ----------
+        data: array_like
+            Digital number for each raster cell. Data is in (n_rows, n_cols, n_bands) shape.
+        geo_transform: tuple or list, optional
+            Affine transform parameters (c, a, b, f, d, e = geo_transform). 
+        projection: str, optional
+            The well known text (WKT) of the raster which can be generate 
+            from `TronGisPy.epsg_to_wkt(<epsg_code>)`
+        gdaldtype: int, optional
+            The type of the cell defined in gdal which will affect the information 
+            to be stored when saving the file. This can be generate from `gdal.GDT_XXX` 
+            such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32` equals 6.
+        no_data_value: int or float, optional
+            Define which value to replace nan in numpy array when saving a raster file.
+        metadata: dict, optional
+            Define the metadata of the raster file.
+        """
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=2)
         self.data = data
@@ -98,18 +77,22 @@ class Raster():
 
     @property
     def rows(self):
+        """Number of rows."""
         return self.data.shape[0]
         
     @property
     def cols(self):
+        """Number of cols."""
         return self.data.shape[1]
 
     @property
     def bands(self):
+        """Number of bands."""
         return self.data.shape[2]
         
     @property
     def shape(self):
+        """The shape of the raster data."""
         return self.data.shape
 
     @property
@@ -118,10 +101,12 @@ class Raster():
 
     @property
     def data(self):
+        """The digital number for each cell of the raster. Data is in (n_rows, n_cols, n_bands) shape."""
         return self.__data
 
     @data.setter
     def data(self, data):
+        """Reset the data"""
         assert type(data) == np.ndarray, "data should be numpy.ndarray type"
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=2)
@@ -131,10 +116,12 @@ class Raster():
 
     @property
     def geo_transform(self):
+        """Affine transform parameters (c, a, b, f, d, e = geo_transform)."""
         return self.__geo_transform
 
     @geo_transform.setter
     def geo_transform(self, geo_transform):
+        """Reset the geo_transform"""
         if geo_transform is not None:
             assert len(geo_transform) == 6, "length of geo_transform should be 6"
             self.__geo_transform = geo_transform
@@ -143,10 +130,12 @@ class Raster():
 
     @property
     def metadata(self):
+        """Metadata of the raster file."""
         return self.__metadata
 
     @metadata.setter
     def metadata(self, metadata):
+        """Reset the metadata"""
         if metadata is not None:
             assert type(metadata) == dict, "metadata should be in dict type"
             self.__metadata = metadata
@@ -163,17 +152,12 @@ class Raster():
 
     @property
     def extent(self):
+        """Coordinates of Four corner points' of the raster. """
         return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_poly=True)
 
     @property
     def extent_for_plot(self):
-        """get the extent for matplotlib extent
-
-        Returns
-        -------
-        extent: `numpy.array` or tuple. If return_poly==True, return four corner coordinates, else return
-        (xmin, xmax, ymin, ymax)
-        """
+        """(xmin, xmax, ymin, ymax) of the raster boundary."""
         return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_poly=False)
 
     # def __getitem__(self, slice_value):
@@ -191,21 +175,28 @@ class Raster():
 
         Parameters
         ----------
-        dtype: type. Target dtype.
+        dtype: type
+            Target dtype.
 
-        update_gdaldtype: bool. Change gdaldtype according to `self.data.dtype`.
+        update_gdaldtype: bool, optional, default: True
+            Change gdaldtype according to `self.data.dtype`.
         """
         assert type(dtype) is type, "dtype should type type"
         self.data = self.data.astype(dtype)
         self.update_gdaldtype_by_npdtype()
 
     def get_values_by_coords(self, coords):
-        """get the data values be the coordinates
+        """get the data digital values of the coordinates
+
+        Parameters
+        ----------
+        coords: ndarray 
+            The coordinates with shape (n_points, 2). The order of last dimension is (lng, lat).
 
         Returns
         -------
-        coords: `numpy.array`. The coordinates with shape (n_points, 2). The order of
-        last dimension is (lng, lat).
+        coords: ndarray 
+            The data digital values of the coordinates.
         """
         npidxs_row, npidxs_col = tgp.coords_to_npidxs(coords, self.geo_transform).T
         return self.data[npidxs_row, npidxs_col]
@@ -213,7 +204,7 @@ class Raster():
     def update_gdaldtype_by_npdtype(self):
         """Update gdaldtype according to gdaldtype using `TronGisPy.npdtype_to_gdaldtype`.
         For memory operation, numpy dtype will be used. For saving the file,
-        gdal dtype will be used. If the data of raster object have being
+        gdal dtype will be used. If the data of raster object have been
         changed, its recomended to update the dtype before saveing the file.
         """
         self.gdaldtype = tgp.npdtype_to_gdaldtype(self.data.dtype)
@@ -224,16 +215,18 @@ class Raster():
 
         Parameters
         ----------
-        fp: str. file path.
+        fp: str
+            File path.
         """
         tgp.write_raster(fp, self.data, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value, self.metadata)
 
     def to_gdal_ds(self):
-        """Convert raster object to `gdal.DataSource`.
+        """Export raster object to `gdal.DataSource`.
 
         Returns
         -------
-        ds: gdal.DataSource.
+        ds: gdal.DataSource
+            DataSource converted from the raster object.
         """
         ds = tgp.write_gdal_ds(self.data, geo_transform=self.geo_transform, projection=self.projection, 
                                 gdaldtype=self.gdaldtype, no_data_value=self.no_data_value)
@@ -244,8 +237,8 @@ class Raster():
 
         Parameters
         ----------
-        no_data_value: int. If None, `self.no_data_value` will be used, else self.no_data_value 
-        will be re-assigned.
+        no_data_value: int, optional
+            If None, `self.no_data_value` will be used, else self.no_data_value will be re-assigned.
         """
         data = self.data.copy()
         self.no_data_value =  self.no_data_value if no_data_value is None else no_data_value
@@ -253,31 +246,29 @@ class Raster():
         self.data = data
 
     def fill_no_data(self, mode='constant', no_data_value=None, constant=0, window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True):
-        """Fill no_data_value
+        """Fill no_data cell of the raster object.
         
         Parameters
         ----------
-        mode: str. Should be in {'constant', 'neighbor_mean', 'neighbor_majority'}
-
-        no_data_value: int. If None, `self.no_data_value` will be used, else self.no_data_value 
-        will be re-assigned.
-
-        constant: int. If `constant` mode is used, use the constant to fill the cell with values
-        no_data_value.
-
-        window_size: int. If `neighbor_mean` or `neighbor_majority` mode is used, the size of the 
-        window of the convolution to calculate the mean value. window_size should be odd number. 
-        See also `TronGisPy.Interpolation.mean_interpolation` or 
-        `TronGisPy.Interpolation.majority_interpolation`.
-
-        loop_to_fill_all: bool. If `neighbor_mean` or `neighbor_majority` mode is used, fill all 
-        no_data_value until there is no no_data_value value in the data. See also 
-        `TronGisPy.Interpolation.mean_interpolation` or `TronGisPy.Interpolation.majority_interpolation`.
-
-        loop_limit: bool.  If `neighbor_mean` or `neighbor_majority` mode is used, the maximum 
-        limitation on loop. if loop_to_fill_all==True, loop_limit will be considered. `-1` means 
-        no limitation. See also `TronGisPy.Interpolation.mean_interpolation` or 
-        `TronGisPy.Interpolation.majority_interpolation`.
+        mode: {'constant', 'neighbor_mean', 'neighbor_majority'}
+            the mode used to fill no_data cell.
+        no_data_value: int
+            If None, `self.no_data_value` will be used, else self.no_data_value will be re-assigned.
+        constant: int, optional, default: 0
+            If `constant` mode is used, use the constant to fill the cell with values no_data_value.
+        window_size: int, optional, default: 3
+            If `neighbor_mean` or `neighbor_majority` mode is used, the size of the window of the 
+            convolution to calculate the mean value. window_size should be odd number. See also 
+            `TronGisPy.Interpolation.mean_interpolation` or `TronGisPy.Interpolation.majority_interpolation`.
+        loop_to_fill_all: bool, optional, default: True
+            If `neighbor_mean` or `neighbor_majority` mode is used, fill all 
+            no_data_value until there is no no_data_value value in the data. See also 
+            `TronGisPy.Interpolation.mean_interpolation` or `TronGisPy.Interpolation.majority_interpolation`.
+        loop_limit: int, optional, default: 5
+            If `neighbor_mean` or `neighbor_majority` mode is used, the maximum 
+            limitation on loop. if loop_to_fill_all==True, loop_limit will be considered. `-1` means 
+            no limitation. See also `TronGisPy.Interpolation.mean_interpolation` or 
+            `TronGisPy.Interpolation.majority_interpolation`.
         """
         self.no_data_value =  self.no_data_value if no_data_value is None else no_data_value
         if fill_na and np.sum(np.isnan(self.data)) > 0:
@@ -304,18 +295,20 @@ class Raster():
 
         Parameters
         ----------
-        norm: bool. Normalize the image for showing.
-
-        clip_percentage: tuple of float. The percentage to cut the data in head and tail e.g. (0.02, 0.98)
-
-        log: bool. Get the log value of data to show the image.
-
-        bands: list. Which bands to plot. 
-
-        ax: `matplotlib.axes._subplots.AxesSubplot`. On which ax the raster will
-        be plot.
-
-        figsize: tuple of float, Width and height of the histgram. 
+        norm: bool, optional, default: False
+            Normalize the image for showing.
+        clip_percentage: tuple of float, optional
+            The percentage to cut the data in head and tail e.g. (0.02, 0.98)
+        log: bool, optional, default: False
+            Use the log value to plot the histgram.
+        bands: list, optional
+            Which bands to plot. if bands==None, use values from all bands.
+        ax: matplotlib.axes._subplots.AxesSubplot, optional
+            On which ax the raster will be plot.
+        title: str, optional
+            The title of the histgram.
+        figsize: tuple, optional
+            Width and height of the histgram e.g.(10, 10).
         """
         if bands is None:
             data = self.data[self.data != self.no_data_value].flatten()
@@ -371,31 +364,32 @@ class Raster():
             self.__cache_data_for_plot = None
 
     def plot(self, flush_cache=True, norm=True, clip_percentage=(0.02, 0.98), log=False, rescale_percentage=None, bands=None, ax=None, title=None, cmap=None, figsize=None):
-        """plot raster object.
+        """Plot the raster object.
 
         Parameters
         ----------
-        flush_cache: bool. Cache the processed result for quick plotting.
-
-        norm: bool. Normalize the image for showing.
-
-        clip_percentage: tuple of float. The percentage to cut the data in head and tail e.g. (0.02, 0.98)
-
-        log: bool. Get the log value of data to show the image.
-
-        rescale_percentage: float. The percentage to recale the image for efficient showing.
-
-        bands: list. Which bands to plot. Length of bands should be 1, 3 or 4.
-        If 3 bands is used, each of them will be defined as rgb bands. If the
-        forth band is used, it will be the opacity value.
-
-        ax: `matplotlib.axes._subplots.AxesSubplot`. On which ax the raster will
-        be plot.
-
-        cmap: string, dict or `matplotlib.colors.Colormap`. Color map used to plot
-        the raster. 
-    
-        figsize: tuple of float, Width and height of the histgram. 
+        flush_cache: bool. 
+            Flush the cached processed result for quick plotting.
+        norm: bool, optional, default: True
+            Normalize the image for showing.
+        clip_percentage: tuple of float, optional, default: (0.02, 0.98)
+            The percentage to cut the data in head and tail e.g. (0.02, 0.98)
+        log: bool, optional, default: False
+            Get the log value of data to show the image.
+        rescale_percentage: float, optional
+            The percentage to recale (resize) the image for efficient showing.
+        bands: list, optional
+            Which bands to plot. Length of bands should be 1, 3 or 4.
+            If 3 bands is used, each of them will be defined as rgb bands. 
+            If the forth band is used, it will be the opacity value.
+        ax: matplotlib.axes._subplots.AxesSubplot, optional
+            On which ax the raster will be plot.
+        title: str, optional
+            The title of the histgram.
+        cmap: str, optional
+            See Colormaps in Matplotlib https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html.
+        figsize: tuple, optional
+            Width and height of the histgram e.g.(10, 10).
         """
         if bands is None:
            bands = [0, 1, 2] if self.bands >= 3 else [0]

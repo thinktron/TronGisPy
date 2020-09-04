@@ -6,13 +6,13 @@ import pyproj
 import numpy as np
 
 @numba.jit(nopython=True)
-def ziyu_from_gdal(c, a, b, f, d, e):
+def __affine_from_gdal(c, a, b, f, d, e):
     members = [a, b, c, d, e, f, 0.0, 0.0, 1.0]
     mat3x3 = [x * 1.0 for x in members[:-3]]
     return mat3x3
 
 @numba.jit(nopython=True)
-def invert_geo_transform( a, b, c, d, e, f):
+def __invert_geo_transform( a, b, c, d, e, f):
     determinant = a * e - b * d
     idet = 1.0 / determinant
     sa, sb, sc, sd, se, sf = a, b, c, d, e, f
@@ -28,8 +28,8 @@ def invert_geo_transform( a, b, c, d, e, f):
 def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
     coord_x, coord_y = x, y
     geo_transform = (a, b, c, d, e, f)
-    forward_transform =  ziyu_from_gdal(*geo_transform)
-    reverse_transform = invert_geo_transform(forward_transform[0], forward_transform[1], forward_transform[2],
+    forward_transform =  __affine_from_gdal(*geo_transform)
+    reverse_transform = __invert_geo_transform(forward_transform[0], forward_transform[1], forward_transform[2],
                                              forward_transform[3], forward_transform[4], forward_transform[5] )
     reverse_transform = np.array(reverse_transform).reshape((3, 3))
     x, y, _ = reverse_transform.dot(np.array([coord_x, coord_y, 1]))
@@ -40,22 +40,22 @@ def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
 def coords_to_npidxs(coords, geo_transform):
     """Find the cells' numpy index the coordinates belong to using 
     the following functions.
+
     | coord_lng |   | a  b  c | | npidx_col |
     | coord_lat | = | d  e  f | | npidx_row |
     |     1     |   | 0  0  1 | |     1     |
 
     Parameters
     ----------
-    coords: `numpy.array`. The coordinates with shape (n_points, 2). The order of
-    last dimension is (lng, lat).
-
-    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform).
+    coords: array_like
+        The coordinates with shape (n_points, 2). The order of last dimension is (lng, lat).
+    geo_transform: tuple or list
+        Affine transform parameters (c, a, b, f, d, e = geo_transform).
 
     Returns
     -------
-    npidxs: `numpy.array`. The numpy indeices with shape (n_points, 2). The order of
-    last dimension is (row_idx, col_idx).
+    npidxs: ndarray
+        The numpy indeices with shape (n_points, 2). The order of last dimension is (row_idx, col_idx).
 
     Examples
     --------
@@ -76,22 +76,22 @@ def coords_to_npidxs(coords, geo_transform):
 def npidxs_to_coords(npidxs, geo_transform): # TODO: reproduce to numba
     """Get coordinates of cells' left-top corner by its numpy index using 
     the following functions.
+
     | coord_lng |   | a  b  c | | npidx_col |
     | coord_lat | = | d  e  f | | npidx_row |
     |     1     |   | 0  0  1 | |     1     |
 
     Parameters
     ----------
-    npidxs: `numpy.array`. The numpy indeices with shape (n_points, 2). The order of
-    last dimension is (row_idx, col_idx).
-
-    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform).
+    npidxs: array_like
+        The numpy indeices with shape (n_points, 2). The order of last dimension is (row_idx, col_idx).
+    geo_transform: tuple or list
+        Affine transform parameters (c, a, b, f, d, e = geo_transform).
 
     Returns
     -------
-    coords: `numpy.array`. The coordinates with shape (n_points, 2). The order of
-    last dimension is (lng, lat).
+    coords: ndarray 
+        The coordinates with shape (n_points, 2). The order of last dimension is (lng, lat).
 
     Examples
     --------
@@ -123,16 +123,15 @@ def npidxs_to_coord_polygons(npidxs, geo_transform):
 
     Parameters
     ----------
-    npidxs: `numpy.array`. The numpy indeices with shape (n_points, 2). The order
-    of last dimension is (row_idx, col_idx).
-
-    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform).
+    npidxs: array_like
+        The numpy indeices with shape (n_points, 2). The order of last dimension is (row_idx, col_idx).
+    geo_transform: tuple or list 
+        Affine transform parameters (c, a, b, f, d, e = geo_transform).
 
     Returns
     -------
-    poly_points: `numpy.array`. The four corner coordinates for each npidxs with
-    shape (-1, 4, 2). The order of last dimension is (lng, lat).
+    poly_points: ndarray
+        The four corner coordinates for each npidxs with shape (-1, 4, 2). The order of last dimension is (lng, lat).
 
     Examples
     --------
@@ -160,20 +159,19 @@ def get_extent(rows, cols, geo_transform, return_poly=True):
 
     Parameters
     ----------
-    rows: int. The number of rows in the raster.
-
-    cols: int. The number of cols in the raster.
-
-    geo_transform : tuple or list. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform).
-
-    return_poly: bool. If True, return four corner coordinates, else return
-    (xmin, xmax, ymin, ymax)
+    rows: int
+        The number of rows in the raster.
+    cols: int
+        The number of cols in the raster.
+    geo_transform : tuple or list
+        Affine transform parameters (c, a, b, f, d, e = geo_transform).
+    return_poly: bool, optional, default: True
+        If True, return four corner coordinates, else return (xmin, xmax, ymin, ymax).
 
     Returns
     -------
-    extent: `numpy.array` ot tuple. If return_poly==True, return four corner coordinates, else return
-    (xmin, xmax, ymin, ymax)
+    extent: ndarray or tuple
+        If return_poly==True, return four corner coordinates, else return (xmin, xmax, ymin, ymax)
 
     Examples
     --------
@@ -195,11 +193,13 @@ def epsg_to_wkt(epsg=4326):
 
     Parameters
     ----------
-    epsg: int. The epsg code.
+    epsg: int, optional
+        The epsg code.
 
     Returns
     -------
-    wkt: string. The well known text of the epsg code.
+    wkt: str
+        The well known text of the epsg code.
     
     Examples
     --------
@@ -214,12 +214,15 @@ def wkt_to_epsg(wkt, pkg='both'):
 
     Parameters
     ----------
-    wkt: string. The well known text of the epsg code.
+    wkt: str 
+        The well known text of the epsg code.
+    pkg: {'pyproj', 'osr', 'both'}, optional, default: both
+        Which package to use to convert the wkt. Should be in {'pyproj', 'osr', 'both'}.
 
     Returns
     -------
-    epsg: int. The epsg code.
-    pkg: str. Which package to use to convert the wkt. Should be in {'pyproj', 'osr', 'both'}.
+    epsg: int
+        The epsg code.
 
     Examples
     --------

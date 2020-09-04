@@ -5,12 +5,12 @@ The repo aims to build a geographic information system (GIS) library for Python 
 ## Windows
 1. Install preinstall thinktron pypi server
 ```
-pip install -U --index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtree==0.9.4 opencv_python==4.1.2
+pip install -U --index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtree==0.9.4 opencv_python==4.1.2
 ```
 
 2. Install TronGisPy from thinktron pypi server (Windows)
 ```
-pip install -U --extra-index-url http://rd.thinktronltd.com:28181/simple --trusted-host rd.thinktronltd.com TronGisPy
+pip install -U --extra-index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 TronGisPy
 ```
 
 ## Linux
@@ -96,3 +96,37 @@ python setup.py sdist bdist_wheel
 ```
 
 
+# Document Generation
+0. [Installaion](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/install.html)
+pip install sphinx
+pip install sphinx-rtd-theme
+pip install numpydoc
+
+1. generatate index.rst (https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html)
+```
+$$ sphinx-quickstart
+```
+
+2. modify docs/source/conf.py (https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html)
+```
+base_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.abspath(os.path.join(base_dir, '..', '..')))
+
+html_theme = "classic"
+extensions = ['sphinx.ext.napoleon']
+exclude_patterns = ['setup.py', 'req_generator.py', 'test.py']
+```
+
+3. generate TronGisPy rst
+```
+cd ..
+python clean_docs_source.py
+sphinx-apidoc --force --separate --module-first -o docs\source .
+```
+
+4. generate html
+```
+cd docs
+make clean
+make html
+```

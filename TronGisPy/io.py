@@ -14,13 +14,15 @@ def get_raster_info(fp, attributes=["rows", "cols", "bands", "geo_transform", "p
 
     Parameters
     ----------
-    fp: string. file path of the raster file.
-
-    attributes: list or string. which attributes to get.
+    fp: str
+        File path of the raster file.
+    attributes: list or str
+        Which attributes to get e.g. ["rows", "cols", "bands", "geo_transform"].
 
     Returns
     -------
-    geo_info : list or attribute. Attributes of the raster.
+    geo_info : list or attribute
+        Attributes of the raster.
 
     Examples
     --------
@@ -55,12 +57,13 @@ def get_raster_data(fp):
 
     Parameters
     ----------
-    fp: string. file path of the raster file.
+    fp: str
+        File path of the raster file.
 
     Returns
     -------
-    data : numpy.array. digital number of the raster file whose shape will be
-    (rows, cols, bnads).
+    data : ndarray
+        Digital number of the raster file whose shape will be (rows, cols, bnads).
 
     Examples
     --------
@@ -84,15 +87,15 @@ def get_raster_extent(fp, return_poly=True):
 
     Parameters
     ----------
-    fp: string. file path of the raster file.
-
-    return_poly: bool. If True, return four corner coordinates, else return
-    (xmin, xmax, ymin, ymax)
+    fp: str
+        File path of the raster file.
+    return_poly: bool, optional, default: True
+        If True, return four corner coordinates, else return (xmin, xmax, ymin, ymax).
 
     Returns
     -------
-    extent: numpy.array ot tuple. If return_poly==True, return four corner coordinates, else return
-    (xmin, xmax, ymin, ymax)
+    extent: ndarray ot tuple
+        If return_poly==True, return four corner coordinates, else return (xmin, xmax, ymin, ymax).
 
     Examples
     --------
@@ -112,23 +115,21 @@ def update_raster_info(fp, geo_transform=None, projection=None, gdaldtype=None, 
 
     Parameters
     ----------
-    fp: string. file path of the raster file.
-
-    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform). 
-
-    projection: string. The well known text (WKT) of the raster which can be
-    generate from `TronGisPy.epsg_to_wkt(<epsg_code>)`
-
-    gdaldtype: int. The type of the cell defined in gdal which will affect the
-    information to be stored when saving the file. This can be generate from
-    `gdal.GDT_XXX` such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32`
-    equals 6.
-
-    no_data_value: int or float. Define which value to replace nan in numpy
-    array when saving a raster file.
-
-    metadata: dict. Define the metadata of the raster file.
+    fp: str
+        File path of the raster file.
+    geo_transform: tuple or list
+        Affine transform parameters (c, a, b, f, d, e = geo_transform). 
+    projection: str, optional
+        The well known text (WKT) of the raster which can be generated from 
+        `TronGisPy.epsg_to_wkt(<epsg_code>)`
+    gdaldtype: int, optional
+        The type of the cell defined in gdal which will affect the information 
+        to be stored when saving the file. This can be generate from `gdal.GDT_XXX` 
+        such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32` equals 6.
+    no_data_value: int or float, optional
+        Define which value to replace nan in numpy array when saving a raster file.
+    metadata: dict, optional
+        Define the metadata of the raster file.
     """
     all_none = geo_transform is None and projection is None and gdaldtype is None and no_data_value is None and metadata is None
     assert not all_none, "at least one of geo_transform and projection params should not be None!"
@@ -154,11 +155,13 @@ def read_raster(fp, fill_na=False):
 
     Parameters
     ----------
-    fp: string. file path of the raster file.
+    fp: str 
+        File path of the raster file.
 
     Returns
     -------
-    raster: `TronGisPy.Raster`.
+    raster: Raster
+        output raster.
 
     Examples
     --------
@@ -182,27 +185,24 @@ def read_raster(fp, fill_na=False):
     return raster
 
 def write_raster(fp, data, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
-    """write raster file.
+    """Write raster file.
 
     Parameters
     ----------
-    fp: string. file path of the raster file.
-
-    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform). 
-
-    projection: string. The well known text (WKT) of the raster which can be
-    generate from `TronGisPy.epsg_to_wkt(<epsg_code>)`
-
-    gdaldtype: int. The type of the cell defined in gdal which will affect the
-    information to be stored when saving the file. This can be generate from
-    `gdal.GDT_XXX` such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32`
-    equals 6.
-
-    no_data_value: int or float. Define which value to replace nan in numpy
-    array when saving a raster file.
-
-    metadata: dict. Define the metadata of the raster file.
+    fp: str
+        File path of the raster file.
+    geo_transform: tuple or list, optional
+        Affine transform parameters (c, a, b, f, d, e = geo_transform). 
+    projection: str, optional
+        The well known text (WKT) of the raster which can be generate from `TronGisPy.epsg_to_wkt(<epsg_code>)`
+    gdaldtype: int, optional
+        The type of the cell defined in gdal which will affect the information 
+        to be stored when saving the file. This can be generate from `gdal.GDT_XXX` 
+        such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32` equals 6.
+    no_data_value: int or float, optional
+        Define which value to replace nan in numpy array when saving a raster file.
+    metadata: dict, optional
+        Define the metadata of the raster file.
     """
     if len(data.shape) == 2:
         data = np.expand_dims(data, axis=2)
@@ -229,11 +229,12 @@ def read_gdal_ds(ds):
 
     Parameters
     ----------
-    ds: `gdal.DataSource`.
+    ds: gdal.DataSource.
 
     Returns
     -------
-    raster: `TronGisPy.Raster`.
+    raster: Raster.
+        output raster.
     """
     rows, cols, bands = ds.RasterYSize, ds.RasterXSize, ds.RasterCount
     geo_transform, projection, metadata = ds.GetGeoTransform(), ds.GetProjection(), ds.GetMetadata()
@@ -252,33 +253,33 @@ def write_gdal_ds(data=None, bands=None, cols=None, rows=None, geo_transform=Non
 
     Parameters
     ----------
-    data: `numpy.array`. The digital number for each cell of the raster.  Data is in (n_rows, n_cols, n_bands) shape.
-
-    bands: int. Number of bands.
-
-    cols: int. Number of cols.
-
-    rows: int. Number of rows.
-
-    geo_transform: tuple or list. Affine transform parameters (c, a, b, f, d, e
-    = geo_transform). 
-
-    projection: string. The well known text (WKT) of the raster which can be
-    generate from `TronGisPy.epsg_to_wkt(<epsg_code>)`
-
-    gdaldtype: int. The type of the cell defined in gdal which will affect the
-    information to be stored when saving the file. This can be generate from
-    `gdal.GDT_XXX` such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32`
-    equals 6.
-
-    no_data_value: int or float. Define which value to replace nan in numpy
-    array when saving a raster file.
-
-    metadata: dict. Define the metadata of the raster file.
+    data: array_like, optional
+        The digital number for each cell of the raster.  Data is in 
+        (n_rows, n_cols, n_bands) shape.
+    bands: int, optional
+        Number of bands.
+    cols: int, optional
+        Number of cols.
+    rows: int, optional
+        Number of rows.
+    geo_transform: tuple or list, optional
+        Affine transform parameters (c, a, b, f, d, e = geo_transform). 
+    projection: str, optional
+        The well known text (WKT) of the raster which can be generate 
+        from `TronGisPy.epsg_to_wkt(<epsg_code>)`
+    gdaldtype: int, optional
+        The type of the cell defined in gdal which will affect the information 
+        to be stored when saving the file. This can be generate from `gdal.GDT_XXX` 
+        such as `gdal.GDT_Int32` equals 5 and `gdal.GDT_Float32` equals 6.
+    no_data_value: int or float, optional
+        Define which value to replace nan in numpy array when saving a raster file.
+    metadata: dict, optional
+        Define the metadata of the raster file.
 
     Returns
     -------
-    ds: `gdal.DataSource`.
+    raster: Raster.
+        output raster.
 
     Examples
     --------
@@ -333,7 +334,8 @@ def remove_shp(shp_fp):
 
     Parameters
     ----------
-    shp_fp: string. file path of the shapefile.
+    shp_fp: str 
+        File path of the shapefile.
     """
     assert shp_fp.endswith('.shp'), 'shp_fp should be ends with ".shp"'
     dst_shp_fp = os.path.abspath(shp_fp)
@@ -350,16 +352,18 @@ def get_testing_fp(fn=None):
 
     Parameters
     ----------
-    fn: string. Choice candidates includes satellite_tif, satellite_tif_clipper,
-    satellite_tif_kmeans, rasterized_image, rasterized_image_1,
-    poly_to_be_clipped, point_to_be_clipped, line_to_be_clipped,
-    multiline_to_be_clipped, shp_clipper, remap_rgb_clipper_path,
-    remap_ndvi_path, dem_process_path, tif_forinterpolation,
-    aero_triangulation_PXYZs
+    fn: str
+        Choice candidates includes satellite_tif, satellite_tif_clipper,
+        satellite_tif_kmeans, rasterized_image, rasterized_image_1,
+        poly_to_be_clipped, point_to_be_clipped, line_to_be_clipped,
+        multiline_to_be_clipped, shp_clipper, remap_rgb_clipper_path,
+        remap_ndvi_path, dem_process_path, tif_forinterpolation,
+        aero_triangulation_PXYZs
 
     Returns
     -------
-    fp: string. The path of testing file.
+    fp: str
+        The path of testing file.
 
     Examples
     --------
