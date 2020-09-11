@@ -7,7 +7,7 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.2.0",
+    version="1.2.1",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -130,7 +130,7 @@ setuptools.setup(
 # XCOPY docs\build\html Y:\R014_Jeremy\temp\TronGisPyDocs /H/S
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.2.0-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.2.0-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.2.0-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.2.0-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.2.1-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.2.1-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.2.1-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.2.1-py3-none-any.whl
 
 
