@@ -6,3 +6,4 @@ dist
 *.egg-info
 *.aux.xml
 test_output
+temp

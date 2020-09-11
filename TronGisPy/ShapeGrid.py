@@ -196,12 +196,11 @@ def clip_raster_with_polygon(src_raster, src_poly):
     """
     assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
     src_ds = src_raster.to_gdal_ds()
-    temp_dir = tgp.create_temp_dir()
+    temp_dir = tgp.create_temp_dir_when_not_exists()
     src_shp_fp = os.path.join(temp_dir, 'src_poly.shp')
     src_poly.to_file(src_shp_fp)
     dst_ds = gdal.Warp('', src_ds, format= 'MEM', cutlineDSName=src_shp_fp, cropToCutline=True)
     dst_raster = tgp.read_gdal_ds(dst_ds)
-    tgp.remove_temp_dir()
     return dst_raster
 
 def clip_raster_with_extent(src_raster, extent):

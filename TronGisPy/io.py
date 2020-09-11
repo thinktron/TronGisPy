@@ -413,20 +413,28 @@ def get_testing_fp(fn=None):
     return os.path.abspath(fp)
 
 
-def create_temp_dir():
+# def create_temp_dir():
+#     base_dir = os.path.dirname(os.path.realpath(__file__))
+#     temp_dir = os.path.abspath(os.path.join(base_dir, 'temp'))
+#     if not os.path.isdir(temp_dir):
+#         os.mkdir(temp_dir)
+#     else:
+#         shutil.rmtree(temp_dir)
+#         time.sleep(0.5)
+#         os.mkdir(temp_dir)
+#     return temp_dir
+
+# def remove_temp_dir():
+#     base_dir = os.path.dirname(os.path.realpath(__file__))
+#     temp_dir = os.path.abspath(os.path.join(base_dir, 'temp'))
+#     shutil.rmtree(temp_dir)
+#     return temp_dir
+
+
+def create_temp_dir_when_not_exists():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     temp_dir = os.path.abspath(os.path.join(base_dir, 'temp'))
     if not os.path.isdir(temp_dir):
         os.mkdir(temp_dir)
-    else:
-        shutil.rmtree(temp_dir)
-        time.sleep(0.5)
-        os.mkdir(temp_dir)
-    return temp_dir
-
-def remove_temp_dir():
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    temp_dir = os.path.abspath(os.path.join(base_dir, 'temp'))
-    shutil.rmtree(temp_dir)
     return temp_dir
 

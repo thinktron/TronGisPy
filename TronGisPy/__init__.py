@@ -2,7 +2,7 @@ from TronGisPy.Raster import Raster
 from TronGisPy.Normalizer import Normalizer
 from TronGisPy.SplittedImage import SplittedImage
 
-from TronGisPy.io import create_temp_dir, remove_temp_dir, remove_shp
+from TronGisPy.io import remove_shp, create_temp_dir_when_not_exists
 from TronGisPy.io import get_raster_info, get_raster_data, get_raster_extent, update_raster_info
 from TronGisPy.io import read_raster, write_raster, read_gdal_ds, write_gdal_ds, get_testing_fp
 
