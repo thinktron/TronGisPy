@@ -68,6 +68,10 @@ def npdtype_to_gdaldtype(npdtype):
     """
     if npdtype in df_gdal_dtype['npdtype'].tolist():
         return int(df_gdal_dtype.loc[df_gdal_dtype['npdtype']==npdtype, 'gdaldtype_idx'].iloc[0])
+    elif np.issubdtype(npdtype, np.uint64):
+        return gdal.GDT_UInt32
+    elif np.issubdtype(npdtype, np.int64):
+        return gdal.GDT_Int32
     elif np.issubdtype(npdtype, np.signedinteger):
         return gdal.GDT_Int16
     elif np.issubdtype(npdtype, np.unsignedinteger):
