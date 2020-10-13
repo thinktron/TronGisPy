@@ -69,14 +69,20 @@ def npdtype_to_gdaldtype(npdtype):
     if npdtype in df_gdal_dtype['npdtype'].tolist():
         return int(df_gdal_dtype.loc[df_gdal_dtype['npdtype']==npdtype, 'gdaldtype_idx'].iloc[0])
     elif np.issubdtype(npdtype, np.uint64):
+        print("cannot find compatible gdaldtype for np.uint64, use gdal.GDT_UInt32 as alternative.")
         return gdal.GDT_UInt32
     elif np.issubdtype(npdtype, np.int64):
+        print("cannot find compatible gdaldtype for np.int64, use gdal.GDT_Int32 as alternative.")
         return gdal.GDT_Int32
     elif np.issubdtype(npdtype, np.signedinteger):
+        print("cannot find compatible gdaldtype.")
         return gdal.GDT_Int16
     elif np.issubdtype(npdtype, np.unsignedinteger):
+        print("cannot find compatible gdaldtype.")
         return gdal.GDT_UInt16
     elif np.issubdtype(npdtype, np.floating):
+        print("cannot find compatible gdaldtype.")
         return gdal.GDT_Float32
     elif np.issubdtype(npdtype, np.generic):
+        print("cannot find compatible gdaldtype.")
         return gdal.GDT_Byte

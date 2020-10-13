@@ -124,7 +124,7 @@ class Raster():
         """Reset the geo_transform"""
         if geo_transform is not None:
             assert len(geo_transform) == 6, "length of geo_transform should be 6"
-            self.__geo_transform = geo_transform
+            self.__geo_transform = tuple(geo_transform)
         else:
             self.__geo_transform = None
 
@@ -423,8 +423,9 @@ class Raster():
                 X_sorted = np.sort(data_notna.flatten())
                 data_min = X_sorted[idx_st]
                 data_max = X_sorted[idx_end]
-                data[~np.isnan(data) & (data<data_min)] = data_min
-                data[~np.isnan(data) & (data>data_max)] = data_max
+                nan_mask = ~np.isnan(data)
+                data[nan_mask][data[nan_mask]<data_min] = data_min
+                data[nan_mask][data[nan_mask]>data_max] = data_max
                 
             # log
             if log:

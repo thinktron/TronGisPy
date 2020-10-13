@@ -48,6 +48,12 @@ TronGisPy/data/interpolation/climate_points.mshp
 TronGisPy/data/interpolation/climate_points.prj
 TronGisPy/data/interpolation/climate_points.shp
 TronGisPy/data/interpolation/climate_points.shx
+TronGisPy/data/multiple_poly_clipping/df_farm_clipped.cpg
+TronGisPy/data/multiple_poly_clipping/df_farm_clipped.dbf
+TronGisPy/data/multiple_poly_clipping/df_farm_clipped.prj
+TronGisPy/data/multiple_poly_clipping/df_farm_clipped.shp
+TronGisPy/data/multiple_poly_clipping/df_farm_clipped.shx
+TronGisPy/data/multiple_poly_clipping/ras_sat_clipped.tif
 TronGisPy/data/rasterized_image/rasterized_image.tif
 TronGisPy/data/rasterized_image/rasterized_image_1.tif
 TronGisPy/data/rasterized_image/rasterized_image_1.tif.aux.xml
@@ -55,6 +61,7 @@ TronGisPy/data/remap/ndvi_32651.tif
 TronGisPy/data/remap/ndvi_32651.tif.aux.xml
 TronGisPy/data/remap/rgb_3826_clipper.tif
 TronGisPy/data/remap/rgb_3826_clipper.tif.aux.xml
+TronGisPy/data/rotate_tif/rotate_tif.tif
 TronGisPy/data/satellite_tif/satellite_tif.tif
 TronGisPy/data/satellite_tif/satellite_tif.tif.aux.xml
 TronGisPy/data/satellite_tif_clipper/satellite_tif_clipper.cpg

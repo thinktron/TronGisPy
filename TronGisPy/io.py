@@ -408,6 +408,12 @@ def get_testing_fp(fn=None):
         fp = os.path.join(data_dir, 'aero_triangulation', 'P_XYZs.npy')
     elif fn == 'flipped_gt':
         fp = os.path.join(data_dir, 'flipped_gt', 'flipped_gt.tif')
+    elif fn == 'rotate_tif':
+        fp = os.path.join(data_dir, 'rotate_tif', 'rotate_tif.tif')
+    elif fn == 'multiple_poly_clipper':
+        fp = os.path.join(data_dir, 'multiple_poly_clipping', 'df_farm_clipped.shp')
+    elif fn == 'multiple_poly_clip_ras':
+        fp = os.path.join(data_dir, 'multiple_poly_clipping', 'ras_sat_clipped.tif')
     else:
         assert False, "cannot find the file!!"
     return os.path.abspath(fp)

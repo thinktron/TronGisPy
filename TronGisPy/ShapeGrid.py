@@ -1,4 +1,5 @@
 import os
+import cv2
 import ogr
 import gdal
 import pyproj
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import TronGisPy as tgp
+from TronGisPy import CRS
 def get_rasterize_layer_params(src_vector, res=5):
     """Get params for rasterize_layer if you don't have a grid system. 
 
@@ -203,6 +205,94 @@ def clip_raster_with_polygon(src_raster, src_poly):
     dst_raster = tgp.read_gdal_ds(dst_ds)
     return dst_raster
 
+# split partitions
+def __split_idxs_partitions(idxs, partitions, seed=None):
+    if seed:
+        np.random.seed(seed)
+    partition_len = int(len(idxs) // partitions)
+    parts = []
+    for i in range(partitions - 1):
+        part = np.random.choice(idxs, size=partition_len, replace=False)
+        parts.append(part)
+        idxs = list(set(idxs) - set(part))
+    parts.append(idxs)
+    return parts 
+
+def clip_raster_with_multiple_polygons(src_raster, src_poly, partitions=10, return_raster=False, no_data_value=None, seed=None):
+    """Clip raster with polygon.
+
+    Parameters
+    ----------
+    src_raster: Raster
+        Which raster data to be clipped.
+    src_poly: Geopandas.GeoDataFrame
+        The clipper(clipping boundary).
+
+    Returns
+    -------
+    dst_raster: Raster 
+        Clipped result.
+
+    Examples
+    -------- 
+    >>> import numpy as np
+    >>> import geopandas as gpd
+    >>> import TronGisPy as tgp
+    >>> from TronGisPy import ShapeGrid
+    >>> from matplotlib import pyplot as plt
+    >>> src_raster_fp = tgp.get_testing_fp('multiple_poly_clip_ras')
+    >>> src_poly_fp = tgp.get_testing_fp('multiple_poly_clipper')
+    >>> src_raster = tgp.read_raster(src_raster_fp)
+    >>> src_shp = gpd.read_file(src_poly_fp)
+    >>> clipped_imgs = ShapeGrid.clip_raster_with_multiple_polygons(src_raster, src_shp, return_raster=True)
+    >>> fig, axes = plt.subplots(2, 5, figsize=(9, 6))
+    >>> axes = axes.flatten()
+    >>> for idx, ax in zip(np.arange(100, 100+10, 1), axes):
+    >>>     clipped_imgs[idx].plot(ax=ax)
+    >>> fig.suptitle("TestShapeGrid" + ": " + "test_clip_raster_with_multiple_polygons")
+    >>> plt.show()
+    """
+    # init resource
+    df_poly_for_rasterize = src_poly.copy()
+    partitions = len(src_poly) if len(src_poly) > partitions else partitions   
+    df_poly_for_rasterize.loc[:, 'id'] = range(len(df_poly_for_rasterize))
+    parts = __split_idxs_partitions(df_poly_for_rasterize['id'].values, partitions=partitions, seed=seed)
+    if no_data_value is None:
+        no_data_value = 0 if src_raster.no_data_value is None else src_raster.no_data_value
+
+    # rasterize by its id and clipping
+    clipped_imgs = []
+    for ps_idx, ps in enumerate(parts): # deal with one part of poly in shp per loop: 1. rasterize => 2. find each poly in the shp
+        # 1. rasterize: rasterize only df_plot['id'].isin(ps) (only id in the splitted shp)
+        df_poly_for_rasterize_ps = pd.concat([df_poly_for_rasterize[df_poly_for_rasterize['id'] == p].copy() for p in ps])
+        df_poly_for_rasterize_ps.loc[:, 'id_ps'] = range(len(df_poly_for_rasterize_ps))
+        raster_poly_part = rasterize_layer(df_poly_for_rasterize_ps, src_raster.rows, src_raster.cols, src_raster.geo_transform, use_attribute='id_ps', all_touched=True, no_data_value=-1)
+        
+        for id_p in range(len(df_poly_for_rasterize_ps)):
+            # 2. find each the location (in the raster) of each poly in the shp 
+            coords = df_poly_for_rasterize_ps[df_poly_for_rasterize_ps['id_ps'] == id_p].total_bounds.reshape(2,2)
+            npidxs = CRS.coords_to_npidxs(coords, src_raster.geo_transform)
+            row_idxs_st, row_idxs_end, col_idxs_st, col_idxs_end = np.min(npidxs[:, 0]), np.max(npidxs[:, 0])+1, np.min(npidxs[:, 1]), np.max(npidxs[:, 1])+1
+            clipped_img = src_raster.data[row_idxs_st:row_idxs_end, col_idxs_st:col_idxs_end].copy()
+            ploy_mask = raster_poly_part.data[row_idxs_st:row_idxs_end, col_idxs_st:col_idxs_end, 0] == id_p
+            if np.sum(ploy_mask) > 0:
+                # generate clipped image
+                clipped_img[~ploy_mask] = no_data_value
+                if return_raster:
+                    gt = np.array(src_raster.geo_transform)
+                    gt[[0, 3]] = CRS.npidxs_to_coords([(row_idxs_st, col_idxs_st)], src_raster.geo_transform)[0]
+                    clipped_img = tgp.Raster(clipped_img, tuple(gt), src_raster.projection, src_raster.gdaldtype, no_data_value, src_raster.metadata)
+                clipped_imgs.append(clipped_img)
+            else:
+                clipped_imgs.append(None)
+        
+        # na_percentage = np.sum([c is None for c in clipped_imgs[-len(df_poly_for_rasterize_ps):]]) / len(df_poly_for_rasterize_ps)
+        # if na_percentage != 0 : 
+        #     print(ps_idx, na_percentage)
+                
+    clipped_imgs = [clipped_imgs[i] for i in np.argsort(np.hstack(parts))]
+    return clipped_imgs
+
 def clip_raster_with_extent(src_raster, extent):
     """Clip raster with extent.
 
@@ -245,8 +335,8 @@ def clip_raster_with_extent(src_raster, extent):
     dst_raster = tgp.read_gdal_ds(dst_ds)
     return dst_raster
 
-def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=None):
-    """Clip raster with polygon.
+def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=None, rotate=True):
+    """Refine the resolution of the raster.
 
     Parameters
     ----------
@@ -264,6 +354,12 @@ def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=No
         ``mode``: mode resampling, selects the value which appears most often of all the sampled points.
     extent: tuple
         extent to clip the data with (xmin, ymin, xmax, ymax) format.
+    rotate: bool
+        If True, the function will rotate the raster and adds noData values around it to make a new rectangular image 
+        matrix if the rotation in Raster.geo_transform is not zero, else it will keep the original rotation angle of 
+        Raster.geo_transform. Gdal will rotate the image by default . Please refer to the issue
+        https://gis.stackexchange.com/questions/256081/why-does-gdalwarp-rotate-the-data and 
+        https://github.com/OSGeo/gdal/issues/1601.
 
     Returns
     -------
@@ -288,8 +384,20 @@ def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=No
     >>> plt.show()
     """
     src_ds = src_raster.to_gdal_ds()
-    dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, outputBounds=extent, format='MEM', resampleAlg=resample_alg)
-    dst_raster = tgp.read_gdal_ds(dst_ds)
+
+    if rotate:
+        dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, outputBounds=extent, format='MEM', resampleAlg=resample_alg)
+        dst_raster = tgp.read_gdal_ds(dst_ds)
+    else:
+        assert extent is None, "you cannot set the extent when rotate == False"
+        zoom_in = dst_resolution / src_raster.pixel_size[0]
+        dst_ds = gdal.Warp('', src_ds, xRes=zoom_in, yRes=zoom_in, format='MEM', resampleAlg=resample_alg, transformerOptions=['SRC_METHOD=NO_GEOTRANSFORM', 'DST_METHOD=NO_GEOTRANSFORM'])
+        dst_geo_transform = np.array(src_raster.geo_transform)
+        dst_geo_transform[[1,2,4,5]] *= zoom_in
+        dst_raster = tgp.read_gdal_ds(dst_ds)
+        dst_raster.geo_transform = tuple(dst_geo_transform)
+        dst_raster.projection = src_raster.projection
+    
     return dst_raster
 
 def reproject(src_raster, dst_crs='EPSG:4326', src_crs=None):

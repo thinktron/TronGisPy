@@ -36,7 +36,6 @@ remap_ndvi_path = tgp.get_testing_fp('remap_ndvi_path')
 tif_forinterpolation_path = tgp.get_testing_fp('tif_forinterpolation')
 aero_triangulation_PXYZs_path = tgp.get_testing_fp('aero_triangulation_PXYZs')
 flipped_gt_path = tgp.get_testing_fp('flipped_gt')
-
 shp_clipper_path = tgp.get_testing_fp('shp_clipper')
 dem_process_path = tgp.get_testing_fp('dem_process_path')
 
@@ -355,7 +354,6 @@ class TestShapeGrid(unittest.TestCase):
             plt.show()
         self.assertTrue(df_shp['geometry'].area.values[0] == 3624400.0)
 
-
     def test_clip_raster_with_polygon(self):
         src_raster = tgp.read_raster(satellite_tif_path)
         src_shp = gpd.read_file(satellite_tif_clipper_path)
@@ -364,7 +362,49 @@ class TestShapeGrid(unittest.TestCase):
             dst_raster.plot(title="TestShapeGrid" + ": " + "clip_raster_with_polygon")
         self.assertTrue(dst_raster.shape == (138, 225, 4))
         self.assertTrue(dst_raster.geo_transform == (329460.0, 10.0, 0.0, 2748190.0, 0.0, -10.0))
+
+    def test_clip_raster_with_multiple_polygons(self):
+        multiple_poly_clipper_path = tgp.get_testing_fp('multiple_poly_clipper')
+        multiple_poly_clip_ras_path = tgp.get_testing_fp('multiple_poly_clip_ras')
+
+        src_raster = tgp.read_raster(multiple_poly_clip_ras_path)
+        src_shp = gpd.read_file(multiple_poly_clipper_path)
+        clipped_imgs = ShapeGrid.clip_raster_with_multiple_polygons(src_raster, src_shp)
+        shapes = np.array([r.shape for r in clipped_imgs] )
         
+        if show_image:
+            fig, axes = plt.subplots(2, 5, figsize=(9, 6))
+            axes = axes.flatten()
+            for idx, ax in zip(np.arange(100, 100+10, 1), axes):
+                ax.imshow(Normalizer().fit_transform(clipped_imgs[idx][:, :, :3]))
+            fig.suptitle("TestShapeGrid" + ": " + "test_clip_raster_with_multiple_polygons")
+            plt.show()
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9 ,3))
+            ax1.hist(shapes[:, 0])
+            ax2.hist(shapes[:, 1])
+            fig.suptitle("TestShapeGrid" + ": " + "test_clip_raster_with_multiple_polygons")
+            plt.show()
+
+        self.assertTrue(np.sum([c is None for c in clipped_imgs]) == 0)
+        self.assertTrue(Counter(pd.cut(shapes[:, 0], bins=5, labels=False)) == {4: 167, 2: 54, 3: 46, 1: 45, 0: 13})
+        self.assertTrue(Counter(pd.cut(shapes[:, 1], bins=5, labels=False)) == {2: 179, 3: 75, 1: 33, 0: 24, 4: 14})
+
+        # try return raster
+        clipped_imgs = ShapeGrid.clip_raster_with_multiple_polygons(src_raster, src_shp, return_raster=True)
+        shapes = np.array([r.shape for r in clipped_imgs] )
+        self.assertTrue(np.sum([c is None for c in clipped_imgs]) == 0)
+        self.assertTrue(Counter(pd.cut(shapes[:, 0], bins=5, labels=False)) == {4: 167, 2: 54, 3: 46, 1: 45, 0: 13})
+        self.assertTrue(Counter(pd.cut(shapes[:, 1], bins=5, labels=False)) == {2: 179, 3: 75, 1: 33, 0: 24, 4: 14})
+
+        if show_image:
+            fig, axes = plt.subplots(2, 5, figsize=(9, 6))
+            axes = axes.flatten()
+            for idx, ax in zip(np.arange(100, 100+10, 1), axes):
+                clipped_imgs[idx].plot(ax=ax)
+            fig.suptitle("TestShapeGrid" + ": " + "test_clip_raster_with_multiple_polygons")
+            plt.show()
+
     def test_clip_raster_with_extent(self):
         src_raster = tgp.read_raster(satellite_tif_path)
         src_gdf = gpd.read_file(satellite_tif_clipper_path).to_crs(src_raster.projection)
@@ -380,11 +420,36 @@ class TestShapeGrid(unittest.TestCase):
 
     def test_refine_resolution(self):
         src_raster = tgp.read_raster(satellite_tif_path)
-        dst_raster = ShapeGrid.refine_resolution(src_raster, dst_resolution=5, resample_alg='bilinear')
+        dst_raster = ShapeGrid.refine_resolution(src_raster, dst_resolution=5, resample_alg='bilinear', rotate=True)
         if show_image:
             dst_raster.plot(title="TestShapeGrid" + ": " + "test_refine_resolution")
         self.assertTrue(dst_raster.shape == (1024, 1024, 4))
         self.assertTrue(dst_raster.geo_transform == (328530.0, 5.0, 0.0, 2750790.0, 0.0, -5.0))
+
+        # src_raster = tgp.read_raster(tgp.get_testing_fp('rotate_tif'))
+        src_raster = tgp.Raster(
+                        data=np.random.randint(0, 255, (100, 100)), 
+                        geo_transform=(286646.9886015, -0.031985, -0.57805, 2694943.1946525, -0.57805, 0.031985),
+                        projection=tgp.epsg_to_wkt(3826),
+                        gdaldtype=gdal.GDT_Int16)
+        dst_raster1 = ShapeGrid.refine_resolution(src_raster, dst_resolution=2.315736920204883, resample_alg='cubic', rotate=True)
+        dst_raster2 = ShapeGrid.refine_resolution(src_raster, dst_resolution=2.315736920204883, resample_alg='cubic', rotate=False)
+        self.assertTrue(np.sum(dst_raster1.data == 0) == 51)
+        self.assertTrue(np.sum(dst_raster2.data == 0) == 0)
+        if show_image:
+            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            fig.suptitle("TestShapeGrid" + ": " + "test_refine_resolution")
+            ax1.hist(src_raster.data.flatten())
+            ax2.hist(dst_raster1.data.flatten())
+            ax3.hist(dst_raster2.data.flatten())
+            plt.show()
+
+            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            fig.suptitle("TestShapeGrid" + ": " + "test_refine_resolution")
+            src_raster.plot(ax=ax1)
+            dst_raster1.plot(ax=ax2)
+            dst_raster2.plot(ax=ax3)
+            plt.show()
 
     def test_reproject(self):
         src_raster = tgp.read_raster(satellite_tif_path)
@@ -664,14 +729,28 @@ class TestSplittedImage(unittest.TestCase):
         time.sleep(1)
 
     def test___getitem__(self):
-        self.assertTrue(Counter(pd.cut(self.splitted_image[1].flatten(), bins=3, labels=range(3))) == Counter({0: 268790, 1: 247772, 2: 3630}))
-        self.assertTrue(Counter(pd.cut(self.splitted_image[:2].flatten(), bins=3, labels=range(3))) == Counter({1: 523687, 0: 508289, 2: 8408}))
-        self.assertTrue(Counter(pd.cut(self.splitted_image[:2, 2].flatten(), bins=3, labels=range(3))) == Counter({0: 285697, 1: 225614, 2: 4817}))
-        self.assertTrue(Counter(pd.cut(self.splitted_image[:2, :2].flatten(), bins=3, labels=range(3))) == Counter({1: 521447, 0: 502404, 2: 8405}))
+        self.assertTrue(Counter(pd.cut(self.splitted_image[1].data.flatten(), bins=3, labels=range(3))) == Counter({0: 268790, 1: 247772, 2: 3630}))
+        self.assertTrue(Counter(pd.cut(self.splitted_image[:2].data.flatten(), bins=3, labels=range(3))) == Counter({1: 523687, 0: 508289, 2: 8408}))
+        self.assertTrue(Counter(pd.cut(self.splitted_image[:2, 2].data.flatten(), bins=3, labels=range(3))) == Counter({0: 285697, 1: 225614, 2: 4817}))
+        self.assertTrue(Counter(pd.cut(self.splitted_image[:2, :2].data.flatten(), bins=3, labels=range(3))) == Counter({1: 521447, 0: 502404, 2: 8405}))
+        if show_image:
+            fig, (ax1, ax2) = plt.subplots(1, 2)
+            self.splitted_image[0].plot(ax=ax1)
+            self.splitted_image[1:, 1:].plot(ax=ax2)
+            plt.show()
 
     def test_get_padded_image(self):
         shape_test = self.splitted_image.padded_image.shape == (635, 635, 4)
         self.assertTrue(shape_test)
+
+    def test_apply(self):
+        splitted_images = self.splitted_image.apply(lambda x:x*1.1, return_raster=True)
+        if show_image:
+            fig, axes = plt.subplots(*self.splitted_image.shape)
+            axes = axes.flatten()
+            for idx, ax in enumerate(axes):
+                splitted_images[idx].plot(ax=ax)
+            plt.show()
 
     def test_get_splitted_images(self):
         shape_test = self.splitted_image.get_splitted_images().shape == (16, 254, 254, 4)
