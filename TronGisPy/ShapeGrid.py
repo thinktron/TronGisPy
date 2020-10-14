@@ -219,7 +219,7 @@ def __split_idxs_partitions(idxs, partitions, seed=None):
     return parts 
 
 def clip_raster_with_multiple_polygons(src_raster, src_poly, partitions=10, return_raster=False, no_data_value=None, seed=None):
-    """Clip raster with polygon.
+    """Clip raster with multiple polygons in the same shp as independent image.
 
     Parameters
     ----------
@@ -227,6 +227,17 @@ def clip_raster_with_multiple_polygons(src_raster, src_poly, partitions=10, retu
         Which raster data to be clipped.
     src_poly: Geopandas.GeoDataFrame
         The clipper(clipping boundary).
+    partitions: int, default: 10
+        The number of partitions used to split all polygons in diferent parts 
+        and rasterize them in different iterations in order to avoid overlapping 
+        when rasterizing.
+    return_raster:bool, optional, default: False
+        Return np.array if return_raster == False, else return tgp.Raster.
+    no_data_value:int, optional
+        Set no_data_value for clipped image. If None, use src_raster.no_data_value 
+        as default. If src_raster.no_data_value is None, use 0 as default.
+    seed: int, optional
+        Seed to split partitions.
 
     Returns
     -------
@@ -254,7 +265,7 @@ def clip_raster_with_multiple_polygons(src_raster, src_poly, partitions=10, retu
     """
     # init resource
     df_poly_for_rasterize = src_poly.copy()
-    partitions = len(src_poly) if len(src_poly) > partitions else partitions   
+    partitions = len(src_poly) if len(src_poly) < partitions else partitions   
     df_poly_for_rasterize.loc[:, 'id'] = range(len(df_poly_for_rasterize))
     parts = __split_idxs_partitions(df_poly_for_rasterize['id'].values, partitions=partitions, seed=seed)
     if no_data_value is None:
