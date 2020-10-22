@@ -179,7 +179,7 @@ class TestRaster(unittest.TestCase):
     def test___init__(self):
         raster = tgp.Raster(np.zeros((3,3)))
         self.assertTrue(raster.shape == (3, 3, 1))
-        self.assertTrue(raster.geo_transform == [0, 1, 0, 0, 0, -1])
+        self.assertTrue(raster.geo_transform == (0, 1, 0, 0, 0, -1))
         self.assertTrue(raster.metadata is None)
 
     def test_get_properties(self):
@@ -196,8 +196,8 @@ class TestRaster(unittest.TestCase):
     def test_set_properties(self):
         self.raster.data = np.random.randint(0, 100, self.raster.shape, dtype=np.uint8)
         self.assertTrue(self.raster.data.dtype == np.uint8)
-        self.raster.geo_transform = [0, 1, 0, 0, 0, -1]
-        self.assertTrue(self.raster.geo_transform == [0, 1, 0, 0, 0, -1])
+        self.raster.geo_transform = (0, 1, 0, 0, 0, -1)
+        self.assertTrue(self.raster.geo_transform == (0, 1, 0, 0, 0, -1))
         self.raster.metadata = {"Test":"Test"}
         self.assertTrue(self.raster.metadata == {"Test":"Test"})
 
@@ -606,8 +606,8 @@ class TestNormalizer(unittest.TestCase):
         self.assertTrue(np.sum(X_norm==0) == 14074)
 
         X_norm = Normalizer().fit_transform(self.X, clip_percentage=(0.1, 0.9)) 
-        self.assertTrue(np.sum(X_norm==0) == 8327)
-        self.assertTrue(np.sum(X_norm==1) == 8661)
+        self.assertTrue(np.sum(X_norm==0) == 112995)
+        self.assertTrue(np.sum(X_norm==1) == 105926)
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
@@ -945,7 +945,7 @@ class TestDEMProcessor(unittest.TestCase):
     def test_dem_to_hillshade(self):
         dem_process_raster = tgp.read_raster(dem_process_path)
         out_raster = DEMProcessor.dem_to_hillshade(dem_process_raster, azimuth=0, altitude=30)
-
+        
         dst_array = out_raster.data
         dst_geo_transform = out_raster.geo_transform
         dst_rows, dst_cols, dst_bands = out_raster.shape

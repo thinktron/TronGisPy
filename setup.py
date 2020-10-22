@@ -7,7 +7,7 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.2.5",
+    version="1.2.6",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -120,6 +120,7 @@ setuptools.setup(
 # 1.2.3 update n_steps in SplittedImage, update items to output Raster in SplittedImage, refine resolution output non-rotated image in ShapeGrid.
 # 1.2.4 add idxs_to_be_kept param in write_splitted_images image in SplittedImage.
 # 1.2.5 add clip_raster_with_multiple_polygons in ShapeGrid.
+# 1.2.6 add clip_min_max and clip_percentage functions and use os.environ to turn off gdaldtype conversion warning.
 
 
 # python clean_docs_source.py
@@ -134,8 +135,8 @@ setuptools.setup(
 # XCOPY docs\build\html Y:\R014_Jeremy\temp\TronGisPyDocs /H/S
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.2.5-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.2.5-py3-none-any.whl
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.2.5-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.2.5-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.2.5-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.2.5-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.2.6-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.2.6-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.2.6-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.2.6-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.2.6-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.2.6-py3-none-any.whl
 
 

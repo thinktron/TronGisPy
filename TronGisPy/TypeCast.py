@@ -1,10 +1,15 @@
+import os
 import gdal
 import numpy as np
 import pandas as pd
 
+warning = os.environ.get('TGPDYPEWARNING')
+warning = True if warning is None else warning
+
 df_gdal_dtype = [
     [0, "GDT_Unknown", None],
-    [1, "GDT_Byte", np.int8],
+    [1, "GDT_Byte", np.uint8],
+    [2, "GDT_UInt16", np.uint16],
     [2, "GDT_UInt16", np.uint16],
     [3, "GDT_Int16", np.int16],
     [4, "GDT_UInt32", np.uint32],
@@ -68,21 +73,25 @@ def npdtype_to_gdaldtype(npdtype):
     """
     if npdtype in df_gdal_dtype['npdtype'].tolist():
         return int(df_gdal_dtype.loc[df_gdal_dtype['npdtype']==npdtype, 'gdaldtype_idx'].iloc[0])
+    elif np.issubdtype(npdtype, np.bool_):
+        return gdal.GDT_Byte
+    elif np.issubdtype(npdtype, np.int8): 
+        return gdal.GDT_UInt16
     elif np.issubdtype(npdtype, np.uint64):
-        print("cannot find compatible gdaldtype for np.uint64, use gdal.GDT_UInt32 as alternative.")
+        if warning: print("cannot find compatible gdaldtype for np.uint64, use gdal.GDT_UInt32 as alternative.")
         return gdal.GDT_UInt32
     elif np.issubdtype(npdtype, np.int64):
-        print("cannot find compatible gdaldtype for np.int64, use gdal.GDT_Int32 as alternative.")
+        if warning: print("cannot find compatible gdaldtype for np.int64, use gdal.GDT_Int32 as alternative.")
         return gdal.GDT_Int32
     elif np.issubdtype(npdtype, np.signedinteger):
-        print("cannot find compatible gdaldtype.")
+        if warning: print(str(npdtype) + " cannot find compatible gdaldtype.")
         return gdal.GDT_Int16
     elif np.issubdtype(npdtype, np.unsignedinteger):
-        print("cannot find compatible gdaldtype.")
+        if warning: print(str(npdtype) + " cannot find compatible gdaldtype.")
         return gdal.GDT_UInt16
     elif np.issubdtype(npdtype, np.floating):
-        print("cannot find compatible gdaldtype.")
+        if warning: print(str(npdtype) + " cannot find compatible gdaldtype.")
         return gdal.GDT_Float32
     elif np.issubdtype(npdtype, np.generic):
-        print("cannot find compatible gdaldtype.")
+        if warning: print(str(npdtype) + " cannot find compatible gdaldtype.")
         return gdal.GDT_Byte

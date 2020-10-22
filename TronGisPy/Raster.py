@@ -363,7 +363,7 @@ class Raster():
         else:
             self.__cache_data_for_plot = None
 
-    def plot(self, flush_cache=True, norm=True, clip_percentage=(0.02, 0.98), log=False, rescale_percentage=None, bands=None, ax=None, title=None, cmap=None, figsize=None):
+    def plot(self, flush_cache=True, norm=True, clip_percentage=(0.02, 0.98), clip_min_max=None, log=False, rescale_percentage=None, bands=None, ax=None, title=None, cmap=None, figsize=None):
         """Plot the raster object.
 
         Parameters
@@ -414,19 +414,15 @@ class Raster():
                 log = False
                 clip_percentage = None
 
-            # clip_percentage
+            # clip_percentage & clip_min_max
             if clip_percentage is not None:
+                assert not (clip_percentage is not None and clip_min_max is not None), "should not set clip_percentage and clip_min_max at the same time!"
                 assert len(clip_percentage) == 2, "clip_percentage two element tuple"
-                data_notna = data[~np.isnan(data)]
-                idx_st = int(len(data_notna.flatten()) * clip_percentage[0])
-                idx_end = int(len(data_notna.flatten()) * clip_percentage[1])
-                X_sorted = np.sort(data_notna.flatten())
-                data_min = X_sorted[idx_st]
-                data_max = X_sorted[idx_end]
-                nan_mask = ~np.isnan(data)
-                data[nan_mask][data[nan_mask]<data_min] = data_min
-                data[nan_mask][data[nan_mask]>data_max] = data_max
-                
+                data = tgp.Normalizer().clip_by_percentage(data, clip_percentage=clip_percentage)
+            elif clip_min_max is not None:
+                assert len(clip_min_max) == 2, "clip_min_max two element tuple"
+                data = tgp.Normalizer().clip_by_min_max(data, min_max=clip_min_max)
+
             # log
             if log:
                 if data[~np.isnan(data)].min() < 0: 
