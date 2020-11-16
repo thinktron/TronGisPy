@@ -5,14 +5,15 @@ class Normalizer():
 
     def clip_by_percentage(self, data, clip_percentage=(0.02, 0.98)):
         data_temp = data.copy()
-        X_flatten = data_temp.flatten()
-        idx_st = int(len(X_flatten) * clip_percentage[0])
-        idx_end = int((len(X_flatten) * clip_percentage[1]) - 10**-6)
-        X_sorted = np.sort(X_flatten)
+        data_temp_masked = data_temp[~np.isnan(data_temp)]
+        idx_st = int(len(data_temp_masked) * clip_percentage[0])
+        idx_end = int((len(data_temp_masked) * clip_percentage[1]) - 10**-6)
+        X_sorted = np.sort(data_temp_masked)
         data_min = X_sorted[idx_st]
         data_max = X_sorted[idx_end]
-        data_temp[data_temp<data_min] = data_min
-        data_temp[data_temp>data_max] = data_max
+        data_temp_masked[data_temp_masked<data_min] = data_min
+        data_temp_masked[data_temp_masked>data_max] = data_max
+        data_temp[~np.isnan(data_temp)] = data_temp_masked
         return data_temp
 
     def clip_by_min_max(self, data, min_max=(0, 100)):

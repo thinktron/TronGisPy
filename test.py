@@ -21,6 +21,7 @@ from shapely.geometry import Polygon, Point
 import TronGisPy as tgp
 from TronGisPy import SplittedImage, Normalizer
 from TronGisPy import GisIO, Algorithm, Interpolation, ShapeGrid, AeroTriangulation, DEMProcessor
+os.environ['TGPDYPEWARNING'] = str(False)
 
 satellite_tif_path = tgp.get_testing_fp('satellite_tif')
 satellite_tif_clipper_path = tgp.get_testing_fp('satellite_tif_clipper')
@@ -286,6 +287,12 @@ class TestRaster(unittest.TestCase):
             ax4.set_title('rescale')
             plt.show()
 
+    def test_plot1(self):
+        ras_norm = tgp.read_raster(tgp.get_testing_fp('norm'))
+        if show_image:
+            ras_norm.plot(clip_percentage=(0.1, 0.9))
+            plt.show()
+
     def test_hist(self):
         flipped_raster = tgp.read_raster(flipped_gt_path)
         if show_image:
@@ -339,6 +346,22 @@ class TestShapeGrid(unittest.TestCase):
         if show_image:
             dst_raster.plot(title="TestShapeGrid" + ": " + "test_rasterize_layer", cmap='gray')
 
+
+    def test_rasterize_layer_from_ref_raster(self):
+        src_shp = gpd.read_file(satellite_tif_clipper_path)
+        src_shp['FEATURE'] = 1
+        ref_raster = tgp.read_raster(satellite_tif_path)
+        dst_raster = ShapeGrid.rasterize_layer_from_ref_raster(src_shp, ref_raster, use_attribute='FEATURE', no_data_value=99)
+        self.assertTrue(np.sum(dst_raster.data==1) == 20512)
+        if show_image:
+            dst_raster.plot(title="TestShapeGrid" + ": " + "test_rasterize_layer", cmap='gray')
+
+        dst_raster = ShapeGrid.rasterize_layer_from_ref_raster(src_shp, ref_raster, use_attribute='FEATURE', no_data_value=-99, all_touched=True)
+        self.assertTrue(np.sum(dst_raster.data==1) == 20876)
+        self.assertTrue(tgp.wkt_to_epsg(dst_raster.projection) == 3826)
+        if show_image:
+            dst_raster.plot(title="TestShapeGrid" + ": " + "test_rasterize_layer", cmap='gray')
+
     def test_vectorize_layer(self):
         src_raster = tgp.read_raster(rasterized_image_path)
         df_shp = ShapeGrid.vectorize_layer(src_raster)
@@ -360,8 +383,11 @@ class TestShapeGrid(unittest.TestCase):
         dst_raster = ShapeGrid.clip_raster_with_polygon(src_raster, src_shp)
         if show_image:
             dst_raster.plot(title="TestShapeGrid" + ": " + "clip_raster_with_polygon")
-        self.assertTrue(dst_raster.shape == (138, 225, 4))
-        self.assertTrue(dst_raster.geo_transform == (329460.0, 10.0, 0.0, 2748190.0, 0.0, -10.0))
+
+        self.assertTrue(dst_raster.shape == (138, 226, 4))
+        self.assertTrue(dst_raster.geo_transform == (329410.0, 10.0, 0.0, 2748180.0, 0.0, -10.0))
+#         self.assertTrue(dst_raster.shape == (138, 225, 4))
+#         self.assertTrue(dst_raster.geo_transform == (329460.0, 10.0, 0.0, 2748190.0, 0.0, -10.0))
 
     def test_clip_raster_with_multiple_polygons(self):
         multiple_poly_clipper_path = tgp.get_testing_fp('multiple_poly_clipper')
@@ -369,7 +395,7 @@ class TestShapeGrid(unittest.TestCase):
 
         src_raster = tgp.read_raster(multiple_poly_clip_ras_path)
         src_shp = gpd.read_file(multiple_poly_clipper_path)
-        clipped_imgs = ShapeGrid.clip_raster_with_multiple_polygons(src_raster, src_shp)
+        clipped_imgs = ShapeGrid.clip_raster_with_multiple_polygons(src_raster, src_shp, seed=2020)
         shapes = np.array([r.shape for r in clipped_imgs] )
         
         if show_image:
@@ -562,15 +588,20 @@ class TestAeroTriangulation(unittest.TestCase):
         shutil.rmtree(self.output_dir)
         time.sleep(1)
 
+    def test__convert_imxyzs_to_npidxs(self):
+        npidxs = np.array([(0, 0), (2, 10), (3, 100)])
+        imxys = AeroTriangulation._convert_npidxs_to_imxys(npidxs, rows=13824, cols=7680, pixel_size=0.012)
+        npidxs_new = AeroTriangulation._convert_imxyzs_to_npidxs(imxys, rows=13824, cols=7680, pixel_size=0.012)
+        self.assertTrue(np.sum((npidxs_new - npidxs) < 10**-4) == np.product(npidxs_new.shape))
+
     def test_project_npidxs_to_XYZs(self):
         aerotri_params = [np.array([0.00759914610989079, -0.002376824281950918, 1.561874186205409]),
                             np.array([ 249557.729, 2607778.809,    5826.51 ]),
                             13824, 7680, 120, 0.012]
-        gt_aerial = (247240.9472615, 0.0042, 0.332961, 2606525.0328175, 0.332961, -0.0042)
         P_XYZs = np.load(aero_triangulation_PXYZs_path)
         P_npidxs = AeroTriangulation.project_XYZs_to_npidxs(P_XYZs, aerotri_params)
-        P_XYZs = AeroTriangulation.project_npidxs_to_XYZs(P_npidxs, P_XYZs[:, 2], aerotri_params)
-        self.assertTrue(Polygon(P_XYZs).area == 2537.83444559387)
+        P_XYZs_new, ks = AeroTriangulation.project_npidxs_to_XYZs(P_npidxs, P_XYZs[:, 2], aerotri_params, return_k=True)
+        self.assertTrue(np.sum(P_XYZs_new - P_XYZs) == 0)
 
     def test_project_XYZs_to_npidxs(self):
         aerotri_params = [np.array([0.00759914610989079, -0.002376824281950918, 1.561874186205409]),
@@ -581,6 +612,15 @@ class TestAeroTriangulation(unittest.TestCase):
         P_npidxs = AeroTriangulation.project_XYZs_to_npidxs(P_XYZs, aerotri_params)
         P_npidxs_coords = tgp.npidxs_to_coords(P_npidxs, gt_aerial)
         self.assertTrue(Polygon(P_npidxs_coords).area == 974.8584352214892)
+
+    def test_get_img_pixels_XYZs(self):
+        aerotri_params = [np.array([0.00759914610989079, -0.002376824281950918, 1.561874186205409]),
+                            np.array([ 249557.729, 2607778.809,    5826.51 ]),
+                            13824, 7680, 120, 0.012]
+        P_XYZs = np.load(aero_triangulation_PXYZs_path)
+        P_npidxs = AeroTriangulation.project_XYZs_to_npidxs(P_XYZs, aerotri_params)
+        P_XYZs = AeroTriangulation.get_img_pixels_XYZs(P_npidxs, aerotri_params)
+        self.assertTrue(Polygon(P_XYZs).area == 1.2660021631078202)
 
 # CV
 class TestNormalizer(unittest.TestCase):

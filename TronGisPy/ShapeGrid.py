@@ -102,6 +102,56 @@ def rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute, all_to
     raster = tgp.Raster(data, geo_transform, projection, gdaldtype, no_data_value)
     return raster
 
+
+def rasterize_layer_from_ref_raster(src_vector, ref_raster, use_attribute, all_touched=False, no_data_value=0):
+    """Rasterize vector data. Get the cell value in defined grid of ref_raster
+    from its overlapped polygon.
+
+    Parameters
+    ----------
+    src_vector: Geopandas.GeoDataFrame
+        Which vector data to be rasterize.
+    ref_raster: Raster
+        Target rasterized image's rows, cols, and geo_transform.
+    use_attribute: str
+        The column to use as rasterized image value.
+    all_touched: bool, optioonal, default: False
+        Pixels that touch (not overlap over 50%) the polygon will be assign the use_attribute value of the polygon.
+    no_data_value: int or float
+        The pixels not covered by any polygon will be filled no_data_value.
+
+    Returns
+    -------
+    raster: Raster. 
+        Rasterized result.
+
+    Examples
+    -------- 
+    >>> import geopandas as gpd
+    >>> import TronGisPy as tgp 
+    >>> from TronGisPy import ShapeGrid
+    >>> from matplotlib import pyplot as plt
+    >>> ref_raster_fp = tgp.get_testing_fp('satellite_tif') # get the geoinfo from the raster
+    >>> src_vector_fp = tgp.get_testing_fp('satellite_tif_clipper') # read source shapefile as GeoDataFrame
+    >>> src_vector = gpd.read_file(src_vector_fp)
+    >>> src_vector['FEATURE'] = 1 # make the value to fill in the raster cell
+    >>> ref_raster = tgp.read_raster(ref_raster_fp)
+    >>> raster = ShapeGrid.rasterize_layer_from_ref_raster(src_vector, ref_raster, use_attribute='FEATURE', no_data_value=99)
+    >>> fig, (ax1, ax2) = plt.subplots(1,2) # plot the result
+    >>> tgp.read_raster(ref_raster_fp).plot(ax=ax1)
+    >>> src_vector.plot(ax=ax1)
+    >>> ax1.set_title('polygon with ref_raster')
+    >>> raster.plot(ax=ax2)
+    >>> ax2.set_title('rasterized image')
+    >>> plt.show()
+    """
+    # Open your shapefile
+    assert type(src_vector) is gpd.GeoDataFrame, "src_vector should be GeoDataFrame type."
+    assert use_attribute in src_vector.columns, "attribute not exists in src_vector."
+    rows, cols, geo_transform = ref_raster.rows, ref_raster.cols, ref_raster.geo_transform
+    raster = rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute=use_attribute, all_touched=all_touched, no_data_value=no_data_value)
+    return raster
+
 def vectorize_layer(src_raster, band_num=1, field_name='value', multipolygon=False):
     """Vectorize raster data to achieve an acceptable raster-to-vector conversion.
 
@@ -162,7 +212,50 @@ def vectorize_layer(src_raster, band_num=1, field_name='value', multipolygon=Fal
 
     return df_vectorized
 
-def clip_raster_with_polygon(src_raster, src_poly):
+# def clip_raster_with_polygon(src_raster, src_poly):
+#     """Clip raster with polygon.
+
+#     Parameters
+#     ----------
+#     src_raster: Raster
+#         Which raster data to be clipped.
+#     src_poly: Geopandas.GeoDataFrame
+#         The clipper(clipping boundary).
+
+#     Returns
+#     -------
+#     dst_raster: Raster 
+#         Clipped result.
+
+#     Examples
+#     -------- 
+#     >>> import geopandas as gpd
+#     >>> import TronGisPy as tgp
+#     >>> from TronGisPy import ShapeGrid
+#     >>> from matplotlib import pyplot as plt
+#     >>> src_raster_fp = tgp.get_testing_fp('satellite_tif')
+#     >>> src_poly_fp = tgp.get_testing_fp('satellite_tif_clipper')
+#     >>> src_raster = tgp.read_raster(src_raster_fp)
+#     >>> src_poly = gpd.read_file(src_poly_fp)
+#     >>> dst_raster = ShapeGrid.clip_raster_with_polygon(src_raster, src_poly)
+#     >>> fig, (ax1, ax2) = plt.subplots(1, 2) # plot the result
+#     >>> src_raster.plot(ax=ax1)
+#     >>> src_poly.boundary.plot(ax=ax1)
+#     >>> ax1.set_title('original image and clipper')
+#     >>> dst_raster.plot(ax=ax2)
+#     >>> ax2.set_title('clipped image')
+#     >>> plt.show()
+#     """
+#     assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
+#     src_ds = src_raster.to_gdal_ds()
+#     temp_dir = tgp.create_temp_dir_when_not_exists()
+#     src_shp_fp = os.path.join(temp_dir, 'src_poly.shp')
+#     src_poly.to_file(src_shp_fp)
+#     dst_ds = gdal.Warp('', src_ds, format= 'MEM', cutlineDSName=src_shp_fp, cropToCutline=True)
+#     dst_raster = tgp.read_gdal_ds(dst_ds)
+#     return dst_raster
+
+def clip_raster_with_polygon(src_raster, src_poly, all_touched=False, no_data_value=0):
     """Clip raster with polygon.
 
     Parameters
@@ -197,12 +290,27 @@ def clip_raster_with_polygon(src_raster, src_poly):
     >>> plt.show()
     """
     assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
-    src_ds = src_raster.to_gdal_ds()
-    temp_dir = tgp.create_temp_dir_when_not_exists()
-    src_shp_fp = os.path.join(temp_dir, 'src_poly.shp')
-    src_poly.to_file(src_shp_fp)
-    dst_ds = gdal.Warp('', src_ds, format= 'MEM', cutlineDSName=src_shp_fp, cropToCutline=True)
-    dst_raster = tgp.read_gdal_ds(dst_ds)
+    src_poly_copy = src_poly.copy()
+    src_poly_copy['value'] = 1
+    src_poly_raster = rasterize_layer_from_ref_raster(src_poly_copy, src_raster, use_attribute='value', all_touched=all_touched, no_data_value=no_data_value)
+    dst_raster = src_raster.copy()
+    dst_raster.data[~(src_poly_raster.data[:, :, 0].astype(bool))] = no_data_value
+    
+    row_idxs, col_idxs, bands_idxs = np.where(src_poly_raster.data!=0)
+    rmin, rmax, cmin, cmax = np.min(row_idxs), np.max(row_idxs), np.min(col_idxs), np.max(col_idxs)
+    dst_raster.data = dst_raster.data[rmin:rmax+1, cmin:cmax+1]
+
+    coords = tgp.npidxs_to_coords([(rmin, cmin)], src_raster.geo_transform)[0]
+    geo_transform = np.array(dst_raster.geo_transform)
+    geo_transform[[0, 3]] = coords
+    dst_raster.geo_transform = geo_transform
+
+    # src_ds = src_raster.to_gdal_ds()
+    # temp_dir = tgp.create_temp_dir_when_not_exists()
+    # src_shp_fp = os.path.join(temp_dir, 'src_poly.shp')
+    # src_poly.to_file(src_shp_fp)
+    # dst_ds = gdal.Warp('', src_ds, format= 'MEM', cutlineDSName=src_shp_fp, cropToCutline=True)
+    # dst_raster = tgp.read_gdal_ds(dst_ds)
     return dst_raster
 
 # split partitions

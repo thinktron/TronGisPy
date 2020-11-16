@@ -3,9 +3,6 @@ import gdal
 import numpy as np
 import pandas as pd
 
-warning = os.environ.get('TGPDYPEWARNING')
-warning = True if warning is None else warning
-
 df_gdal_dtype = [
     [0, "GDT_Unknown", None],
     [1, "GDT_Byte", np.uint8],
@@ -71,6 +68,10 @@ def npdtype_to_gdaldtype(npdtype):
     gdaldtype_idx: int
         Range from 0 to 12 generated from gdal.GDTxxxx e.g. gdal.GDT_Float32.
     """
+    warning = os.environ.get('TGPDYPEWARNING')
+    warning = str(True) if warning is None else warning
+    warning = warning == 'True'
+
     if npdtype in df_gdal_dtype['npdtype'].tolist():
         return int(df_gdal_dtype.loc[df_gdal_dtype['npdtype']==npdtype, 'gdaldtype_idx'].iloc[0])
     elif np.issubdtype(npdtype, np.bool_):
