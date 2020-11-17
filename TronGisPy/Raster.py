@@ -463,12 +463,13 @@ class Raster():
 
         # plotting
         if ax is not None:
-            ax.imshow(data, extent=self.extent_for_plot, cmap=cmap)
+            img = ax.imshow(data, extent=self.extent_for_plot, cmap=cmap)
             ax.set_title(title)
         else:
             if figsize is not None:
                 plt.figure(figsize=figsize)
-            plt.imshow(data, extent=self.extent_for_plot, cmap=cmap)
+            img = plt.imshow(data, extent=self.extent_for_plot, cmap=cmap)
             plt.title(title)
             plt.show()
+        return img
     
