@@ -22,6 +22,7 @@ import TronGisPy as tgp
 from TronGisPy import SplittedImage, Normalizer
 from TronGisPy import GisIO, Algorithm, Interpolation, ShapeGrid, AeroTriangulation, DEMProcessor
 os.environ['TGPDYPEWARNING'] = str(False)
+# print(os.environ['TGPDYPEWARNING'])
 
 satellite_tif_path = tgp.get_testing_fp('satellite_tif')
 satellite_tif_clipper_path = tgp.get_testing_fp('satellite_tif_clipper')

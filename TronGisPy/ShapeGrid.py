@@ -372,6 +372,7 @@ def clip_raster_with_multiple_polygons(src_raster, src_poly, partitions=10, retu
     >>> plt.show()
     """
     # init resource
+    assert (len(src_poly) // partitions) < np.iinfo(np.int32).max, "Please increase partitions in order the gdal type overflow issue."
     df_poly_for_rasterize = src_poly.copy()
     partitions = len(src_poly) if len(src_poly) < partitions else partitions   
     df_poly_for_rasterize.loc[:, 'id'] = range(len(df_poly_for_rasterize))
@@ -384,7 +385,7 @@ def clip_raster_with_multiple_polygons(src_raster, src_poly, partitions=10, retu
     for ps_idx, ps in enumerate(parts): # deal with one part of poly in shp per loop: 1. rasterize => 2. find each poly in the shp
         # 1. rasterize: rasterize only df_plot['id'].isin(ps) (only id in the splitted shp)
         df_poly_for_rasterize_ps = pd.concat([df_poly_for_rasterize[df_poly_for_rasterize['id'] == p].copy() for p in ps])
-        df_poly_for_rasterize_ps.loc[:, 'id_ps'] = range(len(df_poly_for_rasterize_ps))
+        df_poly_for_rasterize_ps.loc[:, 'id_ps'] = np.array(range(len(df_poly_for_rasterize_ps)), dtype=np.int32)
         raster_poly_part = rasterize_layer(df_poly_for_rasterize_ps, src_raster.rows, src_raster.cols, src_raster.geo_transform, use_attribute='id_ps', all_touched=True, no_data_value=-1)
         
         for id_p in range(len(df_poly_for_rasterize_ps)):
