@@ -18,7 +18,7 @@ class Normalizer():
 
     def clip_by_min_max(self, data, min_max=(0, 100)):
         data_temp = data.copy()
-        data_min, data_max = min_max[0]
+        data_min, data_max = min_max
         data_temp[data_temp<data_min] = data_min
         data_temp[data_temp>data_max] = data_max
         return data_temp

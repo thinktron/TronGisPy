@@ -396,7 +396,10 @@ class TestShapeGrid(unittest.TestCase):
 
         src_raster = tgp.read_raster(multiple_poly_clip_ras_path)
         src_shp = gpd.read_file(multiple_poly_clipper_path)
+        print(len(src_shp))
+
         clipped_imgs = ShapeGrid.clip_raster_with_multiple_polygons(src_raster, src_shp, seed=2020)
+        print(len(clipped_imgs))
         shapes = np.array([r.shape for r in clipped_imgs] )
         
         if show_image:
@@ -649,6 +652,13 @@ class TestNormalizer(unittest.TestCase):
         X_norm = Normalizer().fit_transform(self.X, clip_percentage=(0.1, 0.9)) 
         self.assertTrue(np.sum(X_norm==0) == 112995)
         self.assertTrue(np.sum(X_norm==1) == 105926)
+
+
+    def test_clip_by_min_max(self):
+        X_norm = Normalizer().clip_by_min_max(self.X) 
+        self.assertTrue(X_norm.min() == 10)
+        self.assertTrue(X_norm.max() == 100)
+
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
