@@ -7,7 +7,7 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.3.3",
+    version="1.3.4",
     author="GoatWang",
     author_email="jeremywang@thinktronltd.com",
     description="Gis image Processing tool",
@@ -128,7 +128,8 @@ setuptools.setup(
 # 1.3.1 use rasterize to clip raster with poly, add ref_raster as input of rasterize layer
 # 1.3.2 return AxesImage in Raster.plot function
 # 1.3.3 deal with gdal type issue in clip_raster_with_multiple_polygons
-
+# 1.3.4 debug on Raster.get_values_by_coords, ShapeGrid.get_rasterize_layer_params, ShapeGrid.clip_raster_with_polygon
+#       move reproject, refine_resolution from ShapeGrid to Raster, add remap_by_ref_raster in Raster.
 
 
 # python clean_docs_source.py
@@ -143,8 +144,8 @@ setuptools.setup(
 # XCOPY docs\build\html Y:\R014_Jeremy\temp\TronGisPyDocs /H/S
 
 # python setup.py sdist bdist_wheel
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.3-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.3-py3-none-any.whl
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.3-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.3-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.3.3-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.3-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.4-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.4-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.4-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.4-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.3.4-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.4-py3-none-any.whl
 
 

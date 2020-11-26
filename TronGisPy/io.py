@@ -82,20 +82,20 @@ def get_raster_data(fp):
         data = np.expand_dims(data, axis=0)
     return np.transpose(data, axes=[1,2,0])
 
-def get_raster_extent(fp, return_poly=True):
+def get_raster_extent(fp, return_type='poly'):
     """Get the boundary of the raster file.
 
     Parameters
     ----------
     fp: str
         File path of the raster file.
-    return_poly: bool, optional, default: True
-        If True, return four corner coordinates, else return (xmin, xmax, ymin, ymax).
+    return_type: {'poly', 'plot', 'gdal'}
+        If 'poly', return four corner coordinates. If plot, return (xmin, xmax, ymin, ymax). If 'gdal', return (xmin, ymin, xmax, ymax). 
 
     Returns
     -------
-    extent: ndarray ot tuple
-        If return_poly==True, return four corner coordinates, else return (xmin, xmax, ymin, ymax).
+    extent: ndarray or tuple
+        Depends on return_type. If 'poly', return four corner coordinates. If plot, return (xmin, xmax, ymin, ymax). If 'gdal', return (xmin, ymin, xmax, ymax). 
 
     Examples
     --------
@@ -107,7 +107,7 @@ def get_raster_extent(fp, return_poly=True):
     570976.9697303267
     """
     rows, cols, geo_transform = get_raster_info(fp, ['rows', 'cols', 'geo_transform'])
-    return tgp.get_extent(rows, cols, geo_transform, return_poly)
+    return tgp.get_extent(rows, cols, geo_transform, return_type)
 
 def update_raster_info(fp, geo_transform=None, projection=None, gdaldtype=None, no_data_value=None, metadata=None):
     """Update the geo-information of the raster file including geo_transform, projection, gdaldtype, 

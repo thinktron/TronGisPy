@@ -153,12 +153,17 @@ class Raster():
     @property
     def extent(self):
         """Coordinates of Four corner points' of the raster. """
-        return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_poly=True)
+        return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_type='poly')
 
     @property
     def extent_for_plot(self):
         """(xmin, xmax, ymin, ymax) of the raster boundary."""
-        return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_poly=False)
+        return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_type='plot')
+
+    @property
+    def extent_for_gdal(self):
+        """(xmin, xmax, ymin, ymax) of the raster boundary."""
+        return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_type='gdal')
 
     # def __getitem__(self, slice_value):
     #     if type(slice_value) in [int, slice]:
@@ -198,7 +203,7 @@ class Raster():
         coords: ndarray 
             The data digital values of the coordinates.
         """
-        npidxs_row, npidxs_col = tgp.coords_to_npidxs(coords, self.geo_transform).T
+        npidxs_row, npidxs_col = tgp.coords_to_npidxs(coords.astype(np.float32), self.geo_transform).T
         return self.data[npidxs_row, npidxs_col]
 
     def update_gdaldtype_by_npdtype(self):
@@ -289,6 +294,126 @@ class Raster():
     def copy(self):
         """copy raster object."""
         return Raster(self.data, self.geo_transform, self.projection, self.gdaldtype, self.no_data_value, self.metadata)
+
+    def refine_resolution(self, dst_resolution, resample_alg='near', extent=None, rotate=True):
+        """Refine the resolution of the raster.
+
+        Parameters
+        ----------
+        dst_resolution: int
+            Target Resolution.
+        resample_alg: {'near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode'}.
+            ``near``: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
+            ``bilinear``: bilinear resampling.
+            ``cubic``: cubic resampling.
+            ``cubicspline``: cubic spline resampling.
+            ``lanczos``: Lanczos windowed sinc resampling.
+            ``average``: average resampling, computes the weighted average of all non-NODATA contributing pixels.
+            ``mode``: mode resampling, selects the value which appears most often of all the sampled points.
+        extent: tuple
+            extent to clip the data with (xmin, ymin, xmax, ymax) format.
+        rotate: bool
+            If True, the function will rotate the raster and adds noData values around it to make a new rectangular image 
+            matrix if the rotation in Raster.geo_transform is not zero, else it will keep the original rotation angle of 
+            Raster.geo_transform. Gdal will rotate the image by default . Please refer to the issue
+            https://gis.stackexchange.com/questions/256081/why-does-gdalwarp-rotate-the-data and 
+            https://github.com/OSGeo/gdal/issues/1601.
+
+        Returns
+        -------
+        dst_raster: Raster
+            Refined result.
+
+        Examples
+        -------- 
+        >>> import numpy as np
+        >>> import TronGisPy as tgp
+        >>> from TronGisPy import ShapeGrid
+        >>> from matplotlib import pyplot as plt
+        >>> src_raster_fp = tgp.get_testing_fp('dem_process_path')
+        >>> src_raster = tgp.read_raster(src_raster_fp)
+        >>> src_raster.data[src_raster.data == -999] = np.nan
+        >>> dst_raster = src_raster.refine_resolution(dst_resolution=10, resample_alg='bilinear')
+        >>> fig, (ax1, ax2) = plt.subplots(1, 2) # plot the result
+        >>> src_raster.plot(ax=ax1)
+        >>> ax1.set_title('original dem ' + str(src_raster.shape))
+        >>> dst_raster.plot(ax=ax2)
+        >>> ax2.set_title('refined image ' + str(dst_raster.shape))
+        >>> plt.show()
+        """
+        src_ds = self.to_gdal_ds()
+
+        if rotate:
+            dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, outputBounds=extent, format='MEM', resampleAlg=resample_alg)
+            dst_raster = tgp.read_gdal_ds(dst_ds)
+        else:
+            assert extent is None, "you cannot set the extent when rotate == False"
+            zoom_in = dst_resolution / self.pixel_size[0]
+            dst_ds = gdal.Warp('', src_ds, xRes=zoom_in, yRes=zoom_in, format='MEM', resampleAlg=resample_alg, transformerOptions=['SRC_METHOD=NO_GEOTRANSFORM', 'DST_METHOD=NO_GEOTRANSFORM'])
+            dst_geo_transform = np.array(self.geo_transform)
+            dst_geo_transform[[1,2,4,5]] *= zoom_in
+            dst_raster = tgp.read_gdal_ds(dst_ds)
+            dst_raster.geo_transform = tuple(dst_geo_transform)
+            dst_raster.projection = self.projection
+        return dst_raster
+
+    def reproject(self, dst_crs='EPSG:4326', src_crs=None):
+        """Reproject the raster data.
+
+        Parameters
+        ----------
+        dst_crs: str, optional, default: EPSG:4326
+            The target crs to transform the raster to.
+        src_crs: str, optional
+            The source crs to transform the raster from. If None, 
+            get the projection from src_raster.
+
+        Returns
+        -------
+        dst_raster: Raster
+            Reprojected result.
+
+        Examples
+        -------- 
+        >>> import TronGisPy as tgp
+        >>> src_raster_fp = tgp.get_testing_fp()
+        >>> src_raster = tgp.read_raster(src_raster_fp)
+        >>> print("project(before)", src_raster.projection)
+        >>> dst_raster = src_raster.reproject(dst_crs='EPSG:4326', src_crs=None)
+        >>> print("project(after)", tgp.wkt_to_epsg(dst_raster.projection))
+        """
+        src_ds = self.to_gdal_ds()
+        if src_crs:
+            dst_ds = gdal.Warp('', src_ds, srcSRS=src_crs, dstSRS=dst_crs, format='MEM')
+        else:
+            dst_ds = gdal.Warp('', src_ds, dstSRS=dst_crs, format='MEM')
+        dst_raster = tgp.read_gdal_ds(dst_ds)
+        return dst_raster
+
+    def remap_by_ref_raster(self, ref_raster):
+        """remap the raster on to another canvas drew by referenced raster.
+
+        Parameters
+        ----------
+        ref_raster: Raster
+            The referenced raster. The extent, projection and resolution will be used.
+
+        Returns
+        -------
+        dst_raster: Raster
+            Remapped result.
+
+        """
+        src_ds = self.to_gdal_ds()
+        src_projection, src_gdaldtype = self.projection, self.gdaldtype
+        ref_geo_transform, ref_projection = ref_raster.geo_transform, ref_raster.projection
+        output_bounds = ref_raster.extent_for_gdal # minX, minY, maxX, maxY
+
+        x_res, y_res = ref_geo_transform[1], ref_geo_transform[5]
+        output_type = src_gdaldtype
+        dst_ds = gdal.Warp('', src_ds, xRes=x_res, yRes=y_res, outputBounds=output_bounds, format='MEM', srcSRS=src_projection, dstSRS=ref_projection, outputType=output_type, resampleAlg='bilinear')
+        dst_raster = tgp.read_gdal_ds(dst_ds)
+        return dst_raster
 
     def hist(self, norm=False, clip_percentage=None, log=False, bands=None, ax=None, title=None, figsize=None):
         """plot digital value histgram (distribution) of raster object.

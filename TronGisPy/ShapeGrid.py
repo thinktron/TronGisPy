@@ -30,8 +30,8 @@ def get_rasterize_layer_params(src_vector, res=5):
     """
     xmin, ymin, xmax, ymax = src_vector.total_bounds 
     geo_transform = (xmin, res, 0, ymax, 0, -res)
-    cols = int((xmax - xmin) / res) + 1
-    rows = int((ymax - ymin) / res) + 1
+    cols = int((xmax - xmin) / res)
+    rows = int((ymax - ymin) / res)
     return rows, cols, geo_transform
 
 def rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute, all_touched=False, no_data_value=0):
@@ -102,8 +102,7 @@ def rasterize_layer(src_vector, rows, cols, geo_transform, use_attribute, all_to
     raster = tgp.Raster(data, geo_transform, projection, gdaldtype, no_data_value)
     return raster
 
-
-def rasterize_layer_from_ref_raster(src_vector, ref_raster, use_attribute, all_touched=False, no_data_value=0):
+def rasterize_layer_by_ref_raster(src_vector, ref_raster, use_attribute, all_touched=False, no_data_value=0):
     """Rasterize vector data. Get the cell value in defined grid of ref_raster
     from its overlapped polygon.
 
@@ -190,7 +189,7 @@ def vectorize_layer(src_raster, band_num=1, field_name='value', multipolygon=Fal
     drv = ogr.GetDriverByName("MEMORY")
     dst_ds = drv.CreateDataSource('memData')
     dst_layer = dst_ds.CreateLayer('vectorize_layer')
-    dst_layer.CreateField(ogr.FieldDefn(field_name, ogr.OFTInteger))
+    dst_layer.CreateField(ogr.FieldDefn(field_name, ogr.OFTInteger)) # TODO: should not force convert ot integer
     dst_field = dst_layer.GetLayerDefn().GetFieldIndex(field_name)
     gdal.Polygonize(src_band, None, dst_layer, dst_field, [], callback=None)
 
@@ -292,7 +291,7 @@ def clip_raster_with_polygon(src_raster, src_poly, all_touched=False, no_data_va
     assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
     src_poly_copy = src_poly.copy()
     src_poly_copy['value'] = 1
-    src_poly_raster = rasterize_layer_from_ref_raster(src_poly_copy, src_raster, use_attribute='value', all_touched=all_touched, no_data_value=no_data_value)
+    src_poly_raster = rasterize_layer_by_ref_raster(src_poly_copy, src_raster, use_attribute='value', all_touched=all_touched, no_data_value=0)
     dst_raster = src_raster.copy()
     dst_raster.data[~(src_poly_raster.data[:, :, 0].astype(bool))] = no_data_value
     
@@ -452,107 +451,6 @@ def clip_raster_with_extent(src_raster, extent):
     assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
     src_ds = src_raster.to_gdal_ds()
     dst_ds = gdal.Warp('', src_ds, format= 'MEM', outputBounds=extent, cropToCutline=True)
-    dst_raster = tgp.read_gdal_ds(dst_ds)
-    return dst_raster
-
-def refine_resolution(src_raster, dst_resolution, resample_alg='near', extent=None, rotate=True):
-    """Refine the resolution of the raster.
-
-    Parameters
-    ----------
-    src_raster: Raster 
-        Which raster data to be refined.
-    dst_resolution: int
-        Target Resolution.
-    resample_alg: {'near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode'}.
-        ``near``: nearest neighbour resampling (default, fastest algorithm, worst interpolation quality).
-        ``bilinear``: bilinear resampling.
-        ``cubic``: cubic resampling.
-        ``cubicspline``: cubic spline resampling.
-        ``lanczos``: Lanczos windowed sinc resampling.
-        ``average``: average resampling, computes the weighted average of all non-NODATA contributing pixels.
-        ``mode``: mode resampling, selects the value which appears most often of all the sampled points.
-    extent: tuple
-        extent to clip the data with (xmin, ymin, xmax, ymax) format.
-    rotate: bool
-        If True, the function will rotate the raster and adds noData values around it to make a new rectangular image 
-        matrix if the rotation in Raster.geo_transform is not zero, else it will keep the original rotation angle of 
-        Raster.geo_transform. Gdal will rotate the image by default . Please refer to the issue
-        https://gis.stackexchange.com/questions/256081/why-does-gdalwarp-rotate-the-data and 
-        https://github.com/OSGeo/gdal/issues/1601.
-
-    Returns
-    -------
-    dst_raster: Raster
-        Refined result.
-
-    Examples
-    -------- 
-    >>> import numpy as np
-    >>> import TronGisPy as tgp
-    >>> from TronGisPy import ShapeGrid
-    >>> from matplotlib import pyplot as plt
-    >>> src_raster_fp = tgp.get_testing_fp('dem_process_path')
-    >>> src_raster = tgp.read_raster(src_raster_fp)
-    >>> src_raster.data[src_raster.data == -999] = np.nan
-    >>> dst_raster = ShapeGrid.refine_resolution(src_raster, dst_resolution=10, resample_alg='bilinear')
-    >>> fig, (ax1, ax2) = plt.subplots(1, 2) # plot the result
-    >>> src_raster.plot(ax=ax1)
-    >>> ax1.set_title('original dem ' + str(src_raster.shape))
-    >>> dst_raster.plot(ax=ax2)
-    >>> ax2.set_title('refined image ' + str(dst_raster.shape))
-    >>> plt.show()
-    """
-    src_ds = src_raster.to_gdal_ds()
-
-    if rotate:
-        dst_ds = gdal.Warp('', src_ds, xRes=dst_resolution, yRes=dst_resolution, outputBounds=extent, format='MEM', resampleAlg=resample_alg)
-        dst_raster = tgp.read_gdal_ds(dst_ds)
-    else:
-        assert extent is None, "you cannot set the extent when rotate == False"
-        zoom_in = dst_resolution / src_raster.pixel_size[0]
-        dst_ds = gdal.Warp('', src_ds, xRes=zoom_in, yRes=zoom_in, format='MEM', resampleAlg=resample_alg, transformerOptions=['SRC_METHOD=NO_GEOTRANSFORM', 'DST_METHOD=NO_GEOTRANSFORM'])
-        dst_geo_transform = np.array(src_raster.geo_transform)
-        dst_geo_transform[[1,2,4,5]] *= zoom_in
-        dst_raster = tgp.read_gdal_ds(dst_ds)
-        dst_raster.geo_transform = tuple(dst_geo_transform)
-        dst_raster.projection = src_raster.projection
-    
-    return dst_raster
-
-def reproject(src_raster, dst_crs='EPSG:4326', src_crs=None):
-    """Reproject the raster data.
-
-    Parameters
-    ----------
-    src_raster: Raster 
-        Which raster data to be refined.
-    dst_crs: str, optional, default: EPSG:4326
-        The target crs to transform the raster to.
-    src_crs: str, optional
-        The source crs to transform the raster from. If None, 
-        get the projection from src_raster.
-
-    Returns
-    -------
-    dst_raster: Raster
-        Reprojected result.
-
-    Examples
-    -------- 
-    >>> import TronGisPy as tgp
-    >>> src_raster_fp = tgp.get_testing_fp()
-    >>> src_raster = tgp.read_raster(src_raster_fp)
-    >>> print("project(before)", src_raster.projection)
-    >>> dst_raster = ShapeGrid.reproject(src_raster, dst_crs='EPSG:4326', src_crs=None)
-    >>> print("project(after)", tgp.wkt_to_epsg(dst_raster.projection))
-    """
-    src_ds = src_raster.to_gdal_ds()
-
-    if src_crs:
-        dst_ds = gdal.Warp('', src_ds, srcSRS=src_crs, dstSRS=dst_crs, format='MEM')
-    else:
-        dst_ds = gdal.Warp('', src_ds, dstSRS=dst_crs, format='MEM')
     dst_raster = tgp.read_gdal_ds(dst_ds)
     return dst_raster
 

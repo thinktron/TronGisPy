@@ -154,7 +154,7 @@ def npidxs_to_coord_polygons(npidxs, geo_transform):
     poly_points = poly_points.reshape(-1, 4, 2)
     return poly_points
 
-def get_extent(rows, cols, geo_transform, return_poly=True):
+def get_extent(rows, cols, geo_transform, return_type='poly'):
     """Get the boundary of a raster file
 
     Parameters
@@ -165,27 +165,30 @@ def get_extent(rows, cols, geo_transform, return_poly=True):
         The number of cols in the raster.
     geo_transform : tuple or list
         Affine transform parameters (c, a, b, f, d, e = geo_transform).
-    return_poly: bool, optional, default: True
-        If True, return four corner coordinates, else return (xmin, xmax, ymin, ymax).
+    return_type: {'poly', 'plot', 'gdal'}
+        If 'poly', return four corner coordinates. If plot, return (xmin, xmax, ymin, ymax). If 'gdal', return (xmin, ymin, xmax, ymax). 
 
     Returns
     -------
     extent: ndarray or tuple
-        If return_poly==True, return four corner coordinates, else return (xmin, xmax, ymin, ymax)
+        Depends on return_type. If 'poly', return four corner coordinates. If plot, return (xmin, xmax, ymin, ymax). If 'gdal', return (xmin, ymin, xmax, ymax). 
 
     Examples
     --------
     >>> import TronGisPy as tgp
     >>> rows, cols, geo_transform = tgp.get_raster_info(tgp.get_testing_fp(), ['rows', 'cols', 'geo_transform'])
-    >>> tgp.get_extent(rows, cols, geo_transform, False)
+    >>> tgp.get_extent(rows, cols, geo_transform, return_type='plot')
     (271982.8783, 272736.8295, 2769215.7524, 2769973.0653)
     """
+    assert return_type in ['poly', 'plot', 'gdal'], "return_type should be in ['poly', 'plot', 'gdal']"
     points = [[0,0], [0,cols], [rows,cols], [rows,0]]
     poly = npidxs_to_coords(points, geo_transform)
-    if return_poly:
+    if return_type == 'poly':
         extent = poly
-    else:
+    elif return_type == 'plot':
         extent = (np.min(poly[:, 0]), np.max(poly[:, 0]), np.min(poly[:, 1]), np.max(poly[:, 1]))
+    elif return_type == 'gdal':
+        extent = (np.min(poly[:, 0]), np.min(poly[:, 1]), np.max(poly[:, 0]), np.max(poly[:, 1]))
     return extent
 
 def epsg_to_wkt(epsg=4326):

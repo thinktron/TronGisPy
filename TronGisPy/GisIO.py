@@ -205,8 +205,7 @@ def reproject(src_tif_path, dst_tif_path, dst_crs='EPSG:4326', src_crs=None):
 def remap_tif(src_tif_path, dst_tif_path, ref_tif_path):
     src_projection, src_gdaldtype = tgp.get_raster_info(src_tif_path, ['projection', 'gdaldtype'])
     ref_geo_transform, ref_projection = tgp.get_raster_info(ref_tif_path, ['geo_transform', 'projection'])
-    minX, maxX, minY, maxY = tgp.get_raster_extent(ref_tif_path, False)
-    output_bounds = (minX, minY, maxX, maxY)
+    output_bounds = tgp.get_raster_extent(ref_tif_path, 'gdal') # (minX, minY, maxX, maxY)
 
     x_res, y_res = ref_geo_transform[1], ref_geo_transform[5]
     output_type = src_gdaldtype

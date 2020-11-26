@@ -73,7 +73,7 @@ class Testio(unittest.TestCase):
         self.assertTrue(np.sum(clip_image_arr == no_data_value) == 42144)
 
     def test_get_raster_extent(self):
-        extent = tgp.get_raster_extent(satellite_tif_path, False)
+        extent = tgp.get_raster_extent(satellite_tif_path, 'plot')
         self.assertTrue(extent == (328530.0, 333650.0, 2745670.0, 2750790.0))
         if show_image:
             fig, ax = plt.subplots(1, 1)
@@ -274,6 +274,62 @@ class TestRaster(unittest.TestCase):
         raster_copy.geo_transform = [0, 1, 0, 0, 0, -1]
         self.assertTrue(self.raster.geo_transform == (328530.0, 10.0, 0.0, 2750790.0, 0.0, -10.0))
 
+    def test_refine_resolution(self):
+        src_raster = tgp.read_raster(satellite_tif_path)
+        dst_raster = src_raster.refine_resolution(dst_resolution=5, resample_alg='bilinear', rotate=True)
+        if show_image:
+            dst_raster.plot(title="TestRaster" + ": " + "test_refine_resolution")
+        self.assertTrue(dst_raster.shape == (1024, 1024, 4))
+        self.assertTrue(dst_raster.geo_transform == (328530.0, 5.0, 0.0, 2750790.0, 0.0, -5.0))
+
+        # src_raster = tgp.read_raster(tgp.get_testing_fp('rotate_tif'))
+        src_raster = tgp.Raster(
+                        data=np.random.randint(0, 255, (100, 100)), 
+                        geo_transform=(286646.9886015, -0.031985, -0.57805, 2694943.1946525, -0.57805, 0.031985),
+                        projection=tgp.epsg_to_wkt(3826),
+                        gdaldtype=gdal.GDT_Int16)
+        dst_raster1 = src_raster.refine_resolution(dst_resolution=2.315736920204883, resample_alg='cubic', rotate=True)
+        dst_raster2 = src_raster.refine_resolution(dst_resolution=2.315736920204883, resample_alg='cubic', rotate=False)
+        self.assertTrue(np.sum(dst_raster1.data == 0) == 51)
+        self.assertTrue(np.sum(dst_raster2.data == 0) == 0)
+        if show_image:
+            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            fig.suptitle("TestRaster" + ": " + "test_refine_resolution")
+            ax1.hist(src_raster.data.flatten())
+            ax2.hist(dst_raster1.data.flatten())
+            ax3.hist(dst_raster2.data.flatten())
+            plt.show()
+
+            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            fig.suptitle("TestShapeGrid" + ": " + "test_refine_resolution")
+            src_raster.plot(ax=ax1)
+            dst_raster1.plot(ax=ax2)
+            dst_raster2.plot(ax=ax3)
+            plt.show()
+
+    def test_reproject(self):
+        src_raster = tgp.read_raster(satellite_tif_path)
+        dst_raster = src_raster.reproject(dst_crs='EPSG:4326', src_crs=None)
+        self.assertTrue(tgp.wkt_to_epsg(dst_raster.projection) == 4326)
+
+
+    def test_remap_by_ref_raster(self): 
+        src_tif_path = tgp.get_testing_fp('remap_ndvi_path')
+        ref_tif_path = tgp.get_testing_fp('remap_rgb_clipper_path')
+        src_raster = tgp.read_raster(src_tif_path)
+        ref_raster = tgp.read_raster(ref_tif_path)
+        dst_raster = src_raster.remap_by_ref_raster(ref_raster)
+
+        self.assertTrue(ref_raster.shape[:2], dst_raster.shape[:2])
+        self.assertTrue(ref_raster.geo_transform, dst_raster.geo_transform)
+        self.assertTrue(tgp.wkt_to_epsg(dst_raster.projection), 3826)
+        if show_image:
+            fig, (ax1 ,ax2) = plt.subplots(1, 2)
+            fig.suptitle("TestRaster" + ": " + "test_remap_by_ref_raster")
+            src_raster.plot(title="source", ax=ax1)
+            dst_raster.plot(title="remapped", ax=ax2, cmap='gray')
+            plt.show()
+
     def test_plot(self):
         flipped_raster = tgp.read_raster(flipped_gt_path)
         if show_image:
@@ -324,11 +380,11 @@ class TestShapeGrid(unittest.TestCase):
         src_shp = gpd.read_file(satellite_tif_clipper_path)
         src_shp['FEATURE'] = 1
         rows, cols ,geo_transform = ShapeGrid.get_rasterize_layer_params(src_shp, res=2)
-        self.assertTrue(rows == 691)
-        self.assertTrue(cols == 1131)
+        self.assertTrue(rows == 690)
+        self.assertTrue(cols == 1130)
         self.assertTrue(geo_transform == (329405.4857111082, 2, 0, 2748181.2743610824, 0, -2))
         dst_raster = ShapeGrid.rasterize_layer(src_shp, rows, cols, geo_transform, use_attribute='FEATURE', no_data_value=99)
-        self.assertTrue(np.sum(dst_raster.data==1) == 512779)
+        self.assertTrue(np.sum(dst_raster.data==1) == 512776)
         if show_image:
             dst_raster.plot(title="TestShapeGrid" + ": " + "test_get_rasterize_layer_params", cmap='gray')
 
@@ -348,16 +404,16 @@ class TestShapeGrid(unittest.TestCase):
             dst_raster.plot(title="TestShapeGrid" + ": " + "test_rasterize_layer", cmap='gray')
 
 
-    def test_rasterize_layer_from_ref_raster(self):
+    def test_rasterize_layer_by_ref_raster(self):
         src_shp = gpd.read_file(satellite_tif_clipper_path)
         src_shp['FEATURE'] = 1
         ref_raster = tgp.read_raster(satellite_tif_path)
-        dst_raster = ShapeGrid.rasterize_layer_from_ref_raster(src_shp, ref_raster, use_attribute='FEATURE', no_data_value=99)
+        dst_raster = ShapeGrid.rasterize_layer_by_ref_raster(src_shp, ref_raster, use_attribute='FEATURE', no_data_value=99)
         self.assertTrue(np.sum(dst_raster.data==1) == 20512)
         if show_image:
             dst_raster.plot(title="TestShapeGrid" + ": " + "test_rasterize_layer", cmap='gray')
 
-        dst_raster = ShapeGrid.rasterize_layer_from_ref_raster(src_shp, ref_raster, use_attribute='FEATURE', no_data_value=-99, all_touched=True)
+        dst_raster = ShapeGrid.rasterize_layer_by_ref_raster(src_shp, ref_raster, use_attribute='FEATURE', no_data_value=-99, all_touched=True)
         self.assertTrue(np.sum(dst_raster.data==1) == 20876)
         self.assertTrue(tgp.wkt_to_epsg(dst_raster.projection) == 3826)
         if show_image:
@@ -396,10 +452,8 @@ class TestShapeGrid(unittest.TestCase):
 
         src_raster = tgp.read_raster(multiple_poly_clip_ras_path)
         src_shp = gpd.read_file(multiple_poly_clipper_path)
-        print(len(src_shp))
 
         clipped_imgs = ShapeGrid.clip_raster_with_multiple_polygons(src_raster, src_shp, seed=2020)
-        print(len(clipped_imgs))
         shapes = np.array([r.shape for r in clipped_imgs] )
         
         if show_image:
@@ -447,44 +501,6 @@ class TestShapeGrid(unittest.TestCase):
             plt.show()
         self.assertTrue(dst_raster.shape == (138, 226, 4))
         self.assertTrue(dst_raster.geo_transform == (329454.3927272463, 10.005213193877433, 0.0, 2748190.9018181805, 0.0, -10.010645586288655))
-
-    def test_refine_resolution(self):
-        src_raster = tgp.read_raster(satellite_tif_path)
-        dst_raster = ShapeGrid.refine_resolution(src_raster, dst_resolution=5, resample_alg='bilinear', rotate=True)
-        if show_image:
-            dst_raster.plot(title="TestShapeGrid" + ": " + "test_refine_resolution")
-        self.assertTrue(dst_raster.shape == (1024, 1024, 4))
-        self.assertTrue(dst_raster.geo_transform == (328530.0, 5.0, 0.0, 2750790.0, 0.0, -5.0))
-
-        # src_raster = tgp.read_raster(tgp.get_testing_fp('rotate_tif'))
-        src_raster = tgp.Raster(
-                        data=np.random.randint(0, 255, (100, 100)), 
-                        geo_transform=(286646.9886015, -0.031985, -0.57805, 2694943.1946525, -0.57805, 0.031985),
-                        projection=tgp.epsg_to_wkt(3826),
-                        gdaldtype=gdal.GDT_Int16)
-        dst_raster1 = ShapeGrid.refine_resolution(src_raster, dst_resolution=2.315736920204883, resample_alg='cubic', rotate=True)
-        dst_raster2 = ShapeGrid.refine_resolution(src_raster, dst_resolution=2.315736920204883, resample_alg='cubic', rotate=False)
-        self.assertTrue(np.sum(dst_raster1.data == 0) == 51)
-        self.assertTrue(np.sum(dst_raster2.data == 0) == 0)
-        if show_image:
-            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-            fig.suptitle("TestShapeGrid" + ": " + "test_refine_resolution")
-            ax1.hist(src_raster.data.flatten())
-            ax2.hist(dst_raster1.data.flatten())
-            ax3.hist(dst_raster2.data.flatten())
-            plt.show()
-
-            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-            fig.suptitle("TestShapeGrid" + ": " + "test_refine_resolution")
-            src_raster.plot(ax=ax1)
-            dst_raster1.plot(ax=ax2)
-            dst_raster2.plot(ax=ax3)
-            plt.show()
-
-    def test_reproject(self):
-        src_raster = tgp.read_raster(satellite_tif_path)
-        dst_raster = ShapeGrid.reproject(src_raster, dst_crs='EPSG:4326', src_crs=None)
-        self.assertTrue(tgp.wkt_to_epsg(dst_raster.projection) == 4326)
     
     def test_zonal_stats(self):
         src_raster = tgp.read_raster(satellite_tif_path)
@@ -556,7 +572,7 @@ class TestCRS(unittest.TestCase):
 
     def test_get_extent(self):
         rows, cols, geo_transform = tgp.get_raster_info(remap_rgb_clipper_path, ['rows', 'cols', 'geo_transform'])
-        extent = tgp.get_extent(rows, cols, geo_transform, False)
+        extent = tgp.get_extent(rows, cols, geo_transform, return_type='plot')
         self.assertTrue(extent == (271982.8783, 272736.8295, 2769215.7524, 2769973.0653))
 
 class TestTypeCast(unittest.TestCase):
