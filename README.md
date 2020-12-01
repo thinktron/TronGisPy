@@ -1,7 +1,7 @@
 ![TronGisPy](https://raw.githubusercontent.com/thinktron/TronGisPy/master/static/trongispy.02-01.png)
 
 # Introduction
-TronGisPy aims to autmate the whole GIS process by python interface. To get start, pleas see [GettingStarted.ipynb](https://github.com/thinktron/TronGisPy/GettingStarted.ipynb). The main module are listed below:
+TronGisPy aims to autmate the whole GIS process by python interface. To get start, pleas see [GettingStarted.ipynb](https://github.com/thinktron/TronGisPy/blob/master/GettingStarted.ipynb). The main module are listed below:
 
 - **Raster**: This module is Main class in TronGisPy. Use `ras = tgp.read_raster('<file_path>')` to read the file as Raster object. A Raster object contains all required attribute for a gis raster file such as *.tif* or *.geotiff* file including digital number for each pixel (`ras.data`), number of rows (`ras.rows`), number of columns (`ras.cols`), number of bands (`ras.bands`), geo_transform (`ras.geo_transform`), projection (`ras.projection`), no_data_value and metadata. The Raster object can also be plot with GeoDataFrame(shapefile) on the same canvas using `ras.plot()`. Functions like `ras.reproject()`, `ras.remap()` and `ras.refine_resolution()` are useful functions.
 
@@ -23,6 +23,9 @@ normalizer.
 
 <!-- 6. AeroTriangulation: Do the aero-triangulation calculation.
 10. GisIO: Some file-based gis functions. -->
+
+# Introduction
+To get start, pleas see [GettingStarted.ipynb](https://github.com/thinktron/TronGisPy/blob/master/GettingStarted.ipynb).
 
 # Instlall
 ## Windows
