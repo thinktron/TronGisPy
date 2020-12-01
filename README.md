@@ -1,4 +1,5 @@
-![TronGisPy](https://github.com/thinktron/TronGisPy/static/trongispy.02-01.png)
+![TronGisPy](https://raw.githubusercontent.com/thinktron/TronGisPy/master/static/trongispy.02-01.png)
+
 # Introduction
 TronGisPy aims to autmate the whole GIS process by python interface. To get start, pleas see [GettingStarted.ipynb](https://github.com/thinktron/TronGisPy/GettingStarted.ipynb). The main module are listed below:
 
