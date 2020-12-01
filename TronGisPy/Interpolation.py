@@ -20,7 +20,8 @@ def __band_interpolation(data, method='linear', no_data_value=None):
 
 def img_interpolation(data, method='linear', no_data_value=None):
     """Interpolate values on specific cells (generally nan cell) of the image data. 
-    use scipy.interpolate.griddata engine.
+    use scipy.interpolate.griddata engine. Note: Use majority_interpolation, mean_interpolation
+    and gdal_fillnodata to speed up.
 
     Parameters
     ----------
