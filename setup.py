@@ -7,13 +7,13 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.3.6",
-    author="GoatWang",
+    version="1.3.7",
+    author="Thinktron",
     author_email="jeremywang@thinktronltd.com",
     description="Gis raster data processing tool",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="http://rd.thinktronltd.com/jeremywang/TronGisPy",
+    url="https://github.com/thinktron/TronGisPy",
     packages=setuptools.find_packages(),
     # package_data={'PySaga': ['saga_cmd_pkls/*']},
     # package_data={'PySatellite': ['data/*', 'data/*/*']},
@@ -132,6 +132,7 @@ setuptools.setup(
 #       move reproject, refine_resolution from ShapeGrid to Raster, add remap_by_ref_raster in Raster.
 # 1.3.5 update readme
 # 1.3.6 update readme
+# 1.3.7 update setup
 
 # python clean_docs_source.py
 # sphinx-apidoc --force --separate --module-first -o docs\source .
@@ -145,14 +146,14 @@ setuptools.setup(
 # XCOPY docs\build\html Y:\R014_Jeremy\temp\TronGisPyDocs /H/S
 
 # python setup.py sdist bdist_wheel
-# twine upload dist/TronGisPy-1.3.6*
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.6-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.6-py3-none-any.whl
+# twine upload dist/TronGisPy-1.3.7*
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.7-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.7-py3-none-any.whl
 
 
 
 
 
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.6-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.6-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.3.6-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.6-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.7-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.7-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.3.7-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.7-py3-none-any.whl
 
 
