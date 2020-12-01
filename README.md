@@ -24,7 +24,7 @@ normalizer.
 <!-- 6. AeroTriangulation: Do the aero-triangulation calculation.
 10. GisIO: Some file-based gis functions. -->
 
-# Introduction
+# Getting Started
 To get start, pleas see [GettingStarted.ipynb](https://github.com/thinktron/TronGisPy/blob/master/GettingStarted.ipynb).
 
 # Instlall
