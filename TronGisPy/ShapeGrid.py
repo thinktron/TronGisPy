@@ -135,7 +135,7 @@ def rasterize_layer_by_ref_raster(src_vector, ref_raster, use_attribute, all_tou
     >>> src_vector = gpd.read_file(src_vector_fp)
     >>> src_vector['FEATURE'] = 1 # make the value to fill in the raster cell
     >>> ref_raster = tgp.read_raster(ref_raster_fp)
-    >>> raster = ShapeGrid.rasterize_layer_from_ref_raster(src_vector, ref_raster, use_attribute='FEATURE', no_data_value=99)
+    >>> raster = ShapeGrid.rasterize_layer_by_ref_raster(src_vector, ref_raster, use_attribute='FEATURE', no_data_value=99)
     >>> fig, (ax1, ax2) = plt.subplots(1,2) # plot the result
     >>> tgp.read_raster(ref_raster_fp).plot(ax=ax1)
     >>> src_vector.plot(ax=ax1)

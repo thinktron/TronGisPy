@@ -7,7 +7,7 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.3.7",
+    version="1.3.9",
     author="Thinktron",
     author_email="jeremywang@thinktronltd.com",
     description="Gis raster data processing tool",
@@ -133,6 +133,8 @@ setuptools.setup(
 # 1.3.5 update readme
 # 1.3.6 update readme
 # 1.3.7 update setup
+# 1.3.8 fix reproject in Raster when gdal Warp return None
+# 1.3.9 add normalize from opencv in Noemalizer
 
 # python clean_docs_source.py
 # sphinx-apidoc --force --separate --module-first -o docs\source .
@@ -146,14 +148,14 @@ setuptools.setup(
 # XCOPY docs\build\html Y:\R014_Jeremy\temp\TronGisPyDocs /H/S
 
 # python setup.py sdist bdist_wheel
-# twine upload dist/TronGisPy-1.3.7*
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.7-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.7-py3-none-any.whl
+# twine upload dist/TronGisPy-1.3.9*
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.9-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.9-py3-none-any.whl
 
 
 
 
 
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.7-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.7-py3-none-any.whl
-# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.3.7-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.7-py3-none-any.whl
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.9-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.9-py3-none-any.whl
+# scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.3.9-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.9-py3-none-any.whl
 
 

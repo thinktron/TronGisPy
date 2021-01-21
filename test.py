@@ -669,12 +669,32 @@ class TestNormalizer(unittest.TestCase):
         self.assertTrue(np.sum(X_norm==0) == 112995)
         self.assertTrue(np.sum(X_norm==1) == 105926)
 
-
     def test_clip_by_min_max(self):
         X_norm = Normalizer().clip_by_min_max(self.X) 
         self.assertTrue(X_norm.min() == 10)
         self.assertTrue(X_norm.max() == 100)
 
+    def test_fit_transform_opencv(self):
+        X_norm = Normalizer().fit_transform_opencv(self.X) 
+        self.assertTrue(np.sum(X_norm==1) == 0)
+        self.assertTrue(np.sum(X_norm==0) == 0)
+
+        X_norm = Normalizer().fit_transform_opencv(self.X, min_max_val=(20, 240)) 
+        self.assertTrue(np.sum(X_norm==1) == 0)
+        self.assertTrue(np.sum(X_norm==0) == 0)
+
+        X_norm = Normalizer().fit_transform_opencv(self.X, clip_percentage=(0.1, 0.9)) 
+        self.assertTrue(np.sum(X_norm==0) == 0)
+        self.assertTrue(np.sum(X_norm==1) == 105926)
+
+        np.random.seed(2020)
+        X_test = self.X.copy().astype(np.float32)
+        rand_xs = np.random.choice(range(X_test.shape[1]), 1000)
+        rand_ys = np.random.choice(range(X_test.shape[0]), 1000)
+        X_test[rand_xs, rand_ys] = np.nan
+        X_norm = Normalizer().fit_transform_opencv(X_test, clip_percentage=(0.1, 0.9)) 
+        self.assertTrue(np.sum(X_norm==0) == 0)
+        self.assertTrue(np.sum(X_norm==1) == 105516)
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
@@ -690,8 +710,8 @@ class TestAlgorithm(unittest.TestCase):
         time.sleep(1)
 
     def test_kmeans(self):
-        X_kmeans = Algorithm.kmeans(self.X, n_clusters=5, no_data_value=0)
-        self.assertTrue(np.bincount(X_kmeans.astype(np.int32).flatten()).max() == 77677)
+        X_kmeans = Algorithm.kmeans(self.X, n_clusters=5, no_data_value=0, random_state=2020)
+        self.assertTrue(np.bincount(X_kmeans.astype(np.int32).flatten()).max() == 77721)
         if show_image:
             plt.imshow(X_kmeans, cmap='gray')
             plt.title("TestAlgorithm" + ": " + "test_kmeans")

@@ -387,6 +387,15 @@ class Raster():
             dst_ds = gdal.Warp('', src_ds, srcSRS=src_crs, dstSRS=dst_crs, format='MEM')
         else:
             dst_ds = gdal.Warp('', src_ds, dstSRS=dst_crs, format='MEM')
+            if dst_ds is None:
+                try:
+                    src_crs = "EPSG:" + str(tgp.wkt_to_epsg(self.projection))
+                    dst_ds = gdal.Warp('', src_ds, srcSRS=src_crs, dstSRS=dst_crs, format='MEM')
+                    assert dst_ds is not None, "Please provide src_crs since the raster does not contain valid crs information."
+                    print("Please provide src_crs to accelerate the process.")
+                except:
+                    assert False, "Please provide src_crs since the raster does not contain crs information."
+
         dst_raster = tgp.read_gdal_ds(dst_ds)
         return dst_raster
 

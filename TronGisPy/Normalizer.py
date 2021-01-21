@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 
 class Normalizer():
@@ -103,3 +104,40 @@ class Normalizer():
             The un-normalized image.
         """
         return (Y * (self.max - self.min)) + self.min
+
+    def fit_transform_opencv(self, X, min_max_val=None, clip_percentage=None, clip_min_max=None, out_dtype=np.float32):
+        """Combine the fit and transform funtion.
+
+        Parameters
+        -------
+        X: ndarray
+            The normalized image.
+        min_max_val: tuple, optional
+            The min and max limitation on the normalizer e.g. (50, 150).
+        clip_percentage: tuple, optional
+            give a two element tuple represents the start and end percentage of 
+            the data to cut in head and tail e.g. (0.02, 0.98)
+        clip_min_max: tuple, optional
+            give a two element tuple represents the min and max to cut in head 
+            and tail e.g. (0, 100)
+
+        Returns
+        -------
+        Y: ndarray
+            The normalized image.
+        """
+        if clip_percentage is not None:
+            assert not (clip_percentage is not None and clip_min_max is not None), "should not set clip_percentage and clip_min_max at the same time!"
+            assert len(clip_percentage) == 2, "clip_percentage two element tuple"
+            X = self.clip_by_percentage(X, clip_percentage=clip_percentage)
+        elif clip_min_max is not None:
+            assert len(clip_min_max) == 2, "clip_min_max two element tuple"
+            X = self.clip_by_min_max(X, min_max=clip_min_max)
+        X_mean = np.nanmean(X)
+        nan_mask = np.isnan(X)
+        nan_mask = np.sum(nan_mask, axis=-1) >= 1 if len(nan_mask.shape) == 3 else nan_mask
+        X[nan_mask] = X_mean
+        X = cv2.normalize(X.astype(out_dtype), None, norm_type=cv2.NORM_MINMAX)
+        X[nan_mask] = np.nan
+        return X
+
