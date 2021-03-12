@@ -7,7 +7,7 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.3.9",
+    version="1.4.0",
     author="Thinktron",
     author_email="jeremywang@thinktronltd.com",
     description="Gis raster data processing tool",
@@ -135,6 +135,7 @@ setuptools.setup(
 # 1.3.7 update setup
 # 1.3.8 fix reproject in Raster when gdal Warp return None
 # 1.3.9 add normalize from opencv in Noemalizer
+# 1.4.0 [fixbug] interpolation majority false indeices
 
 # python clean_docs_source.py
 # sphinx-apidoc --force --separate --module-first -o docs\source .
@@ -148,8 +149,8 @@ setuptools.setup(
 # XCOPY docs\build\html Y:\R014_Jeremy\temp\TronGisPyDocs /H/S
 
 # python setup.py sdist bdist_wheel
-# twine upload dist/TronGisPy-1.3.9*
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.9-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.9-py3-none-any.whl
+# twine upload dist/TronGisPy-1.4.0*
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.4.0-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.9-py3-none-any.whl
 
 
 

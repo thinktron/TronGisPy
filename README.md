@@ -53,12 +53,39 @@ pip install GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtre
 ```
 pip install TronGisPy
 ```
+<!-- 
+## Taiwan DataCube
+1. uninstall gdal
+```
+pip uninstall gdal
+```
+
+2. install requirements for gdal
+```
+sudo apt-get install python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
+```
+
+
+3. add gdal path
+```
+echo "export CPLUS_INCLUDE_PATH=/usr/include/gdal" >> ~/.profile
+echo "export C_INCLUDE_PATH=/usr/include/gdal" >> ~/.profile
+source ~/.profile
+```
+
+4. install gdal
+```
+pip install GDAL==3.0.4
+``` -->
 
 # For Developer
 ## Build
 ```bash
 python setup.py sdist bdist_wheel
 ```
+
+# Reference
+1. [Logo](https://github.com/thinktron/TronGisPy/blob/master/static/trongispy.01-01.png)
 
 ## Document Generation
 0. [Installaion](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/install.html)

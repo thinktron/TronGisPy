@@ -351,7 +351,7 @@ class Raster():
             zoom_in = dst_resolution / self.pixel_size[0]
             dst_ds = gdal.Warp('', src_ds, xRes=zoom_in, yRes=zoom_in, format='MEM', resampleAlg=resample_alg, transformerOptions=['SRC_METHOD=NO_GEOTRANSFORM', 'DST_METHOD=NO_GEOTRANSFORM'])
             dst_geo_transform = np.array(self.geo_transform)
-            dst_geo_transform[[1,2,4,5]] *= zoom_in
+            dst_geo_transform[[1,5]] *= zoom_in
             dst_raster = tgp.read_gdal_ds(dst_ds)
             dst_raster.geo_transform = tuple(dst_geo_transform)
             dst_raster.projection = self.projection

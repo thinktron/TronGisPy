@@ -60,9 +60,9 @@ def img_interpolation(data, method='linear', no_data_value=None):
 @jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
 def __jit_majority_interpolation(X_stacked, no_data_value): # Function is compiled to machine code when called the first time
     X_interp = np.zeros((X_stacked.shape[0], X_stacked.shape[1]), dtype=np.int32)
-    for i in range(X_interp.shape[0]-1):
-        for j in range(X_interp.shape[1]-1):
-            if X_stacked[i,j][5] == no_data_value: # only calculate majority when value is no_data_value
+    for i in range(X_interp.shape[0]):
+        for j in range(X_interp.shape[1]):
+            if X_stacked[i,j][4] == no_data_value: # only calculate majority when value is no_data_value
                 vals = X_stacked[i,j][X_stacked[i,j]!=no_data_value]
                 v_len = vals.shape[0]
                 if v_len !=0: # if at least one value in the convolution is not no_data_value
@@ -70,7 +70,7 @@ def __jit_majority_interpolation(X_stacked, no_data_value): # Function is compil
                 else: 
                     X_interp[i, j] = no_data_value
             else:
-                X_interp[i, j] = X_stacked[i,j][5]
+                X_interp[i, j] = X_stacked[i,j][4]
     return X_interp
 
 @jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit

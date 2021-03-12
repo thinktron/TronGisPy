@@ -260,7 +260,7 @@ class TestRaster(unittest.TestCase):
         raster3.fill_no_data(mode='constant', constant=raster3.no_data_value, fill_na=True)
         raster3.astype(np.int)
         raster3.fill_no_data(mode='neighbor_majority', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
-        self.assertTrue(np.sum(np.unique(raster3.data) == [ 0, 47, 48, 69, 75, 82]) == 6)
+        self.assertTrue(np.sum(np.isin(np.unique(raster3.data), np.array([ 47, 48, 69, 75, 82]))) == 5)
 
         if show_image:
             fig , (ax1, ax2, ax3) = plt.subplots(1, 3)
@@ -758,8 +758,10 @@ class TestInterpolation(unittest.TestCase):
     
     def test_majority_interpolation(self):
         X = tgp.get_raster_data(tif_forinterpolation_path)[:, :, 0]
-        X[np.isnan(X)] = 999
+        nan_mask = np.isnan(X)
+        X[nan_mask] = 999
         X_interp = Interpolation.majority_interpolation(X.astype(np.int), no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=1)
+        self.assertTrue(np.mean(X[~nan_mask] == X_interp[~nan_mask]) == 1)
         self.assertTrue(np.sum(X_interp == 999) == 0)
         if show_image:
             fig, axes = plt.subplots(1, 2, figsize=(20, 5))

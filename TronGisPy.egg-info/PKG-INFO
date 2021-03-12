@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: TronGisPy
-Version: 1.3.9
+Version: 1.4.0
 Summary: Gis raster data processing tool
 Home-page: https://github.com/thinktron/TronGisPy
 Author: Thinktron
@@ -61,12 +61,39 @@ Description: ![TronGisPy](https://raw.githubusercontent.com/thinktron/TronGisPy/
         ```
         pip install TronGisPy
         ```
+        <!-- 
+        ## Taiwan DataCube
+        1. uninstall gdal
+        ```
+        pip uninstall gdal
+        ```
+        
+        2. install requirements for gdal
+        ```
+        sudo apt-get install python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
+        ```
+        
+        
+        3. add gdal path
+        ```
+        echo "export CPLUS_INCLUDE_PATH=/usr/include/gdal" >> ~/.profile
+        echo "export C_INCLUDE_PATH=/usr/include/gdal" >> ~/.profile
+        source ~/.profile
+        ```
+        
+        4. install gdal
+        ```
+        pip install GDAL==3.0.4
+        ``` -->
         
         # For Developer
         ## Build
         ```bash
         python setup.py sdist bdist_wheel
         ```
+        
+        # Reference
+        1. [Logo](https://github.com/thinktron/TronGisPy/blob/master/static/trongispy.01-01.png)
         
         ## Document Generation
         0. [Installaion](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/install.html)
