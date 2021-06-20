@@ -157,7 +157,7 @@ class Raster():
 
     @property
     def extent_for_plot(self):
-        """(xmin, xmax, ymin, ymax) of the raster boundary."""
+        """(xmin, xmax, ymin, ymax) of the raster boundary. (left, right, bottom, top) will be used in the plot."""
         return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_type='plot')
 
     @property
