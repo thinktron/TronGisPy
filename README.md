@@ -53,6 +53,10 @@ pip install GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtre
 ```
 pip install TronGisPy
 ```
+## Docker
+```
+docker pull jeremy4555:trongispy:latest
+```
 <!-- 
 ## Taiwan DataCube
 1. uninstall gdal
@@ -83,10 +87,6 @@ pip install GDAL==3.0.4
 ```bash
 python setup.py sdist bdist_wheel
 ```
-
-# Reference
-1. [Logo](https://github.com/thinktron/TronGisPy/blob/master/static/trongispy.01-01.png)
-
 ## Document Generation
 0. [Installaion](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/install.html)
 ```
@@ -128,6 +128,16 @@ cd docs
 make clean
 make html
 ```
+
+## Docker Build
+```
+docker build -it --rm <dockerhub_id>/trongispy:latest
+```
+
+
+# Reference
+1. [Logo](https://github.com/thinktron/TronGisPy/blob/master/static/trongispy.01-01.png)
+
 
 # For Thinktron Worker
 ## Install on Windows

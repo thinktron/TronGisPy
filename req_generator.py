@@ -15,5 +15,5 @@ write_str += "geopandas==0.7.0 \n"
 write_str += "Rtree==0.9.4\n"
 
 # pip install Fiona-1.8.6-cp36-cp36m-win_amd64.whl Rtree-0.8.3-cp36-cp36m-win_amd64.whl Shapely-1.6.4.post1-cp36-cp36m-win_amd64.whl GDAL-2.4.1-cp36-cp36m-win_amd64.whl geopandas-0.5.0-py2.py3-none-any.whl
-with open("requirements_new.txt", 'w' , encoding="utf8") as f:
+with open("requirements_win.txt", 'w' , encoding="utf8") as f:
     f.write(write_str)
