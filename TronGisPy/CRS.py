@@ -73,6 +73,25 @@ def coords_to_npidxs(coords, geo_transform):
         group_npidx.append((y, x))
     return np.array(group_npidx, np.int64)
 
+def coords_to_npidxs_temp(coords, geo_transform):
+    """
+    | coord_lng |   | a  b  c | | npidx_col |
+    | coord_lat | = | d  e  f | | npidx_row |
+    |     1     |   | 0  0  1 | |     1     |
+
+    a * npidx_col + b * npidx_row + c = coord_lng
+    d * npidx_col + e * npidx_row + f = coord_lat
+
+    npidx_col = ((e*coord_lng - b*coord_lat) - (c*e - f*b)) / (a*e - b*d)
+    npidx_row = ((d*coord_lng - a*coord_lat) - (c*d - a*f)) / (b*d - a*e)
+    """
+    c, a, b, f, d, e = geo_transform
+    coords_lng, coords_lat = np.array(coords).T
+    col_idxs = ((e*coords_lng - b*coords_lat) - (c*e - f*b)) / (a*e - b*d)
+    row_idxs = ((d*coords_lng - a*coords_lat) - (c*d - a*f)) / (b*d - a*e)
+    npidxs = np.stack([row_idxs, col_idxs], axis=1).astype(np.int64)
+    return npidxs
+    
 def npidxs_to_coords(npidxs, geo_transform): # TODO: reproduce to numba
     """Get coordinates of cells' left-top corner by its numpy index using 
     the following functions.
