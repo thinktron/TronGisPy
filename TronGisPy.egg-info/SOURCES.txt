@@ -1,3 +1,4 @@
+LICENSE.txt
 README.md
 setup.cfg
 setup.py
@@ -19,6 +20,7 @@ TronGisPy.egg-info/SOURCES.txt
 TronGisPy.egg-info/dependency_links.txt
 TronGisPy.egg-info/requires.txt
 TronGisPy.egg-info/top_level.txt
+TronGisPy/data/aereo_tif/131129d_29_0263_refined.tif
 TronGisPy/data/aero_triangulation/P_XYZs.npy
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.cpg
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.dbf
@@ -59,12 +61,9 @@ TronGisPy/data/rasterized_image/rasterized_image.tif
 TronGisPy/data/rasterized_image/rasterized_image_1.tif
 TronGisPy/data/rasterized_image/rasterized_image_1.tif.aux.xml
 TronGisPy/data/remap/ndvi_32651.tif
-TronGisPy/data/remap/ndvi_32651.tif.aux.xml
 TronGisPy/data/remap/rgb_3826_clipper.tif
-TronGisPy/data/remap/rgb_3826_clipper.tif.aux.xml
 TronGisPy/data/rotate_tif/rotate_tif.tif
 TronGisPy/data/satellite_tif/satellite_tif.tif
-TronGisPy/data/satellite_tif/satellite_tif.tif.aux.xml
 TronGisPy/data/satellite_tif_clipper/satellite_tif_clipper.cpg
 TronGisPy/data/satellite_tif_clipper/satellite_tif_clipper.dbf
 TronGisPy/data/satellite_tif_clipper/satellite_tif_clipper.prj

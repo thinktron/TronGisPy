@@ -257,8 +257,8 @@ class TestRaster(unittest.TestCase):
 
         raster2 = tgp.read_raster(tif_forinterpolation_path)
         raster2.fill_no_data(mode='neighbor_mean', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
-        self.assertTrue(np.mean(np.unique(raster2.data)).astype(np.int) == 63)
-        self.assertTrue(np.std(np.unique(raster2.data)).astype(np.int) == 12)
+        self.assertTrue(np.mean(np.unique(raster2.data)).astype(np.int) == 65)
+        self.assertTrue(np.std(np.unique(raster2.data)).astype(np.int) == 10)
 
         raster3 = tgp.read_raster(tif_forinterpolation_path)
         raster3.fill_no_data(mode='constant', constant=raster3.no_data_value, fill_na=True)
@@ -269,8 +269,11 @@ class TestRaster(unittest.TestCase):
         if show_image:
             fig , (ax1, ax2, ax3) = plt.subplots(1, 3)
             raster1.plot(ax=ax1)
+            ax1.set_title("Constant")
             raster2.plot(ax=ax2)
+            ax2.set_title("neighbor_mean")
             raster3.plot(ax=ax3)
+            ax3.set_title("neighbor_majority")
             plt.show()
 
     def test_copy(self):

@@ -76,9 +76,9 @@ def __jit_majority_interpolation(X_stacked, no_data_value): # Function is compil
 @jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
 def __jit_mean_interpolation(X_stacked, no_data_value): # Function is compiled to machine code when called the first time
     X_interp = np.zeros((X_stacked.shape[0], X_stacked.shape[1]))
-    for i in range(X_interp.shape[0]-1):
-        for j in range(X_interp.shape[1]-1):
-            if X_stacked[i,j][5] == no_data_value: # only calculate majority when value is no_data_value
+    for i in range(X_interp.shape[0]):
+        for j in range(X_interp.shape[1]):
+            if X_stacked[i,j][4] == no_data_value: # only calculate majority when value is no_data_value
                 vals = X_stacked[i,j][X_stacked[i,j]!=no_data_value]
                 v_len = vals.shape[0]
                 if v_len !=0: # if at least one value in the convolution is not no_data_value
@@ -86,7 +86,7 @@ def __jit_mean_interpolation(X_stacked, no_data_value): # Function is compiled t
                 else: 
                     X_interp[i, j] = no_data_value
             else:
-                X_interp[i, j] = X_stacked[i,j][5]
+                X_interp[i, j] = X_stacked[i,j][4]
     return X_interp
 
 def __generate_stacked_X(X_padded, ws):
@@ -106,13 +106,15 @@ def __generate_stacked_X(X_padded, ws):
     return X_stacked
 
 def __majority_interpolation_single(X, no_data_value, window_size):
-    X_padded = np.pad(X, ((1, 1), (1, 1)), mode='edge')
+    pad_size = int((window_size -1) / 2)
+    X_padded = np.pad(X, ((pad_size, pad_size), (pad_size, pad_size)), mode='edge')
     X_stacked = __generate_stacked_X(X_padded, window_size)
     X_interp = __jit_majority_interpolation(X_stacked, no_data_value=no_data_value)
     return X_interp
 
 def __mean_interpolation_single(X, no_data_value, window_size):
-    X_padded = np.pad(X, ((1, 1), (1, 1)), mode='edge')
+    pad_size = int((window_size -1) / 2)
+    X_padded = np.pad(X, ((pad_size, pad_size), (pad_size, pad_size)), mode='edge')
     X_stacked = __generate_stacked_X(X_padded, window_size)
     X_interp = __jit_mean_interpolation(X_stacked, no_data_value=no_data_value)
     return X_interp

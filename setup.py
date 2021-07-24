@@ -7,7 +7,7 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.4.0",
+    version="1.4.3",
     author="Thinktron",
     author_email="jeremywang@thinktronltd.com",
     description="Gis raster data processing tool",
@@ -136,6 +136,17 @@ setuptools.setup(
 # 1.3.8 fix reproject in Raster when gdal Warp return None
 # 1.3.9 add normalize from opencv in Noemalizer
 # 1.4.0 [fixbug] interpolation majority false indeices
+# 1.4.1 [fixbug] geotransform[1, 2, 4, 5] should be changed when refine resolution 
+# 1.4.2 [fixbug] interpolation mean false indeices
+# 1.4.3 add new test data (aereo_tif)
+
+
+# python setup.py sdist bdist_wheel
+# twine upload dist/TronGisPy-1.4.3*
+
+
+
+
 
 # python clean_docs_source.py
 # sphinx-apidoc --force --separate --module-first -o docs\source .
@@ -148,14 +159,10 @@ setuptools.setup(
 # mkdir Y:\R014_Jeremy\temp\TronGisPyDocs
 # XCOPY docs\build\html Y:\R014_Jeremy\temp\TronGisPyDocs /H/S
 
-# python setup.py sdist bdist_wheel
-# twine upload dist/TronGisPy-1.4.0*
-# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.4.0-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.3.9-py3-none-any.whl
 
 
 
-
-
+# scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.4.1-py3-none-any.whl  jeremy@192.168.0.128:/home/ttl/pypi/TronGisPy-1.4.1-py3-none-any.whl
 # scp C:\Users\Thinktron\Projects\TronGisPy\dist\TronGisPy-1.3.9-py3-none-any.whl  jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.9-py3-none-any.whl
 # scp C:\Users\TTL_R041\Desktop\Projects\RS2001\LineDetection\TronGisPy\dist\TronGisPy-1.3.9-py3-none-any.whl jeremy@rd.thinktronltd.com:/home/ttl/pypi/TronGisPy-1.3.9-py3-none-any.whl
 
