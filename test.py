@@ -153,7 +153,11 @@ class Testio(unittest.TestCase):
         fn = 'satellite_tif'
         fp = tgp.get_testing_fp(fn)
         self.assertTrue(fp == os.path.join(data_dir, 'satellite_tif', 'satellite_tif.tif'))
-        
+
+        fn = 'aereo_tif'
+        fp = tgp.get_testing_fp(fn)
+        self.assertTrue(fp == os.path.join(data_dir, 'aereo_tif', '131129d_29_0263_refined.tif'))
+
         fn = 'satellite_tif_clipper'
         fp = tgp.get_testing_fp(fn)
         self.assertTrue(fp == os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp'))
@@ -711,7 +715,7 @@ class TestAlgorithm(unittest.TestCase):
 
     def test_kmeans(self):
         X_kmeans = Algorithm.kmeans(self.X, n_clusters=5, no_data_value=0, random_state=2020)
-        self.assertTrue(np.bincount(X_kmeans.astype(np.int32).flatten()).max() == 77721)
+        self.assertTrue(np.bincount(X_kmeans.astype(np.int32).flatten()).max() - 77721 < 3000)
         if show_image:
             plt.imshow(X_kmeans, cmap='gray')
             plt.title("TestAlgorithm" + ": " + "test_kmeans")
