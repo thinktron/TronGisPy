@@ -378,11 +378,12 @@ def get_testing_fp(fn=None):
         fp = os.path.join(data_dir, 'remap', 'rgb_3826_clipper.tif')
     elif fn == 'satellite_tif':
         fp = os.path.join(data_dir, 'satellite_tif', 'satellite_tif.tif')
-    elif fn == 'aereo_tif':
-        # 131129d_29_0263\ras_aerial_img_refined.tif
-        fp = os.path.join(data_dir, 'aereo_tif', '131129d_29_0263_refined.tif')
     elif fn == 'satellite_tif_clipper':
         fp = os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp')
+    elif fn == 'aereo_tif':
+        fp = os.path.join(data_dir, 'aereo_tif', '131129d_29_0263_refined.tif') # 131129d_29_0263\ras_aerial_img_refined.tif
+    elif fn == 'aereo_tif_clipper':
+        fp = os.path.join(data_dir, 'aereo_tif_clipper', '131129d_29_0263_clipper.shp')
     elif fn == 'satellite_tif_kmeans':
         fp = os.path.join(data_dir, 'satellite_tif_kmeans', 'satellite_tif_kmeans.tif')
     elif fn == 'rasterized_image':

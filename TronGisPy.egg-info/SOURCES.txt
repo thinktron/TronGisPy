@@ -21,6 +21,10 @@ TronGisPy.egg-info/dependency_links.txt
 TronGisPy.egg-info/requires.txt
 TronGisPy.egg-info/top_level.txt
 TronGisPy/data/aereo_tif/131129d_29_0263_refined.tif
+TronGisPy/data/aereo_tif_clipper/131129d_29_0263_clipper.dbf
+TronGisPy/data/aereo_tif_clipper/131129d_29_0263_clipper.prj
+TronGisPy/data/aereo_tif_clipper/131129d_29_0263_clipper.shp
+TronGisPy/data/aereo_tif_clipper/131129d_29_0263_clipper.shx
 TronGisPy/data/aero_triangulation/P_XYZs.npy
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.cpg
 TronGisPy/data/clip_shp_by_shp/line_to_be_clipped.dbf

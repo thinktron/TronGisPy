@@ -76,6 +76,8 @@ def coords_to_npidxs(coords, geo_transform):
 
 def coords_to_npidxs_temp(coords, geo_transform):
     """
+    c, a, b, f, d, e = geo_transform
+    
     | coord_lng |   | a  b  c | | npidx_col |
     | coord_lat | = | d  e  f | | npidx_row |
     |     1     |   | 0  0  1 | |     1     |

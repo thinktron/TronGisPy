@@ -154,13 +154,17 @@ class Testio(unittest.TestCase):
         fp = tgp.get_testing_fp(fn)
         self.assertTrue(fp == os.path.join(data_dir, 'satellite_tif', 'satellite_tif.tif'))
 
+        fn = 'satellite_tif_clipper'
+        fp = tgp.get_testing_fp(fn)
+        self.assertTrue(fp == os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp'))
+
         fn = 'aereo_tif'
         fp = tgp.get_testing_fp(fn)
         self.assertTrue(fp == os.path.join(data_dir, 'aereo_tif', '131129d_29_0263_refined.tif'))
 
-        fn = 'satellite_tif_clipper'
+        fn = 'aereo_tif_clipper'
         fp = tgp.get_testing_fp(fn)
-        self.assertTrue(fp == os.path.join(data_dir, 'satellite_tif_clipper', 'satellite_tif_clipper.shp'))
+        self.assertTrue(fp == os.path.join(data_dir, 'aereo_tif_clipper', '131129d_29_0263_clipper.shp'))
 
         fn = 'satellite_tif_kmeans'
         fp = tgp.get_testing_fp(fn)
