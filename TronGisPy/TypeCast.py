@@ -1,7 +1,7 @@
 import os
-import gdal
 import numpy as np
 import pandas as pd
+from osgeo import gdal
 
 df_gdal_dtype = [
     [0, "GDT_Unknown", None],
@@ -74,7 +74,7 @@ def npdtype_to_gdaldtype(npdtype):
 
     if npdtype in df_gdal_dtype['npdtype'].tolist():
         return int(df_gdal_dtype.loc[df_gdal_dtype['npdtype']==npdtype, 'gdaldtype_idx'].iloc[0])
-    elif np.issubdtype(npdtype, np.bool_):
+    elif np.issubdtype(npdtype, bool):
         return gdal.GDT_Byte
     elif np.issubdtype(npdtype, np.int8): 
         return gdal.GDT_UInt16

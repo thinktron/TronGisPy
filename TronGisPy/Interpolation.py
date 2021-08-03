@@ -1,7 +1,7 @@
 import os
-import gdal
 import numpy as np
 from numba import jit
+from osgeo import gdal
 import TronGisPy as tgp
 from scipy.interpolate import griddata
 
@@ -156,7 +156,7 @@ def majority_interpolation(data, no_data_value=999, window_size=3, loop_to_fill_
     >>> data = raster.data.copy()[:, :, 0]
     >>> data_interp = data.copy()
     >>> data_interp[np.isnan(data_interp)] = 999
-    >>> data_interp = data_interp.astype(np.int)
+    >>> data_interp = data_interp.astype(int)
     >>> data_interp = Interpolation.majority_interpolation(data_interp, no_data_value=999)
     >>> fig, (ax1, ax2) = plt.subplots(1,2)
     >>> ax1.imshow(data)
@@ -282,7 +282,7 @@ def gdal_fillnodata(raster, band=0, no_data_value=999, max_distance=100, smoothi
     raster_mask = raster.copy()
     raster_mask.data[raster_mask.data==no_data_value] = 0
     raster_mask.data[raster_mask.data!=0] = 1
-    raster_mask.astype(np.bool)
+    raster_mask.astype(bool)
     raster_mask.no_data_value = 0
     ds_mask = raster_mask.to_gdal_ds()
     maskband = ds_mask.GetRasterBand(1)

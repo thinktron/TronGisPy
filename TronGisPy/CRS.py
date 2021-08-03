@@ -1,9 +1,9 @@
-import osr
-import gdal
 import numba
 import affine
 import pyproj
 import numpy as np
+from osgeo import osr
+from osgeo import gdal
 
 @numba.jit(nopython=True)
 def __affine_from_gdal(c, a, b, f, d, e):

@@ -1,6 +1,6 @@
 import os
-import gdal
 import numpy as np
+from osgeo import gdal
 import geopandas as gpd
 import TronGisPy as tgp
 from shapely.geometry import Polygon

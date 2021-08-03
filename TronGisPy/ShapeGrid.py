@@ -1,11 +1,11 @@
 import os
 import cv2
-import ogr
-import gdal
 import pyproj
 import shapely
 import numpy as np
 import pandas as pd
+from osgeo import ogr
+from osgeo import gdal
 import geopandas as gpd
 import TronGisPy as tgp
 from TronGisPy import CRS

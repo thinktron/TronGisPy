@@ -12,8 +12,8 @@ from collections import Counter
 import matplotlib.pyplot as plt
 
 # gis
-import gdal 
 import pyproj
+from osgeo import gdal
 import geopandas as gpd # should be put before gdal: https://blog.csdn.net/u014656611/article/details/106450006
 from shapely.geometry import Polygon, Point
 
@@ -47,6 +47,7 @@ show_image = False
 # operation on gis data
 class Testio(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -176,6 +177,7 @@ class Testio(unittest.TestCase):
 
 class TestRaster(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.raster = tgp.read_raster(satellite_tif_path)
         self.output_dir = os.path.join('test_output')
@@ -261,12 +263,12 @@ class TestRaster(unittest.TestCase):
 
         raster2 = tgp.read_raster(tif_forinterpolation_path)
         raster2.fill_no_data(mode='neighbor_mean', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
-        self.assertTrue(np.mean(np.unique(raster2.data)).astype(np.int) == 65)
-        self.assertTrue(np.std(np.unique(raster2.data)).astype(np.int) == 10)
+        self.assertTrue(np.mean(np.unique(raster2.data)).astype(int) == 65)
+        self.assertTrue(np.std(np.unique(raster2.data)).astype(int) == 10)
 
         raster3 = tgp.read_raster(tif_forinterpolation_path)
         raster3.fill_no_data(mode='constant', constant=raster3.no_data_value, fill_na=True)
-        raster3.astype(np.int)
+        raster3.astype(int)
         raster3.fill_no_data(mode='neighbor_majority', window_size=3, loop_to_fill_all=True, loop_limit=5, fill_na=True)
         self.assertTrue(np.sum(np.isin(np.unique(raster3.data), np.array([ 47, 48, 69, 75, 82]))) == 5)
 
@@ -378,6 +380,7 @@ class TestRaster(unittest.TestCase):
 
 class TestShapeGrid(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -529,6 +532,7 @@ class TestShapeGrid(unittest.TestCase):
 # gis tool
 class TestCRS(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -588,6 +592,7 @@ class TestCRS(unittest.TestCase):
 
 class TestTypeCast(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -605,11 +610,12 @@ class TestTypeCast(unittest.TestCase):
 
     def test_npdtype_to_gdaldtype(self):
         self.assertTrue(tgp.npdtype_to_gdaldtype(np.int32) == 5)
-        self.assertTrue(tgp.npdtype_to_gdaldtype(np.bool) == gdal.GDT_Byte)
+        self.assertTrue(tgp.npdtype_to_gdaldtype(bool) == gdal.GDT_Byte)
 
 
 class TestAeroTriangulation(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -656,6 +662,7 @@ class TestAeroTriangulation(unittest.TestCase):
 # CV
 class TestNormalizer(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -709,6 +716,7 @@ class TestNormalizer(unittest.TestCase):
 
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -730,8 +738,9 @@ class TestAlgorithm(unittest.TestCase):
 
 class TestInterpolation(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
-        X = tgp.get_raster_data(satellite_tif_path).astype(np.float)
+        X = tgp.get_raster_data(satellite_tif_path).astype(float)
         raw_shape = X.shape
         X = X.flatten()
         rand_idx = np.random.randint(0, len(X), int(len(X)*0.3))
@@ -771,7 +780,7 @@ class TestInterpolation(unittest.TestCase):
         X = tgp.get_raster_data(tif_forinterpolation_path)[:, :, 0]
         nan_mask = np.isnan(X)
         X[nan_mask] = 999
-        X_interp = Interpolation.majority_interpolation(X.astype(np.int), no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=1)
+        X_interp = Interpolation.majority_interpolation(X.astype(int), no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=1)
         self.assertTrue(np.mean(X[~nan_mask] == X_interp[~nan_mask]) == 1)
         self.assertTrue(np.sum(X_interp == 999) == 0)
         if show_image:
@@ -784,7 +793,7 @@ class TestInterpolation(unittest.TestCase):
             plt.show()
 
     def test_mean_interpolation(self):
-        X = tgp.get_raster_data(tif_forinterpolation_path)[:, :, 0].astype(np.float)
+        X = tgp.get_raster_data(tif_forinterpolation_path)[:, :, 0].astype(float)
         X[np.isnan(X)] = 999
         X_interp = Interpolation.mean_interpolation(X, no_data_value=999, window_size=3, loop_to_fill_all=True, loop_limit=1)
         self.assertTrue(np.sum(X_interp == 999) == 0)
@@ -815,6 +824,7 @@ class TestInterpolation(unittest.TestCase):
 
 class TestSplittedImage(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -885,6 +895,7 @@ class TestSplittedImage(unittest.TestCase):
 
 class TestGisIO(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.output_dir = os.path.join('test_output')
         if not os.path.isdir(self.output_dir):
@@ -1032,6 +1043,7 @@ class TestGisIO(unittest.TestCase):
 
 class TestDEMProcessor(unittest.TestCase):
     def setUp(self):
+        print("\nIn method", self._testMethodName)
         time.sleep(1)
         self.dem_rows, self.dem_cols, self.dem_bands, self.dem_geo_transform, self.dem_projection, self.dem_gdaldtype, self.dem_no_data_value, self.dem_metadata = tgp.get_raster_info(dem_process_path)
         self.output_dir = os.path.join('test_output')

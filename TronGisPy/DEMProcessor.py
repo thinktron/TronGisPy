@@ -1,5 +1,5 @@
-import gdal
 import numpy as np
+from osgeo import gdal
 import TronGisPy as tgp
 
 def dem_to_hillshade(src_raster, band=0, alg='Horn', azimuth=315, altitude=45):
@@ -84,7 +84,7 @@ def dem_to_aspect(src_raster, band=0, alg='Horn', trigonometric=False):
     dst_raster = tgp.read_gdal_ds(ds)
     return dst_raster
 
-def dem_to_TRI(src_raster, band=0, alg='Horn'):
+def dem_to_TRI(src_raster, band=0):
     """Calculate the terrain ruggedness index (TRI) for the DEM.
 
     Parameters
@@ -93,22 +93,19 @@ def dem_to_TRI(src_raster, band=0, alg='Horn'):
         The dem used to calculate the TRI.
     band : int, optional, default: 0
         source band number to use.
-    alg : {'ZevenbergenThorne' or 'Horn'}, optional, default: Horn
-        The literature suggests Zevenbergen & Thorne to be more suited to smooth landscapes, 
-        where Horn’s formula to perform better on rougher terrain.
 
     Returns
     -------
     dst_raster: Raster
         TRI calculated from the DEM.
     """
-    options = dict(band=band+1, alg=alg, format='MEM')
+    options = dict(band=band+1, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'TRI', **options)
     dst_raster = tgp.read_gdal_ds(ds)
     return dst_raster
 
-def dem_to_TPI(src_raster, band=0, alg='Horn'):
+def dem_to_TPI(src_raster, band=0):
     """Calculate the topographic position index (TPI) for the DEM.
 
     Parameters
@@ -117,22 +114,19 @@ def dem_to_TPI(src_raster, band=0, alg='Horn'):
         The dem used to calculate the TPI.
     band : int, optional, default: 0
         source band number to use.
-    alg : {'ZevenbergenThorne' or 'Horn'}, optional, default: Horn
-        The literature suggests Zevenbergen & Thorne to be more suited to smooth landscapes, 
-        where Horn’s formula to perform better on rougher terrain.
 
     Returns
     -------
     dst_raster: Raster
         TPI calculated from the DEM.
     """
-    options = dict(band=band+1, alg=alg, format='MEM')
+    options = dict(band=band+1, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'TPI', **options)
     dst_raster = tgp.read_gdal_ds(ds)
     return dst_raster
 
-def dem_to_roughness(src_raster, band=0, alg='Horn'):
+def dem_to_roughness(src_raster, band=0):
     """Calculate the roughness for the DEM.
 
     Parameters
@@ -141,16 +135,13 @@ def dem_to_roughness(src_raster, band=0, alg='Horn'):
         The dem used to calculate the roughness.
     band : int, optional, default: 0
         source band number to use.
-    alg : {'ZevenbergenThorne' or 'Horn'}, optional, default: Horn
-        The literature suggests Zevenbergen & Thorne to be more suited to smooth landscapes, 
-        where Horn’s formula to perform better on rougher terrain.
 
     Returns
     -------
     dst_raster: Raster
         roughness calculated from the DEM.
     """
-    options = dict(band=band+1, alg=alg, format='MEM')
+    options = dict(band=band+1, format='MEM')
     ds_src = src_raster.to_gdal_ds()
     ds = gdal.DEMProcessing('', ds_src, 'Roughness', **options)
     dst_raster = tgp.read_gdal_ds(ds)

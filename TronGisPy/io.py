@@ -1,8 +1,8 @@
 import os
-import gdal
 import time
 import shutil
 import numpy as np
+from osgeo import gdal
 import TronGisPy as tgp
 from TronGisPy import ShapeGrid
 

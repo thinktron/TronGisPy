@@ -1,5 +1,5 @@
-import gdal
 import numpy as np
+from osgeo import gdal
 import TronGisPy as tgp
 from TronGisPy import Interpolation
 from matplotlib import pyplot as plt

@@ -1,7 +1,8 @@
 import os
-import gdal
-import ogr, osr
 import numpy as np
+from osgeo import ogr
+from osgeo import osr
+from osgeo import gdal
 import TronGisPy as tgp
 import geopandas as gpd
 from collections import Counter
@@ -68,7 +69,7 @@ def clip_shp_by_shp(src_shp_path, clipper_shp_path, dst_shp_path):
         df_dst_shp.dropna(inplace=True)
     else:
         assert False, "geom_type must be Point, MultiPoint, Polygon, MultiPolygon, LineString or MultiLineString!"
-
+    
     df_dst_shp.to_file(dst_shp_path)
 
 def tif_composition(ref_tif_path, src_tif_paths, dst_tif_path, dst_tif_dtype_gdal=None):
@@ -175,7 +176,7 @@ def raster_pixel_to_polygon(src_tif_path, dst_shp_path, all_bands_as_feature=Fal
     """
     rows, cols, bands, geo_transform, projection, dtype_gdal, no_data_value, metadata = tgp.get_raster_info(src_tif_path)
     X = tgp.get_raster_data(src_tif_path)
-    idxs = np.where(np.ones_like(X[:,:,0], dtype=np.bool))
+    idxs = np.where(np.ones_like(X[:,:,0], dtype=bool))
     rows = []
 
     for row_idx, col_idx in zip(*idxs):
