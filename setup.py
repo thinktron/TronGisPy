@@ -7,7 +7,7 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.4.5",
+    version="1.4.6",
     author="Thinktron",
     author_email="jeremywang@thinktronltd.com",
     description="Gis raster data processing tool",
@@ -141,10 +141,10 @@ setuptools.setup(
 # 1.4.3 add new test data (aereo_tif)
 # 1.4.4 debig on compile and deploy dist
 # 1.4.5 add new test data (aereo_tif_clipper)
-
+# 1.4.6 compatile with GDAL 3.3.1 and python37
 
 # python setup.py sdist bdist_wheel
-# twine upload dist/TronGisPy-1.4.5*
+# twine upload dist/TronGisPy-1.4.6*
 
 
 

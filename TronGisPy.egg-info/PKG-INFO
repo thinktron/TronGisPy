@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: TronGisPy
-Version: 1.4.5
+Version: 1.4.6
 Summary: Gis raster data processing tool
 Home-page: https://github.com/thinktron/TronGisPy
 Author: Thinktron
@@ -45,12 +45,12 @@ To get start, please see [GettingStarted.ipynb](https://github.com/thinktron/Tro
 # Install
 ## Windows
 1. Install preinstalls from pre-build wheel package
-    - [GDAL==3.0.4](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)
-    - [Fiona==1.8.13](https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona)
-    - [Shapely==1.6.4.post2](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely)
-    - [geopandas==0.7.0](https://www.lfd.uci.edu/~gohlke/pythonlibs/#geopandas)
-    - [Rtree==0.9.4](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rtree)
-    - [opencv_python==4.1.2](https://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv)
+    - [GDAL>=3.0.4](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)
+    - [Fiona>=1.8.13](https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona)
+    - [Shapely>=1.6.4.post2](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely)
+    - [geopandas>=0.7.0](https://www.lfd.uci.edu/~gohlke/pythonlibs/#geopandas)
+    - [Rtree>=0.9.4](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rtree)
+    - [opencv_python>=4.1.2](https://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv)
 
 2. Install TronGisPy
 ```
@@ -58,11 +58,11 @@ pip install TronGisPy
 ```
 
 ## Linux
-1. Build GDAL==3.0.4 by yourself
-2. Build opencv==4.1.2 by yourself
+1. Build GDAL>=3.0.4 by yourself
+2. Build opencv>=4.1.2 by yourself
 3. install other preinstalls from public pypi server
 ```
-pip install GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtree==0.9.4
+pip install GDAL>=3.0.4 Fiona>=1.8.13 Shapely>=1.6.4.post2 geopandas>=0.7.0 Rtree>=0.9.4
 ```
 4. Install TronGisPy
 ```
@@ -158,12 +158,17 @@ docker build -it --rm <dockerhub_id>/trongispy:latest
 ## Install on Windows
 1. Install preinstall thinktron pypi server
 ```
-pip install -U --index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 GDAL==3.0.4 Fiona==1.8.13 Shapely==1.6.4.post2 geopandas==0.7.0 Rtree==0.9.4 opencv_python==4.1.2
+# python36
+pip install -U --index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 GDAL>=3.0.4 Fiona>=1.8.13 Shapely>=1.6.4.post2 geopandas>=0.7.0 Rtree>=0.9.4 opencv_python>=4.1.2
+
+# python37
+pip install pyproj
+pip install -U --index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 GDAL Fiona Shapely geopandas Rtree opencv_python
 ```
 
 2. Install TronGisPy from thinktron pypi server (Windows)
 ```
-pip install -U --extra-index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 TronGisPy
+pip install TronGisPy 
 ```
 
 
