@@ -24,6 +24,18 @@ normalizer.
 <!-- 6. AeroTriangulation: Do the aero-triangulation calculation.
 10. GisIO: Some file-based gis functions. -->
 
+# Contributor
+## Author
+- [GoatWang/王選仲](https://github.com/GoatWang), AI Engineer from Thinktron
+- [DavidHuang/黃梓育](https://github.com/moonstarsky37)(聯絡人), AI Engineer from Thinktron
+- [Funskie/方子齊](https://github.com/Funskie), AI Engineer from Thinktron
+
+## Domain Instructor 
+- 沈哲緯, Tech Lead of Thinktron
+- [YuHsiang/王禹翔](https://github.com/b6100111524)(聯絡人), Remote Sensing Engineer, Section Manager from Thinktron
+- 周立生, RD Engineer, Section Manager from Thinktron
+- 鄧澤揚, RD Engineer from Thinktron
+
 # Getting Started
 To get start, please see [GettingStarted.ipynb](https://github.com/thinktron/TronGisPy/blob/master/GettingStarted.ipynb).
 
@@ -53,10 +65,12 @@ pip install GDAL>=3.0.4 Fiona>=1.8.13 Shapely>=1.6.4.post2 geopandas>=0.7.0 Rtre
 ```
 pip install TronGisPy
 ```
+
 ## Docker
 ```
-docker pull jeremy4555:trongispy:latest
+sudo docker run -it --rm jeremy4555/trongispy:latest
 ```
+
 <!-- 
 ## Taiwan DataCube
 1. uninstall gdal
@@ -131,7 +145,7 @@ make html
 
 ## Docker Build
 ```
-docker build -it --rm <dockerhub_id>/trongispy:latest
+sudo docker build -t <dockerhub_id>/trongispy:latest -< Dockerfile
 ```
 
 
@@ -144,11 +158,11 @@ docker build -it --rm <dockerhub_id>/trongispy:latest
 1. Install preinstall thinktron pypi server
 ```
 # python36
-pip install -U --index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 GDAL>=3.0.4 Fiona>=1.8.13 Shapely>=1.6.4.post2 geopandas>=0.7.0 Rtree>=0.9.4 opencv_python>=4.1.2
+pip install -U --index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 GDAL Fiona Shapely geopandas Rtree opencv_python
 
 # python37
 pip install pyproj
-pip install -U --index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 GDAL Fiona Shapely geopandas Rtree opencv_python
+pip install -U --index-url http://192.168.0.128:28181/simple --trusted-host 192.168.0.128 GDAL>=3.0.4 Fiona>=1.8.13 Shapely>=1.6.4.post2 geopandas>=0.7.0 Rtree>=0.9.4 opencv_python>=4.1.2
 ```
 
 2. Install TronGisPy from thinktron pypi server (Windows)

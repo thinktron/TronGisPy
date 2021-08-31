@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: TronGisPy
-Version: 1.4.6
+Version: 1.4.7
 Summary: Gis raster data processing tool
 Home-page: https://github.com/thinktron/TronGisPy
 Author: Thinktron
@@ -42,6 +42,7 @@ normalizer.
 # Getting Started
 To get start, please see [GettingStarted.ipynb](https://github.com/thinktron/TronGisPy/blob/master/GettingStarted.ipynb).
 
+
 # Install
 ## Windows
 1. Install preinstalls from pre-build wheel package
@@ -72,6 +73,8 @@ pip install TronGisPy
 ```
 docker pull jeremy4555:trongispy:latest
 ```
+
+# Author & Instructure
 <!-- 
 ## Taiwan DataCube
 1. uninstall gdal

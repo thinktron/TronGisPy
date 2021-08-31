@@ -454,7 +454,7 @@ def clip_raster_with_extent(src_raster, extent):
     dst_raster = tgp.read_gdal_ds(dst_ds)
     return dst_raster
 
-def zonal_stats(src_poly, src_raster, operator=['mean']):
+def zonal_stats(src_poly, src_raster, operator=['mean'], features=None):
     """Calculate the statistic value for each zone defined by src_poly, base on values from src_raster. 
 
     Parameters
@@ -465,6 +465,8 @@ def zonal_stats(src_poly, src_raster, operator=['mean']):
         Which value dataset to be calculated statistic values.
     operator: list of {'mean', 'max', 'min', 'median', 'std', 'sum', 'count'}, optional, defalut: ['mean']
         The statistic operator to be used.
+    features: list of string
+        The band names which will be used as column names. if None, the index number will be used.
 
     Returns
     -------
@@ -485,28 +487,33 @@ def zonal_stats(src_poly, src_raster, operator=['mean']):
     """
     assert src_raster.geo_transform is not None, "src_raster.geo_transform should not be None"
     assert isinstance(operator, list), "operator should be a list of string. ex: ['mean']"
+    features = list(range(src_raster.bands)) if features is None else features
+    assert len(features) == src_raster.bands, "length of features should equals number of bands of the raster"
     df_shp = src_poly.copy()
     df_shp['poly_idx'] = list(range(len(df_shp)))
     df_shp['poly_idx'] = df_shp['poly_idx'].astype('float')
     poly_rst = tgp.ShapeGrid.rasterize_layer(df_shp, src_raster.rows, src_raster.cols, src_raster.geo_transform, 'poly_idx', all_touched=True, no_data_value=np.nan)
     X_combine = np.concatenate([poly_rst.data, src_raster.data], axis=-1)
-    X_combine_df = pd.DataFrame(X_combine.reshape(-1, 2))
+    X_combine_df = pd.DataFrame(X_combine.reshape(-1, src_raster.bands))
     X_groupby = X_combine_df.groupby(0, as_index=False)
     for op in operator:
+        columns = {0:'poly_idx'}
+        for f_idx, f in enumerate(features):
+            columns[f_idx+1] = f'zonal_{op}_{f}'
         if op == 'mean':
-            df_shp = df_shp.merge(X_groupby.mean().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+            df_shp = df_shp.merge(X_groupby.mean().rename(columns=columns), on='poly_idx', how='left')
         elif op == 'max':
-            df_shp = df_shp.merge(X_groupby.max().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+            df_shp = df_shp.merge(X_groupby.max().rename(columns=columns), on='poly_idx', how='left')
         elif op == 'min':
-            df_shp = df_shp.merge(X_groupby.min().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+            df_shp = df_shp.merge(X_groupby.min().rename(columns=columns), on='poly_idx', how='left')
         elif op == 'median':
-            df_shp = df_shp.merge(X_groupby.median().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+            df_shp = df_shp.merge(X_groupby.median().rename(columns=columns), on='poly_idx', how='left')
         elif op == 'sum':
-            df_shp = df_shp.merge(X_groupby.sum().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+            df_shp = df_shp.merge(X_groupby.sum().rename(columns=columns), on='poly_idx', how='left')
         elif op == 'std':
-            df_shp = df_shp.merge(X_groupby.std().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+            df_shp = df_shp.merge(X_groupby.std().rename(columns=columns), on='poly_idx', how='left')
         elif op == 'count':
-            df_shp = df_shp.merge(X_groupby.count().rename(columns={0:'poly_idx', 1:f'zonal_{op}'}), on='poly_idx', how='left')
+            df_shp = df_shp.merge(X_groupby.count().rename(columns=columns), on='poly_idx', how='left')
         else:
             assert False, "no this operator"
     return df_shp
