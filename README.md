@@ -101,7 +101,7 @@ pip install GDAL==3.0.4
 ```bash
 python setup.py sdist bdist_wheel
 ```
-## Document Generation
+<!-- ## Document Generation
 0. [Installaion](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/install.html)
 ```
 pip install sphinx
@@ -141,7 +141,7 @@ sphinx-apidoc --force --separate --module-first -o docs\source .
 cd docs
 make clean
 make html
-```
+``` -->
 
 ## Docker Build
 ```
