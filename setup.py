@@ -9,7 +9,7 @@ setuptools.setup(
     name="TronGisPy",
     version="1.4.7",
     author="Thinktron",
-    author_email="jeremywang@thinktronltd.com",
+    author_email="jeremywang@thinktronltd.com, moon.starsky37@gmail.com",
     description="Gis raster data processing tool",
     long_description=long_description,
     long_description_content_type="text/markdown",

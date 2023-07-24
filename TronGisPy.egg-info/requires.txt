@@ -1,5 +1,5 @@
-numba
 affine
-scikit-learn
 descartes
 matplotlib
+numba
+scikit-learn

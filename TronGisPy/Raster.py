@@ -539,7 +539,7 @@ class Raster():
                 data = self.data[:, :, bands]
 
             # deal with no data
-            data = data.astype(np.float)
+            data = data.astype(float)
             data[data == self.no_data_value] = np.nan
 
             # detect single value

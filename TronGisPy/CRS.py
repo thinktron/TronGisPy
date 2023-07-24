@@ -4,6 +4,8 @@ import pyproj
 import numpy as np
 from osgeo import osr
 from osgeo import gdal
+from numba.typed import List
+from numba import njit, int64
 
 @numba.jit(nopython=True)
 def __affine_from_gdal(c, a, b, f, d, e):
@@ -36,7 +38,8 @@ def __numba_transfer_coord_to_xy(x, y, a, b, c, d, e, f):
     # x, y = np.int(x), np.int(y)
     return x, y
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
+@njit
 def coords_to_npidxs(coords, geo_transform):
     """Find the cells' numpy index the coordinates belong to using 
     the following functions.
@@ -66,12 +69,21 @@ def coords_to_npidxs(coords, geo_transform):
     >>> tgp.coords_to_npidxs(coords, geo_transform)
     array([[1, 3]], dtype=int64)
     """
-    group_npidx = []
-    for i in range(0, len(coords)):
+    num_coords = len(coords)
+    group_npidx = np.empty((num_coords, 2), dtype=np.int64)
+    for i in range(num_coords):
         x, y = coords[i][0], coords[i][1]
         x, y = __numba_transfer_coord_to_xy(x, y, *geo_transform)
-        group_npidx.append((y, x))
-    return np.array(group_npidx, np.int64)
+        group_npidx[i, 0] = y
+        group_npidx[i, 1] = x
+    return group_npidx
+    # group_npidx = []
+    # for i in range(0, len(coords)):
+    #     x, y = coords[i][0], coords[i][1]
+    #     x, y = __numba_transfer_coord_to_xy(x, y, *geo_transform)
+    #     group_npidx.append((y, x))
+    # return np.array(group_npidx, np.int64)
+
 
 
 def coords_to_npidxs_temp(coords, geo_transform):
