@@ -193,6 +193,13 @@ class TestRaster(unittest.TestCase):
         self.assertTrue(raster.shape == (3, 3, 1))
         self.assertTrue(raster.geo_transform == (0, 1, 0, 0, 0, -1))
         self.assertTrue(raster.metadata is None)
+        
+    def test__getitem__(self):
+        ras_clipped = self.raster[100:356, 100:164]
+        x_st_new, y_st_new = tgp.npidxs_to_coords(np.array([[100, 100]]), self.raster.geo_transform)[0]
+        self.assertTrue(ras_clipped.geo_transform[0] == x_st_new)
+        self.assertTrue(ras_clipped.geo_transform[3] == y_st_new)
+        self.assertTrue(np.all(ras_clipped.data == self.raster.data[100:356, 100:164]))
 
     def test_get_properties(self):
         self.assertTrue(self.raster.rows == 512)
@@ -1120,3 +1127,4 @@ class TestDEMProcessor(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 #  python -m unittest -v test.py
+#  python -m unittest -v test.py -k TestRaster.test__getitem__

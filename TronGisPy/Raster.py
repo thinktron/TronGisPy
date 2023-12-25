@@ -1,8 +1,10 @@
 import numpy as np
 from osgeo import gdal
 import TronGisPy as tgp
+import geopandas as gpd
 from TronGisPy import Interpolation
 from matplotlib import pyplot as plt
+from shapely.geometry import Polygon
 
 class Raster():
     """A Raster object contains all required information for a gis raster file such
@@ -165,15 +167,23 @@ class Raster():
         """(xmin, xmax, ymin, ymax) of the raster boundary."""
         return tgp.get_extent(self.rows, self.cols, self.geo_transform, return_type='gdal')
 
-    # def __getitem__(self, slice_value):
-    #     if type(slice_value) in [int, slice]:
-    #         h_start_inner, h_stop_inner = self.get_values_by_coords(slice_value)
-    #         return self.data[h_start_inner:h_stop_inner, :]
-
-    #     elif type(slice_value) == tuple:
-    #         h_start_inner, h_stop_inner = self.get_values_by_coords(slice_value[0])
-    #         w_start_inner, w_stop_inner = self.get_values_by_coords(slice_value[1])
-    #         return self.data[h_start_inner:h_stop_inner, w_start_inner:w_stop_inner]
+    def __getitem__(self, slice_value):
+#         if type(slice_value) in [slice]: # int, 
+#             row_st, row_end = slice_value
+            
+#             h_start_inner, h_stop_inner = self.get_values_by_coords(slice_value)
+#             return self.data[h_start_inner:h_stop_inner, :]
+        if type(slice_value) == tuple and len(slice_value) == 2 and slice_value[0].step is None and slice_value[1].step is None: # the step 
+            row_st, row_end = slice_value[0].start, slice_value[0].stop
+            col_st, col_end = slice_value[1].start, slice_value[1].stop
+            npidxs = [(row_st, col_st), (row_st, col_end), (row_end, col_end), (row_end, col_st)]
+            coords = tgp.npidxs_to_coords(npidxs, self.geo_transform)
+            xmin, ymin, xmax, ymax = coords[:, 0].min(), coords[:, 1].min(), coords[:, 0].max(), coords[:, 1].max()
+            ras_clipped = tgp.ShapeGrid.clip_raster_with_extent(self, extent=[xmin, ymin, xmax, ymax])
+            return ras_clipped
+        else:
+            assert False, "This indexing method is not supported currently! Please use raster[<row_idx_st>:<row_idx_end>, <col_idx_st>:<col_idx_end>] to slice"
+        
 
     def astype(self, dtype, update_gdaldtype=True):
         """Change dtype of self.data.
