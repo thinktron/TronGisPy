@@ -7,7 +7,7 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
 
 setuptools.setup(
     name="TronGisPy",
-    version="1.4.7",
+    version="1.4.8",
     author="Thinktron",
     author_email="jeremywang@thinktronltd.com, moon.starsky37@gmail.com",
     description="Gis raster data processing tool",
@@ -143,9 +143,11 @@ setuptools.setup(
 # 1.4.5 add new test data (aereo_tif_clipper)
 # 1.4.6 compatile with GDAL 3.3.1 and python37
 # 1.4.7 fix zonal stats with multi-bands' raster
+# 1.4.7 fix zonal stats with multi-bands' raster
+# 1.4.8 Add getitem function in Raster to enable quick clipping of Raster using numpy index.
 
 # python setup.py sdist bdist_wheel
-# twine upload dist/TronGisPy-1.4.7*
+# twine upload dist/TronGisPy-1.4.8*
 
 
 
